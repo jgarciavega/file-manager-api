@@ -102,7 +102,7 @@ export default function Login() {
           <div className="mx-24">
             <button
               type="submit"
-              className="w-full py-3 text-sm font-semibold text-white bg-[#813441] hover:bg-red-700 rounded-3xl transition-colors duration-200"
+              className="w-full py-3 text-sm font-semibold text-white bg-[#813441] hover:bg-[#5f2730] rounded-3xl transition-colors duration-200"
             >
               Ingresar
             </button>
