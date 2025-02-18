@@ -11,9 +11,10 @@ export default NextAuth({
       },
       async authorize(credentials) {
         // Implementa tu lógica real de autenticación aquí
-        const user = { id: 1, name: "Test User", email: "test@example.com" };
+        const user = { id: 1, name: "Test User", email: "jorge@File.com" };
         
         if (
+          credentials &&
           credentials.email === "jorge@File.com" &&
           credentials.password === "123456"
         ) {
