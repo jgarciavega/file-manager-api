@@ -14,8 +14,8 @@ export default NextAuth({
         const user = { id: 1, name: "Test User", email: "test@example.com" };
         
         if (
-          credentials.email === "test@example.com" &&
-          credentials.password === "password123"
+          credentials.email === "jorge@File.com" &&
+          credentials.password === "123456"
         ) {
           return user;
         }
