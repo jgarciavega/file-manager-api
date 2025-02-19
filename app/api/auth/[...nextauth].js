@@ -7,34 +7,36 @@ export default NextAuth({
       name: "Credentials",
       credentials: {
         email: { label: "Email", type: "text" },
-        password: { label: "Password", type: "password" }
+        password: { label: "Password", type: "password" },
       },
       async authorize(credentials) {
-        // Implementa tu lógica real de autenticación aquí
-        const user = { id: 1, name: "Test User", email: "jorge@File.com" };
-        
-        if (
-          credentials &&
-          credentials.email === "jorge@File.com" &&
-          credentials.password === "123456"
-        ) {
-          return user;
+        if (credentials) {
+          const user = { id: 1, name: "Test User", email: "jorge@File.com" };
+
+          if (
+            credentials.email === "jorge@File.com" &&
+            credentials.password === "123456"
+          ) {
+            return user;
+          }
         }
         return null;
-      }
-    })
+      },
+    }),
   ],
   callbacks: {
     async jwt({ token, user }) {
-      if (user) token.user = user;
+      if (user) {
+        token.user = user;
+      }
       return token;
     },
     async session({ session, token }) {
       session.user = token.user;
       return session;
-    }
+    },
   },
   pages: {
-    signIn: "/login"
-  }
+    signIn: "/login",
+  },
 });
