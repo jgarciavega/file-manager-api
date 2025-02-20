@@ -1,3 +1,4 @@
+// pages/login.jsx
 "use client";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
@@ -19,6 +20,17 @@ export default function Login() {
 
   const onSubmit = async (data) => {
     clearErrors();
+    if (!data.email || !data.password) {
+      setError("email", {
+        type: "manual",
+        message: "El correo es obligatorio",
+      });
+      setError("password", {
+        type: "manual",
+        message: "La contraseña es obligatoria",
+      });
+      return;
+    }
     if (!data.email.includes("@") || data.password.length < 6) {
       setError("email", { type: "manual", message: "Correo inválido" });
       setError("password", {
@@ -34,7 +46,7 @@ export default function Login() {
       password: data.password,
     });
 
-    console.log("result:", result); // Log para verificar el resultado de signIn
+    console.log("Resultado del login:", result); // Depuración
 
     if (result.error) {
       setLoginError(true);
@@ -48,8 +60,10 @@ export default function Login() {
         message: "Correo o contraseña incorrectos",
       });
 
-      if (attempts >= 2) {
-        router.push("/recovery-password");
+      if (attempts + 1 >= 3) {
+        setTimeout(() => {
+          router.push("/recovery-password");
+        }, 1000);
       }
     } else {
       setLoginError(false);
@@ -102,18 +116,26 @@ export default function Login() {
           {loginError && (
             <p className="text-red-600 text-sm">Usuario incorrecto</p>
           )}
-          <button
-            type="submit"
-            className="w-full py-3 text-white bg-[#813441] hover:bg-[#5f2730] rounded-xl"
+          <div className="text-center mt-4">
+            <a href="/recovery-password" className="text-[#0a0a0a]">
+              ¿Olvidaste tu contraseña?
+            </a>
+          </div>
+          <div
+            className="text-center text-gray-600 relative"
+            style={{ top: "-20px" }}
           >
-            Ingresar
-          </button>
+            Restablecer
+          </div>
+          <div className="flex justify-center">
+            <button
+              type="submit"
+              className="inline-block px-16 py-2 text-white bg-[#7e4142] hover:bg-[#cd4058] rounded-xl"
+            >
+              Ingresar
+            </button>
+          </div>
         </form>
-        <div className="text-center mt-4">
-          <a href="/recovery-password" className="text-[#a14e5c]">
-            ¿Olvidaste tu contraseña? Restablecer
-          </a>
-        </div>
       </div>
     </div>
   );
