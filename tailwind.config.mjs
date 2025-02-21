@@ -13,5 +13,8 @@ export default {
       },
     },
   },
+  corePlugins: {
+    highContrastAdjust: false, // ✅ Desactiva la propiedad obsoleta
+  },
   plugins: [],
 };

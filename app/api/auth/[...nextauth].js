@@ -1,7 +1,11 @@
 import NextAuth from "next-auth";
 import CredentialsProvider from "next-auth/providers/credentials";
 
+console.log("NEXTAUTH_SECRET en servidor:", process.env.NEXTAUTH_SECRET);
+
 export default NextAuth({
+  secret: process.env.NEXTAUTH_SECRET,
+  debug: true, // Muestra más información en la consola
   providers: [
     CredentialsProvider({
       name: "Credentials",
@@ -10,17 +14,24 @@ export default NextAuth({
         password: { label: "Password", type: "password" },
       },
       async authorize(credentials) {
-        if (credentials) {
-          const user = { id: 1, name: "Test User", email: "jorge@File.com" };
+        console.log("Credenciales recibidas:", credentials);
 
-          if (
-            credentials.email === "jorge@File.com" &&
-            credentials.password === "123456"
-          ) {
-            return user;
-          }
+        if (!credentials?.email || !credentials?.password) {
+          throw new Error("Faltan credenciales");
         }
-        return null;
+
+        const user = { id: 1, name: "Test User", email: "jorge@File.com" };
+
+        if (
+          credentials.email === "jorge@File.com" &&
+          credentials.password === "123456"
+        ) {
+          console.log("Usuario autenticado correctamente:", user);
+          return user;
+        }
+
+        console.log("Error: Credenciales inválidas");
+        throw new Error("Credenciales inválidas");
       },
     }),
   ],
@@ -38,5 +49,6 @@ export default NextAuth({
   },
   pages: {
     signIn: "/login",
+    error: "/auth/error",
   },
 });

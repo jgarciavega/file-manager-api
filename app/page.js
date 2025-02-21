@@ -15,11 +15,16 @@ export default function Login() {
     formState: { errors },
   } = useForm();
   const router = useRouter();
-  const [loginError, setLoginError] = useState(false);
+  const [loginError, setLoginError] = useState("");
   const [attempts, setAttempts] = useState(0);
 
   const onSubmit = async (data) => {
-    clearErrors();
+    alert(" Se ejecutó onSubmit()");  // ALERTA para verificar que se ejecuta
+    console.log("🔍 Enviando credenciales:", data);
+  
+
+    console.log("🔍 Enviando credenciales:", data);
+
     if (!data.email || !data.password) {
       setError("email", {
         type: "manual",
@@ -31,6 +36,7 @@ export default function Login() {
       });
       return;
     }
+
     if (!data.email.includes("@") || data.password.length < 6) {
       setError("email", { type: "manual", message: "Correo inválido" });
       setError("password", {
@@ -46,10 +52,11 @@ export default function Login() {
       password: data.password,
     });
 
-    console.log("Resultado del login:", result); // Depuración
+    console.log("📌 Respuesta del login:", result);
 
-    if (result.error) {
-      setLoginError(true);
+    if (result?.error) {
+      console.log("🚨 Error en el login:", result.error);
+      setLoginError("Correo o contraseña incorrectos");
       setAttempts((prev) => prev + 1);
       setError("email", {
         type: "manual",
@@ -61,12 +68,14 @@ export default function Login() {
       });
 
       if (attempts + 1 >= 3) {
+        console.log("🔄 Redirigiendo a recuperación de contraseña...");
         setTimeout(() => {
           router.push("/recovery-password");
         }, 1000);
       }
     } else {
-      setLoginError(false);
+      console.log("✅ Inicio de sesión exitoso, redirigiendo...");
+      setLoginError("");
       setAttempts(0);
       router.push("/");
     }
@@ -77,8 +86,7 @@ export default function Login() {
       <Image
         src="/login.jpg"
         alt="Fondo"
-        layout="fill"
-        objectFit="cover"
+        fill={true}
         className="absolute top-0 left-0 w-full h-full filter brightness-50 -z-10"
       />
       <div className="bg-white shadow-xl p-8 w-[480px] border-2 rounded-lg min-h-[420px]">
@@ -113,9 +121,7 @@ export default function Login() {
           {errors.password && (
             <p className="text-red-600 text-sm">{errors.password.message}</p>
           )}
-          {loginError && (
-            <p className="text-red-600 text-sm">Usuario incorrecto</p>
-          )}
+          {loginError && <p className="text-red-600 text-sm">{loginError}</p>}
           <div className="text-center mt-4">
             <a href="/recovery-password" className="text-[#0a0a0a]">
               ¿Olvidaste tu contraseña?
