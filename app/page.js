@@ -6,7 +6,7 @@ import { signIn } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
 
-export default function Login() {
+export default function LoginPage() {
   const {
     register,
     handleSubmit,
@@ -19,9 +19,8 @@ export default function Login() {
   const [attempts, setAttempts] = useState(0);
 
   const onSubmit = async (data) => {
-    alert(" Se ejecutó onSubmit()");  // ALERTA para verificar que se ejecuta
+    alert(" Se ejecutó onSubmit()"); // ALERTA para verificar que se ejecuta
     console.log("🔍 Enviando credenciales:", data);
-  
 
     console.log("🔍 Enviando credenciales:", data);
 
