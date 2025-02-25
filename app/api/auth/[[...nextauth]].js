@@ -19,10 +19,24 @@ export const authOptions = {
           return { id: 1, name: "Test User", email: "jorge@File.com" };
         }
         console.log("❌ Error: Credenciales inválidas");
-        throw new Error("Credenciales inválidas");
+        return null;
       },
     }),
   ],
+  callbacks: {
+    async jwt(token, user) {
+      if (user) {
+        token.id = user.id;
+      }
+      console.log("🔍 Token JWT:", token);
+      return token;
+    },
+    async session(session, token) {
+      session.user.id = token.id;
+      console.log("🔍 Sesión:", session);
+      return session;
+    }
+  }
 };
 
 console.log("🟢 NextAuth configurado correctamente");

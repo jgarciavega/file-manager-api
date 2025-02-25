@@ -1,4 +1,3 @@
-// pages/login.jsx
 "use client";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
@@ -11,7 +10,6 @@ export default function LoginPage() {
     register,
     handleSubmit,
     setError,
-    clearErrors,
     formState: { errors },
   } = useForm();
   const router = useRouter();
@@ -19,9 +17,7 @@ export default function LoginPage() {
   const [attempts, setAttempts] = useState(0);
 
   const onSubmit = async (data) => {
-    alert(" Se ejecutó onSubmit()"); // ALERTA para verificar que se ejecuta
-    console.log("🔍 Enviando credenciales:", data);
-
+    alert("Se ejecutó onSubmit()"); // ALERTA para verificar que se ejecuta
     console.log("🔍 Enviando credenciales:", data);
 
     if (!data.email || !data.password) {
