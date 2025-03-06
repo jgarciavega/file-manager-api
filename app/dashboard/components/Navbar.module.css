@@ -1,0 +1,30 @@
+/* Navbar.module.css */
+.navbar {
+  background-color: #ffffff; /* Color de fondo del navbar */
+  padding: 1rem;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.searchBar {
+  width: 200px; /* Ancho de la barra de búsqueda */
+}
+
+.relative {
+  position: relative;
+}
+
+.bg-white {
+  background-color: #ffffff;
+}
+
+.text-gray-700 {
+  color: #4a4a4a;
+}
+
+.w-6 {
+  width: 1.5rem;
+}
+
+.h-6 {
+  height: 1.5rem;
+}

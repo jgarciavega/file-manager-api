@@ -1,4 +1,5 @@
 "use client";
+
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { signIn } from "next-auth/react";
@@ -6,17 +7,12 @@ import { useRouter } from "next/navigation";
 import Image from "next/image";
 
 export default function LoginPage() {
-  const {
-    register,
-    handleSubmit,
-    setError,
-    formState: { errors },
-  } = useForm();
+  const { register, handleSubmit, setError, formState: { errors } } = useForm();
   const router = useRouter();
   const [loginError, setLoginError] = useState("");
   const [attempts, setAttempts] = useState(0);
 
-  // Regex para la valdiacion del correo
+  // Regex para la validación del correo
   const EMAIL_REGEX = /^[a-zA-Z0-9._-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,6}$/;
 
   const onSubmit = async (data) => {
@@ -26,14 +22,11 @@ export default function LoginPage() {
         email: data.email,
         password: data.password,
       });
-
       console.log("📌 Respuesta del login:", result);
-
       if (result?.error) {
         console.log("🚨 Error en el login:", result.error);
         setLoginError("Credenciales incorrectas");
         setAttempts((prev) => prev + 1);
-
         if (attempts + 1 >= 3) {
           setLoginError("Demasiados intentos fallidos. Redirigiendo a recuperación de contraseña...");
           setTimeout(() => {
@@ -47,7 +40,7 @@ export default function LoginPage() {
       console.log("✅ Inicio de sesión exitoso, redirigiendo...");
       setLoginError("");
       setAttempts(0);
-      router.push("/index");
+      router.push("/home"); // Redirigir a la página principal después del inicio de sesión
     } catch (error) {
       console.error("Error durante el login:", error);
       setLoginError("Error al intentar iniciar sesión");
@@ -92,7 +85,6 @@ export default function LoginPage() {
           {errors.email && (
             <p className="text-red-600 text-sm">{errors.email.message}</p>
           )}
-
           <input
             {...register("password", {
               required: "La contraseña es obligatoria",
@@ -108,21 +100,17 @@ export default function LoginPage() {
           {errors.password && (
             <p className="text-red-600 text-sm">{errors.password.message}</p>
           )}
-
           {loginError && (
             <p className="text-red-600 text-sm text-center">{loginError}</p>
           )}
-
           <div className="text-center mt-4">
             <a href="/recover-password" className="text-[#0a0a0a] hover:text-[#7e4142]">
               ¿Olvidaste tu contraseña?
             </a>
           </div>
-
           <div className="text-center text-gray-600 relative" style={{ top: "-20px" }}>
             Restablecer
           </div>
-
           <div className="flex justify-center">
             <button
               type="submit"

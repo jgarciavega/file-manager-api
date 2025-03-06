@@ -1,0 +1,11 @@
+/* styles.css */
+.bg-welcome-image {
+  background-image: url('/path/to/your/background-image.jpg'); /* Actualiza la ruta a tu imagen de fondo */
+  background-size: cover;
+  background-position: center;
+}
+
+/* Sidebar.module.css */
+.sidebar {
+  color: #333; /* Color de texto */
+}

@@ -1,0 +1,10 @@
+/* HomePage.module.css */
+.background {
+  background-color: #f7fafc; /* Color de fondo claro */
+}
+
+.welcomeSection {
+  background-image: url('/path/to/your/image.jpg'); /* Ruta de la imagen de bienvenida */
+  background-size: cover;
+  background-position: center;
+}
