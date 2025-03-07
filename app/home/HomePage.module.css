@@ -7,4 +7,12 @@
   background-image: url('/path/to/your/image.jpg'); /* Ruta de la imagen de bienvenida */
   background-size: cover;
   background-position: center;
+  height: 400px;
+  position: relative;
+}
+
+
+.welcomeMessage {
+  max-width: 50%;
+  margin-right: 2rem;
 }

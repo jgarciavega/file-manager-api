@@ -5,7 +5,12 @@
   background-position: center;
 }
 
-/* Sidebar.module.css */
+/* Sidebar.module.css 
 .sidebar {
   color: #333; /* Color de texto */
+}
+/*.sub-menu {
+  font-family: 'Arial', sans-serif; /* Cambia la fuente según tu preferencia */
+  font-size: 0.875rem; /* Ajusta el tamaño de la fuente */
+  color: #555555; /* Color de texto diferente */
 }

@@ -1,4 +1,17 @@
-/* Sidebar.module.css */
 .sidebar {
-  color: #333; /* Color de texto */
+  transition: all 0.3s ease;
+}
+.sub-menu {
+  transition: all 0.3s ease;
+  list-style-type: none;
+  padding: 0;
+}
+.sub-menu li {
+  padding: 4px 0;
+  margin-left: 10px;
+  border-left: 2px solid #ccc; /* Línea distintiva para submenús */
+}
+.sub-menu li:hover {
+  border-left-color: #007acc; /* Cambio de color en el hover */
+  color: #007acc; /* Cambio de color en el hover */
 }
