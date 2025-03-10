@@ -1,4 +1,5 @@
 "use client";
+
 import { useState } from "react";
 import Image from 'next/image';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
@@ -14,7 +15,7 @@ export default function Sidebar({ user }) {
   }
 
   return (
-    <aside className={`text-blue-800 w-64 bg-gray-50 shadow-lg p-6 ${styles.sidebar} mt-16 rounded-lg`}>
+    <aside className={`text-blue-800 w-64 bg-gray-50 shadow-lg p-6 mt-16 rounded-lg ${styles.sidebar}`}>
       <div className="user-info mb-6 flex items-center gap-3">
         <Image
           src={user.avatar}
@@ -30,7 +31,7 @@ export default function Sidebar({ user }) {
         <li className="font-bold text-gray-800">
           <a
             href="#"
-            className="flex items-center justify-between text-black-800 hover:text-blue-600 transition-colors duration-300"
+            className="flex items-center justify-between text-gray-800 hover:text-blue-600 transition-colors duration-300"
             onClick={() => setFileMenuOpen(!isFileMenuOpen)}
             aria-expanded={isFileMenuOpen}
           >
@@ -60,7 +61,7 @@ export default function Sidebar({ user }) {
         <li className="font-bold text-gray-800">
           <a
             href="#"
-            className="flex items-center justify-between text-black-800 hover:text-blue-600 transition-colors duration-300"
+            className="flex items-center justify-between text-gray-800 hover:text-blue-600 transition-colors duration-300"
             onClick={() => setTaskMenuOpen(!isTaskMenuOpen)}
             aria-expanded={isTaskMenuOpen}
           >
@@ -84,7 +85,7 @@ export default function Sidebar({ user }) {
         <li className="font-bold text-gray-800">
           <a
             href="#"
-            className="flex items-center justify-between text-black-800 hover:text-blue-600 transition-colors duration-300"
+            className="flex items-center justify-between text-gray-800 hover:text-blue-600 transition-colors duration-300"
             onClick={() => setTaskMenuOpen(!isTaskMenuOpen)}
             aria-expanded={isTaskMenuOpen}
           >
@@ -108,7 +109,7 @@ export default function Sidebar({ user }) {
         <li className="font-bold text-gray-800">
           <a
             href="#"
-            className="flex items-center justify-between text-black-800 hover:text-blue-600 transition-colors duration-300"
+            className="flex items-center justify-between text-gray-800 hover:text-blue-600 transition-colors duration-300"
             onClick={() => setTaskMenuOpen(!isTaskMenuOpen)}
             aria-expanded={isTaskMenuOpen}
           >

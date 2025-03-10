@@ -20,3 +20,9 @@
   font-weight: bold;
 }
 */
+/* global.css */
+body {
+  background-color: #ffffff; /* Color de fondo blanco */
+  margin: 0;
+  padding: 0;
+}
