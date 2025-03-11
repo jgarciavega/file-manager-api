@@ -1,11 +1,20 @@
-/* Sidebar.module.css */
 .sidebar-container {
-  margin-top: 100px; /* Ajusta este valor según lo necesites para bajar todo el componente */
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
 }
 
 .sidebar {
-  transition: all 0.3s ease;
-  background-color: #ffffff !important; /* Asegura que el fondo sea siempre blanco */
+  width: 250px;
+  height: 100%;
+  padding: 25px;
+  background-color: #f0f2f5;
+  overflow-y: auto;
+  transition: width 0.3s ease;
+}
+
+.sidebar-collapsed {
+  width: 64px;
 }
 
 .menu-icon {
@@ -23,10 +32,29 @@
 .sub-menu li {
   padding: 4px 0;
   margin-left: 10px;
-  border-left: 2px solid #ccc; /* Línea distintiva para submenús */
 }
 
 .sub-menu li:hover {
-  border-left-color: #007acc; /* Cambio de color en el hover */
-  color: #007acc; /* Cambio de color en el hover */
+  color: #007acc;
+}
+.user-info {
+  cursor: pointer;
+  position: relative;
+}
+
+.user-details {
+  display: none;
+  position: absolute;
+  top: 100%;
+  left: 0;
+  background-color: white;
+  border: 1px solid #ddd;
+  padding: 10px;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+  z-index: 10;
+  color: #000;
+}
+
+.user-info:hover .user-details {
+  display: block;
 }

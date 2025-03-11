@@ -2,7 +2,7 @@
 
 import { Bell } from "lucide-react";
 import Image from "next/image";
-import styles from "./Navbar.module.css";
+import styles from "./Navbar.module.css"; 
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faUpload, faArrowLeft, faChevronRight } from "@fortawesome/free-solid-svg-icons";
 
@@ -10,23 +10,23 @@ export default function Navbar({ user }) {
   return (
     <div className={`navbar flex flex-col w-full ${styles.navbar}`}>
       {/* Logo, buscador y notificaciones */}
-      <div className="logo-container bg-[#d2d2cb] shadow-md p-4 w-full flex justify-between items-center">
-        <div className="flex items-center ml-2">
+      <div className="flex items-center justify-between w-full p-4 bg-[#d2d2cb] shadow-md">
+        <div className="flex items-start">
           <Image
             src="/api.jpg"
             alt="API-BCS Logo"
-            width={700}
-            height={20}
+            width={150}
+            height={150}
           />
         </div>
-        <div className="flex items-center justify-center flex-grow relative mx-4">
+        <div className="flex items-center justify-between flex-grow ml-4">
           <input
             type="text"
             placeholder="Buscar..."
-            className={`border-2 border-gray-500 rounded-lg px-4 py-2 text-gray-700 focus:outline-none focus:ring focus:ring-blue-300 hover:border-blue-500 ${styles.searchBar}`}
+            className={`border-2 border-white rounded-lg px-4 py-2 text-gray-700 focus:outline-none focus:ring focus:ring-blue-300 hover:border-blue-500 ${styles.searchBar}`}
             aria-label="Buscar"
           />
-          <button className="relative ml-4" aria-label="Notificaciones" style={{ position: 'absolute', right: '0', top: '25%' }}>
+          <button className="relative ml-4" aria-label="Notificaciones">
             <Bell className="w-6 h-6 text-gray-600" />
             <span className="absolute top-0 right-0 w-3 h-3 bg-red-500 rounded-full"></span>
           </button>
@@ -46,8 +46,8 @@ export default function Navbar({ user }) {
           src="/inicio.webp"
           alt="Imagen de Bienvenida"
           layout="responsive"
-          width={300}
-          height={300}
+          width={700}
+          height={500}
           className="rounded-lg"
         />
         <div className="absolute top-0 right-0 p-4 bg-black bg-opacity-30 rounded-lg m-4 w-1/3 h-full flex flex-col justify-start">
