@@ -8,7 +8,7 @@ import { faUpload, faArrowLeft, faChevronRight } from "@fortawesome/free-solid-s
 
 export default function Navbar({ user }) {
   return (
-    <div className="navbar flex flex-col w-full">
+    <div className={`navbar flex flex-col w-full ${styles.navbar}`}>
       {/* Logo, buscador y notificaciones */}
       <div className="logo-container bg-[#d2d2cb] shadow-md p-4 w-full flex justify-between items-center">
         <div className="flex items-center ml-2">
@@ -23,7 +23,7 @@ export default function Navbar({ user }) {
           <input
             type="text"
             placeholder="Buscar..."
-            className={`border-2 border-gray-400 rounded-lg px-4 py-2 text-gray-700 focus:outline-none focus:ring focus:ring-blue-300 hover:border-blue-500 ${styles.searchBar}`}
+            className={`border-2 border-gray-500 rounded-lg px-4 py-2 text-gray-700 focus:outline-none focus:ring focus:ring-blue-300 hover:border-blue-500 ${styles.searchBar}`}
             aria-label="Buscar"
           />
           <button className="relative ml-4" aria-label="Notificaciones" style={{ position: 'absolute', right: '0', top: '25%' }}>
@@ -34,7 +34,7 @@ export default function Navbar({ user }) {
       </div>
 
       {/* Título principal */}
-      <div className="title-container bg-white shadow-md p-4 w-full text-center">
+      <div className={`title-container bg-white shadow-md p-4 w-full text-center ${styles['bg-white']}`}>
         <h2 className="text-2xl font-bold text-gray-800">
           Gestor de Archivos Puerto Pichilingue
         </h2>
@@ -46,12 +46,12 @@ export default function Navbar({ user }) {
           src="/inicio.webp"
           alt="Imagen de Bienvenida"
           layout="responsive"
-          width={500}
+          width={300}
           height={300}
           className="rounded-lg"
         />
         <div className="absolute top-0 right-0 p-4 bg-black bg-opacity-30 rounded-lg m-4 w-1/3 h-full flex flex-col justify-start">
-          <h2 className="text-4xl font-bold text-white mt-96">Bienvenido</h2>
+          <h2 className="text-4xl font-bold text-blue-500 mt-60">Bienvenido</h2>
           <p className="text-white mt-2 text-light text-2xl">
             Se han enviado a tu cuenta nuevos archivos, puedes revisarlos
             directamente mediante esta sección.
@@ -65,13 +65,13 @@ export default function Navbar({ user }) {
 
       {/* Cuadros de reportes y documentos pendientes */}
       <div className="report-section flex flex-row items-center gap-4 mt-4">
-        <div className="reportes bg-slate-600 p-8 shadow-md w-1/2">
+        <div className={`reportes bg-slate-600 p-8 shadow-md w-1/2 ${styles.reportes}`}>
           <h2 className="text-xl font-bold text-black">Reportes generados</h2>
           <h4>
             22 archivos <FontAwesomeIcon icon={faUpload} />
           </h4>
         </div>
-        <div className="pendientes bg-gray-500 p-8 shadow-md w-1/2">
+        <div className={`pendientes bg-gray-500 p-8 shadow-md w-1/2 ${styles.pendientes}`}>
           <h2 className="text-xl font-bold text-gray-800">
             Documentos pendientes
           </h2>

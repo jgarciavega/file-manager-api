@@ -15,7 +15,7 @@ export default function Home() {
       <Sidebar user={user} />
       
       {/* Main Content */}
-      <div className="flex flex-col flex-1">
+      <div className="flex flex-col flex-2">
         {/* Navbar */}
         <Navbar user={user} />
       </div>
