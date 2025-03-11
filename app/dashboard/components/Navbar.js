@@ -15,19 +15,19 @@ export default function Navbar({ user }) {
           <Image
             src="/api.jpg"
             alt="API-BCS Logo"
-            width={150}
-            height={150}
+            width={650}
+            height={50}
           />
         </div>
         <div className="flex items-center justify-between flex-grow ml-4">
           <input
             type="text"
             placeholder="Buscar..."
-            className={`border-2 border-white rounded-lg px-4 py-2 text-gray-700 focus:outline-none focus:ring focus:ring-blue-300 hover:border-blue-500 ${styles.searchBar}`}
+            className={`border-2 border-black rounded-lg px-3 py-2 text-gray-700 focus:outline-none focus:ring focus:ring-blue-300 hover:border-blue-500 ${styles.searchBar}`}
             aria-label="Buscar"
           />
           <button className="relative ml-4" aria-label="Notificaciones">
-            <Bell className="w-6 h-6 text-gray-600" />
+            <Bell className="w-16 h-10 text-gray-600" />
             <span className="absolute top-0 right-0 w-3 h-3 bg-red-500 rounded-full"></span>
           </button>
         </div>
@@ -51,7 +51,7 @@ export default function Navbar({ user }) {
           className="rounded-lg"
         />
         <div className="absolute top-0 right-0 p-4 bg-black bg-opacity-30 rounded-lg m-4 w-1/3 h-full flex flex-col justify-start">
-          <h2 className="text-4xl font-bold text-blue-500 mt-60">Bienvenido</h2>
+          <h2 className="text-4xl font-bold text-blue-100 mt-60">Bienvenido</h2>
           <p className="text-white mt-2 text-light text-2xl">
             Se han enviado a tu cuenta nuevos archivos, puedes revisarlos
             directamente mediante esta sección.
