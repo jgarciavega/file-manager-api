@@ -9,7 +9,7 @@ import styles from './Sidebar.module.css';
 export default function Sidebar() {
   // Define los datos del usuario aquí
   const user = {
-    name: "Julio R",
+    name: "Julio Rubio",
     avatar: "/av3.webp", // Reemplaza con la ruta correcta de la imagen de avatar
     workArea: "Contraloria",
     position: "Jefe de Seguimiento Administrativo"
@@ -49,16 +49,16 @@ export default function Sidebar() {
       <aside className={`${styles.sidebar} ${isSidebarCollapsed ? styles['sidebar-collapsed'] : ''}`}>
         <FontAwesomeIcon
           icon={faBars}
-          className={`text-gray-800 ${styles['menu-icon']}`}
+          className={`text-gray-800  ${styles['menu-icon']}`}
           onClick={toggleSidebar}
         />
         {!isSidebarCollapsed && (
           <>
-            <div className={`${styles['user-info']} mb-6 flex items-center gap-3`} onClick={toggleUserInfo}>
+            <div className={`${styles['user-info']} mb-28 flex items-center gap-3`} onClick={toggleUserInfo}>
               <Image
                 src={user.avatar}
                 alt="Usuario"
-                width={55}
+                width={100}
                 height={35}
                 className="rounded-full border border-gray-500"
               />
@@ -80,7 +80,7 @@ export default function Sidebar() {
                   onClick={() => toggleMenu('file')}
                   aria-expanded={openMenus.includes('file')}
                 >
-                  <div className="flex items-center">
+                  <div className="text-lg font size-28 flex items-center">
                     <FontAwesomeIcon icon={faFileAlt} className="mr-2" /> Gestión de archivos
                   </div>
                   <span>{openMenus.includes('file') ? '−' : '+'}</span>
@@ -110,7 +110,7 @@ export default function Sidebar() {
                   onClick={() => toggleMenu('task')}
                   aria-expanded={openMenus.includes('task')}
                 >
-                  <div className="flex items-center">
+                  <div className="text-lg font size-28 flex items-center">
                     <FontAwesomeIcon icon={faTasks} className="mr-2" /> Tareas Pendientes
                   </div>
                   <span>{openMenus.includes('task') ? '−' : '+'}</span>
@@ -134,7 +134,7 @@ export default function Sidebar() {
                   onClick={() => toggleMenu('reports')}
                   aria-expanded={openMenus.includes('reports')}
                 >
-                  <div className="flex items-center">
+                  <div className="text-lg font size-28 flex items-center">
                     <FontAwesomeIcon icon={faTasks} className="mr-2" /> Consultas & Reportes
                   </div>
                   <span>{openMenus.includes('reports') ? '−' : '+'}</span>
@@ -154,7 +154,7 @@ export default function Sidebar() {
               <li className="font-bold text-gray-800">
                 <a
                   href="#"
-                  className="flex items-center justify-between text-gray-800 hover:text-blue-600 transition-colors duración-300"
+                  className="text-lg font size-28 flex items-center justify-between text-gray-800 hover:text-blue-600 transition-colors duración-300"
                   onClick={() => toggleMenu('settings')}
                   aria-expanded={openMenus.includes('settings')}
                 >
@@ -175,7 +175,7 @@ export default function Sidebar() {
                 )}
               </li>
 
-              <li className="font-bold text-gray-800">
+              <li className="text-lg font size-28 font-bold text-gray-800">
                 <a href="#" className="flex items-center justify-between text-gray-800 hover:text-blue-600 transition-colors duración-300">
                   <FontAwesomeIcon icon={faSignOutAlt} className="mr-2" /> Cerrar sesión
                   </a>
