@@ -4,7 +4,7 @@
   height: 1%;
  margin: 10px;
  padding:10px;
- background-color: #ffffff; /* or any other valid color value */
+ background-color: #ffffff; 
 }
 
 .searchBar {
@@ -14,6 +14,7 @@
 }
 .relative {
   position: relative;
+  
 }
 
 .bg-white {
@@ -51,5 +52,28 @@
 }
 
 .searchBar:focus {
-  box-shadow: 0 0 0 3px rgba(22, 25, 27, 0.6);
+  box-shadow: 10 0 0 6px rgba(101, 233, 13, 0.6);
+}
+/* Archivo styles.css o el archivo CSS correspondiente */
+
+.placeholder-left-align::placeholder {
+  text-align: left;
+}
+.container {
+  background-color: white;
+  padding: 2rem;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); /* Sombra */
+  width: 100%;
+  border: 2px solid #E5E7EB; /* Borde de 2px de color gris claro */
+  border-radius: 0.5rem; /* Bordes redondeados */
+  text-align: center;
+  transition: background-color 0.3s ease; /* Transición suave para el efecto hover */
+}
+/* Efecto de resaltado cuando se pasa el cursor */
+.container:hover {
+  background-color: #f0f0f0; /* Color de fondo más claro al pasar el cursor */
+}
+/* Margen superior para separar los elementos */
+.mt-3 {
+  margin-top: 0.75rem;
 }

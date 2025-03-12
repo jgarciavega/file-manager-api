@@ -58,8 +58,8 @@ export default function Sidebar() {
               <Image
                 src={user.avatar}
                 alt="Usuario"
-                width={100}
-                height={35}
+                width={150}
+                height={15}
                 className="rounded-full border border-gray-500"
               />
               <p className="font-bold text-gray-800">{user.name}</p>
