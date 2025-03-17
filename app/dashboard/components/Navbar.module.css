@@ -75,7 +75,7 @@
   display: absolute;
   padding: 2rem;
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); /* Sombra */
-  width: 100%;
+  width: 101%;
   max-width: 10000px; /* Ancho máximo */
   text-align: center;
   margin: -20 auto; /* Centra el contenedor */
@@ -90,9 +90,9 @@
 
 
 .customBox {
-  border: 2px solid #101112;
+  border: 2px solid #1f30e7;
   border-radius: 20px;
   padding: 1rem;
   background-color: rgb(37, 158, 158);
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  box-shadow: 10 4px 8px rgba(0, 0, 0, 0.1);
 }
