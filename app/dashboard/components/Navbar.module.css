@@ -7,6 +7,12 @@
  background-color: #ffffff; 
 }
 
+.navbar {
+  position: relative; /* Necesario si usas "left" */
+  margin-left: 50px; /* Ajusta según necesites */
+}
+
+
 .searchBar {
   width: 550px;
   left:auto;
@@ -36,44 +42,57 @@
   align-items: center;
 }
 
-.search-and-notification {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-}
-
-.reportes, .pendientes {
-  width: 700px; /* Ajusta el ancho de los cuadros según tus necesidades */
-  margin: 10px;
-}
-
 .user-info {
   margin-bottom: 11rem;
 }
 
-.searchBar:focus {
+.searchInput {
+  width: 100%; /* Ancho completo como predeterminado */
+  max-width: 400px; /* Ajusta este valor según el tamaño deseado */
+  padding: 8px;
+  border: 1px solid black;
+  border-radius: 8px;
+  transition: border-color 0.3s ease-in-out;
+}
+
+.search.hover{
+  border-color: #3b82f6; /* Cambia el color del borde al pasar el cursor */
+
+}
+
+.searchBarIput:focus {
   box-shadow: 10 0 0 6px rgba(101, 233, 13, 0.6);
+  border-color: #3b82f6; /* Cambia el color del borde al enfocar */
+  outline: none; /* Quita el borde por defecto */
 }
 /* Archivo styles.css o el archivo CSS correspondiente */
 
 .placeholder-left-align::placeholder {
   text-align: left;
+  
 }
 .container {
-  background-color: white;
+  display: absolute;
   padding: 2rem;
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); /* Sombra */
   width: 100%;
-  border: 2px solid #E5E7EB; /* Borde de 2px de color gris claro */
-  border-radius: 0.5rem; /* Bordes redondeados */
+  max-width: 10000px; /* Ancho máximo */
   text-align: center;
+  margin: -20 auto; /* Centra el contenedor */
   transition: background-color 0.3s ease; /* Transición suave para el efecto hover */
 }
-/* Efecto de resaltado cuando se pasa el cursor */
-.container:hover {
-  background-color: #f0f0f0; /* Color de fondo más claro al pasar el cursor */
-}
+
+
 /* Margen superior para separar los elementos */
 .mt-3 {
-  margin-top: 0.75rem;
+  margin-top: 1.75rem;
+}
+
+
+.customBox {
+  border: 2px solid #101112;
+  border-radius: 20px;
+  padding: 1rem;
+  background-color: rgb(37, 158, 158);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
 }
