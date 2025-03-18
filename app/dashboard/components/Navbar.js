@@ -21,9 +21,9 @@ export default function Navbar({ user }) {
         </div>
       </div>
 
-      <div className="navbar flex items-center justify-between w-full bg-[#fff] shadow-md">
+      <div className="navbar-logo flex items-center justify-start">
         {/* Logo */}
-        <div className="navbar-logo">
+        <div className="navbar-logo flex items-left justify-start">
           <Image
             src="/api.jpg"
             alt="API-BCS Logo"

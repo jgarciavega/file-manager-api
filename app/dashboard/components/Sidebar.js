@@ -71,7 +71,7 @@ export default function Sidebar() {
                 </div>
               )}
             </div>
-            <h1 className="text-2xl font-semibold text-gray-800 mb-4">Menú</h1>
+            <h1 className="text-2xl font-semibold text-gray-800 mb-4"></h1>
             <ul className="space-y-4">
               <li className="font-bold text-gray-800">
                 <a
