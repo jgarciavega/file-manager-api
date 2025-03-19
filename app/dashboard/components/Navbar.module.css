@@ -9,17 +9,19 @@
 
 .navbar-logo{
   display: flex;
-  align-items: center;
-  justify-content: flex-start;
-  padding-left: 20px;
-  left: 10px;
- position: absolute;
+  align-items:center;
+  justify-content: flex-start; /* Alinea el logo hacia la izquierda */
+  padding-left: 0; /* Elimina cualquier espacio adicional a la izquierda */
+  margin-left: 0; /* Asegúrate de que no haya márgenes extra */
 }
 
-
 .navbar {
-  position: relative; /* Necesario si usas "left" */
-  margin-left: 50px; /* Ajusta según necesites */
+  position: absolute; /* Necesario si usas "left" */
+  margin-left: 270px;  /*Ajusta según necesites */
+  z-index: 2px;
+  padding: 0px;
+  left: 0px;
+
 }
 
 
