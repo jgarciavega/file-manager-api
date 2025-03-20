@@ -4,31 +4,40 @@
   height: 1%;
  margin: 10px;
  padding:10px;
- background-color: #ffffff; 
+ background-color: #ffffff;
 }
 
-.navbar-logo{
-  display: flex;
-  align-items:center;
-  justify-content: flex-start; /* Alinea el logo hacia la izquierda */
-  padding-left: 0; /* Elimina cualquier espacio adicional a la izquierda */
-  margin-left: 0; /* Asegúrate de que no haya márgenes extra */
-}
+/* 🔹 Mueve el logo completamente a la izquierda */
 
-.navbar {
-  position: absolute; /* Necesario si usas "left" */
-  margin-left: 270px;  /*Ajusta según necesites */
-  z-index: 2px;
-  padding: 0px;
-  left: 0px;
-
-}
-
-
-.searchBar {
-  width: 550px;
+  .navbar-logo {
+    position: absolute; /* 🔹 Se mueve a una posición específica */
+    left: 20px; /* 🔹 Lo mueve bien pegado a la izquierda */
+    top: 10px; /* 🔹 Ajusta su altura para que no se desplace arriba */
+    display: flex;
+    align-items: center;
+    justify-content: flex-start;
+    width: 300px; /* 🔹 Asegura un buen ancho para los logos */
+  }
   
+  .navbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between; /* 🔹 Mantiene el balance de elementos */
+    padding: 10px 20px;
+    width: 100%;
+    position: relative;
+  }
+  
+
+/* 🔹 Ajuste del buscador para centrarlo correctamente */
+.searchBar {
+  width: 600px; /* Se agranda */
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%); /* Lo centra en la pantalla */
 }
+
+
 .relative {
   position: relative;
   
@@ -57,13 +66,14 @@
   margin-bottom: 11rem;
 }
 
+/* 🔹 Ajuste del input dentro del buscador */
 .searchInput {
-  width: 100%; /* Ancho completo como predeterminado */
-  max-width: 400px; /* Ajusta este valor según el tamaño deseado */
-  padding: 8px;
+  width: 100%;
+  max-width: 500px;
+  padding: 10px;
   border: 1px solid black;
   border-radius: 8px;
-  transition: border-color 0.3s ease-in-out;
+  text-align: left;
 }
 
 .search.hover{

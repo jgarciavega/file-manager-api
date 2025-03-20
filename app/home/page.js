@@ -20,6 +20,7 @@ export default function Home() {
    // Función para alternar estado del sidebar
    const toggleSidebar = () => setSidebarCollapsed(prev => !prev);
 
+   
   return (
     <div className={`flex h-screen ${styles.background}`}>
       {/* Sidebar recibe nuevo prop "isSidebarCollapsed" */}

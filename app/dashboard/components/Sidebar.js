@@ -69,7 +69,6 @@ export default function Sidebar({ user, isSidebarCollapsed }) {
           isSidebarCollapsed ? styles["sidebar-collapsed"] : ""
         }`}
       >
-     
         {!isSidebarCollapsed && (
           <>
             <h1 className="text-2xl font-semibold text-gray-500 mb-4"> </h1>
