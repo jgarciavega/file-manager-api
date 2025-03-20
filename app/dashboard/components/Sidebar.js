@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import styles from "./Sidebar.module.css";
 import Image from "next/image";
 import Swal from "sweetalert2";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
@@ -13,11 +14,16 @@ import {
   faFileAlt,
   faTasks,
   faSignOutAlt,
+  faCog,
+  faChartBar,
+  faThumbtack,
+  faBoxes,
+  faFolderTree,
+  faFileLines,
 } from "@fortawesome/free-solid-svg-icons";
-import styles from "./Sidebar.module.css";
+
 
 export default function Sidebar({ user, isSidebarCollapsed }) {
-  
   const [openMenus, setOpenMenus] = useState([]);
   const [isUserInfoOpen, setUserInfoOpen] = useState(false);
 
@@ -30,13 +36,14 @@ export default function Sidebar({ user, isSidebarCollapsed }) {
 
   // Colapsar Sidebar
   const toggleSidebar = () => {
-    setSidebarCollapsed(!isSidebarCollapsed);
+    isSidebarCollapsed(!isSidebarCollapsed);
     if (!isSidebarCollapsed) setOpenMenus([]);
   };
 
   // Mostrar información usuario
   const toggleUserInfo = () => {
     setUserInfoOpen(!isUserInfoOpen);
+    console.log("Estado de isUserInfoOpen:", !isUserInfoOpen);
   };
 
   useEffect(() => {
@@ -56,7 +63,7 @@ export default function Sidebar({ user, isSidebarCollapsed }) {
       cancelButtonText: "Cancelar",
     }).then((result) => {
       if (result.isConfirmed) {
-        // Aquí colocas tu lógica de cierre de sesión real
+        //cierre de sesión real
         console.log("Sesión cerrada");
       }
     });
@@ -71,25 +78,29 @@ export default function Sidebar({ user, isSidebarCollapsed }) {
       >
         {!isSidebarCollapsed && (
           <>
-            <h1 className="text-2xl font-semibold text-gray-500 mb-4"> </h1>
+            <h1 className="text-3xl font-semibold text-gray-800 mb-4"> </h1>
             <ul className="space-y-4">
               {/* Gestión de archivos */}
-              <li className="font-bold text-gray-800">
+              <li className="font-bold text-red-800">
                 <a
                   onClick={() => toggleMenu("file")}
                   className="flex items-center justify-between cursor-pointer"
                 >
                   <div>
-                    <FontAwesomeIcon icon={faFileAlt} className="mr-2" />{" "}
+                    <FontAwesomeIcon
+                      icon={faBoxes}
+                      className="mr-2 text-blue-400"
+                      size="2x"
+                    />{" "}
                     Gestión de archivos
                   </div>
                   <span>{openMenus.includes("file") ? "−" : "+"}</span>
                 </a>
                 {openMenus.includes("file") && (
                   <ul
-                    className={`ml-6 mt-2 space-y-2 ${styles["sub-menu"]} ${
-                      openMenus.includes("file") ? styles["open"] : ""
-                    }`}
+                    className={`ml-6 text-violet-500 mt-2 space-y-2 ${
+                      styles["sub-menu"]
+                    } ${openMenus.includes("file") ? styles["open"] : ""}`}
                   >
                     <li>
                       <FontAwesomeIcon icon={faUpload} className="mr-2" /> Subir
@@ -112,22 +123,26 @@ export default function Sidebar({ user, isSidebarCollapsed }) {
               </li>
 
               {/* Tareas Pendientes */}
-              <li className="font-bold text-gray-800">
+              <li className="font-bold text-red-800">
                 <a
                   onClick={() => toggleMenu("task")}
                   className="flex items-center justify-between cursor-pointer"
                 >
                   <div>
-                    <FontAwesomeIcon icon={faTasks} className="mr-2" /> Tareas
-                    Pendientes
+                    <FontAwesomeIcon
+                      icon={faThumbtack}
+                      className="mr-2 text-blue-400"
+                      size="2x"
+                    />{" "}
+                    Tareas Pendientes
                   </div>
                   <span>{openMenus.includes("task") ? "−" : "+"}</span>
                 </a>
                 {openMenus.includes("task") && (
                   <ul
-                    className={`ml-6 mt-2 space-y-2 ${styles["sub-menu"]} ${
-                      openMenus.includes("task") ? styles["open"] : ""
-                    }`}
+                    className={`ml-6 mt-2 text-violet-500 space-y-2 ${
+                      styles["sub-menu"]
+                    } ${openMenus.includes("task") ? styles["open"] : ""}`}
                   >
                     <li>
                       <FontAwesomeIcon icon={faFileAlt} className="mr-2" />{" "}
@@ -140,25 +155,28 @@ export default function Sidebar({ user, isSidebarCollapsed }) {
                   </ul>
                 )}
               </li>
-              
 
               {/* Consultas & Reportes */}
-              <li className="font-bold text-gray-800">
+              <li className="font-bold text-red-800">
                 <a
                   onClick={() => toggleMenu("reports")}
                   className="flex items-center justify-between cursor-pointer"
                 >
                   <div>
-                    <FontAwesomeIcon icon={faTasks} className="mr-2" />{" "}
+                    <FontAwesomeIcon
+                      icon={faFileLines}
+                      className="mr-2 text-blue-400"
+                      size="2x"
+                    />
                     Consultas & Reportes
                   </div>
                   <span>{openMenus.includes("reports") ? "−" : "+"}</span>
                 </a>
                 {openMenus.includes("reports") && (
                   <ul
-                    className={`ml-6 mt-2 space-y-2 ${styles["sub-menu"]} ${
-                      openMenus.includes("reports") ? styles["open"] : ""
-                    }`}
+                    className={`ml-6 mt-2 text-violet-500 space-y-2 ${
+                      styles["sub-menu"]
+                    } ${openMenus.includes("reports") ? styles["open"] : ""}`}
                   >
                     <li>
                       <FontAwesomeIcon icon={faHistory} className="mr-2" />{" "}
@@ -173,22 +191,26 @@ export default function Sidebar({ user, isSidebarCollapsed }) {
               </li>
 
               {/* Configuración & Ayuda */}
-              <li className="font-bold text-gray-800">
+              <li className="font-bold text-red-800">
                 <a
                   onClick={() => toggleMenu("settings")}
                   className="flex items-center justify-between cursor-pointer"
                 >
                   <div>
-                    <FontAwesomeIcon icon={faTasks} className="mr-2" />{" "}
+                    <FontAwesomeIcon
+                      icon={faCog}
+                      className="mr-2 text-blue-400"
+                      size="2x"
+                    />{" "}
                     Configuración & Ayuda
                   </div>
                   <span>{openMenus.includes("settings") ? "−" : "+"}</span>
                 </a>
                 {openMenus.includes("settings") && (
                   <ul
-                    className={`ml-6 mt-2 space-y-2 ${styles["sub-menu"]} ${
-                      openMenus.includes("settings") ? styles["open"] : ""
-                    }`}
+                    className={`ml-6 mt-2 text-violet-500 space-y-2 ${
+                      styles["sub-menu"]
+                    } ${openMenus.includes("settings") ? styles["open"] : ""}`}
                   >
                     <li>
                       <FontAwesomeIcon icon={faFileAlt} className="mr-2" />{" "}
@@ -203,23 +225,27 @@ export default function Sidebar({ user, isSidebarCollapsed }) {
 
               {/* Cerrar sesión */}
               <li
-                className="font-bold cursor-pointer mt-12 text-gray-800"
+                className="font-bold cursor-pointer mt-12 text-gray-500"
                 onClick={handleLogoutClick}
               >
-                <FontAwesomeIcon icon={faSignOutAlt} className="mr-2" /> Cerrar
-                sesión
+                <FontAwesomeIcon
+                  icon={faSignOutAlt}
+                  className="mr-2 text-red-500"
+                  size="2x"
+                />{" "}
+                Cerrar sesión
               </li>
             </ul>
-            
+
             /*Avatar */
             <div
-              className={`${styles["user-info"]} mt-12 flex items-center gap-3`}
+              className={`${styles["user-info"]} mt-20 flex items-center gap-3`}
               onClick={toggleUserInfo}
             >
               <Image
                 src={user.avatar}
                 alt="Usuario"
-                width={100}
+                width={120}
                 height={100}
                 className="rounded-full border border-gray-800"
               />
@@ -230,10 +256,10 @@ export default function Sidebar({ user, isSidebarCollapsed }) {
                     <strong>Nombre:</strong> {user.name}
                   </p>
                   <p>
-                    <strong>Área de Trabajo:</strong> {user.workArea}
+                    <strong>Área :</strong> {user.workArea}
                   </p>
                   <p>
-                    <strong>Puesto:</strong> {user.position}
+                    <strong>ADM:</strong> {user.position}
                   </p>
                 </div>
               )}
@@ -243,4 +269,4 @@ export default function Sidebar({ user, isSidebarCollapsed }) {
       </aside>
     </div>
   );
-};
+}

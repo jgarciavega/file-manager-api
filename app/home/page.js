@@ -8,26 +8,25 @@ import styles from './HomePage.module.css';
 export default function Home() {
   const user = {
     name: "Julio Rubio",
-    avatar: "/av3.webp",
+    avatar: "/julio-rubio.jpg",
     workArea: "Contraloria",
-    position: "Jefe",
+    position: "749",
     
   };
 
-   // Estado para controlar claramente si el sidebar está colapsado o no
+   // Estado de sidebar colapsado o no
    const [isSidebarCollapsed, setSidebarCollapsed] = useState(false);
-
-   // Función para alternar estado del sidebar
+   // alternar estado del sidebar
    const toggleSidebar = () => setSidebarCollapsed(prev => !prev);
 
-   
   return (
     <div className={`flex h-screen ${styles.background}`}>
-      {/* Sidebar recibe nuevo prop "isSidebarCollapsed" */}
+      {/* recibe nuevo prop "isSidebarCollapsed" */}
       <Sidebar user={user} isSidebarCollapsed={isSidebarCollapsed} />
 
       {/* Main Content */}
-      <div className="flex flex-col flex-1"> {/* Cambia "flex-2" por "flex-1" */}
+      <div className="flex flex-col flex-1"> 
+
         {/* Navbar recibe nueva función para controlar sidebar */}
         <Navbar user={user} toggleSidebar={toggleSidebar} />
 

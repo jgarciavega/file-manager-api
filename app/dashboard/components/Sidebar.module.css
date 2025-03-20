@@ -1,6 +1,6 @@
 .sidebar-container {
-  margin-top: 210px; /* Corregido */
-  height: 140vh;
+  margin-top: 310px; /* Corregido */
+  height: 240vh;
   display: flex;
   flex-direction: column;
 }
@@ -13,12 +13,9 @@
   height: 100%;
   padding: 25px;
   flex-direction: column;
-  background-color: #ffffff;
+  background-color: #ffff;
   overflow-y: auto;
   transition: width 0.3s ease;
-
- 
-
 }
 
 .sidebar-collapsed {
@@ -61,17 +58,18 @@
 }
 
 .user-details {
-  display: none;
+  display: block !important;
   position: absolute;
-  top: 100%;
-  left: 0;
-  background-color: rgb(229, 189, 189);
-  border: 1px solid #ddd;
-  padding: 10px;
-  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+  background-color: #89adf5;
+  padding: 15px;
+  border-radius: 28px;
+  box-shadow: 0 2px 8px rgba(255,255,0);
+  top: 100px; /* Ajusta según la posición del avatar */
+  left: 50%;
+  transform: translateX(-50%);
   z-index: 10;
-  color: #000;
 }
+
 
 .user-info:hover .user-details {
   display: block;
