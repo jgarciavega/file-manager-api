@@ -18,17 +18,16 @@ export default function Navbar({ user, toggleSidebar }) {
   return (
     <>
       {/* 🔹 NAVBAR */}
-      <nav className="relative flex items-center justify-between px-4 py-12 bg-white shadow-md w-full h-64">
-        {/* 🔹 Contenedor del Logo y Título */}
-        <div className="flex flex-col items-start">
+      <nav className="relative flex items-center justify-between mr-auto px-4 py-12 bg-white shadow-md w-full h-64">
+        <div className="flex flex-col items-start ml-8">
        
-          {/* 🔹 Título */}
+          {/*Título */}
           <div>
-            <h1 className="text-2xl font-extrabold text-red-800 mt-1 tracking-wide">
-              <p>Gestor de Archivos</p>
+          <h1 className="!text-4xl font-extrabold text-red-800 mt-12 tracking-wide">
+          <p>GESTOR DE ARCHIVOS</p>
             </h1>
 
-            <h1 className="text-2xl font-extrabold text-blue-950 mt-2 tracking-wide">
+            <h1 className="!text-3xl font-extrabold text-blue-950 mt-2 tracking-wide">
               <p>Puerto de Pichilingue </p>
             </h1>
           </div>
@@ -64,9 +63,9 @@ export default function Navbar({ user, toggleSidebar }) {
         {/* 🔹 Botón Hamburguesa */}
         <button
           onClick={toggleSidebar}
-          className="text-blue-800 text-3xl p-3 hover:bg-gray-200 rounded-md transition"
+          className="text-blue-800 ml-auto text-3xl p-4 hover:bg-gray-400 rounded-md transition"
         >
-          <FontAwesomeIcon icon={faBars} />
+          <FontAwesomeIcon size="2xl"  icon={faBars} />
         </button>
       </nav>
 

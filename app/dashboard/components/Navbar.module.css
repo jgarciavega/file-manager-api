@@ -30,12 +30,12 @@
   }
   
 
-/* 🔹 Ajuste del buscador para centrarlo correctamente */
+
 .searchBar {
   width: 600px; /* Se agranda */
   position: absolute;
   left: 50%;
-  transform: translateX(-50%); /* Lo centra en la pantalla */
+  transform: translateX(-50%); 
 }
 
 
@@ -77,7 +77,7 @@
   text-align: left;
 }
 
-.search.hover{
+.search-hover{
   border-color: #3b82f6; /* Cambia el color del borde al pasar el cursor */
 
 }
