@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useState, useEffect } from "react";
 import styles from "./Sidebar.module.css";
 import Image from "next/image";
@@ -95,12 +96,20 @@ export default function Sidebar({ user, isSidebarCollapsed }) {
                 </a>
                 <span>{openMenus.includes("file") ? "−" : "+"}</span>
               </li>
+
               {openMenus.includes("file") && (
                 <ul className="pl-10 text-violet-500 space-y-3">
-                  <li className="flex items-center">
-                    <FontAwesomeIcon icon={faUpload} className="mr-2" /> Subir
-                    Documentos
+                  <li>
+                    <Link href="/dashboard/upload">
+                      <FontAwesomeIcon
+                        icon={faUpload}
+                        className="mr-2 text-blue-400"
+                        size="1x"
+                      />
+                      Subir Documento
+                    </Link>
                   </li>
+
                   <li className="flex items-center">
                     <FontAwesomeIcon icon={faCheck} className="mr-2" /> Estado
                     del Documento

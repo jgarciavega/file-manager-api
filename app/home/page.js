@@ -5,6 +5,9 @@ import { useState } from "react";
 import Image from "next/image"; 
 import styles from './HomePage.module.css';
 
+
+
+
 export default function Home() {
   const user = {
     name: "Julio Rubio",
@@ -13,6 +16,17 @@ export default function Home() {
     position: "749",
     
   };
+
+  
+
+function UploadPage() {
+  return (
+    <div className="p-6">
+      <UploadFiles />
+    </div>
+  );
+}
+
 
    // Estado de sidebar colapsado o no
    const [isSidebarCollapsed, setSidebarCollapsed] = useState(false);
