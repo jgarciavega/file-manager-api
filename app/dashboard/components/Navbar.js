@@ -18,13 +18,10 @@ export default function Navbar({ user, toggleSidebar }) {
   return (
     <>
       {/* 🔹 NAVBAR */}
-      <nav className="relative flex items-center justify-between px-4 py-4 bg-white shadow-md w-full h-50">
+      <nav className="relative flex items-center justify-between px-4 py-12 bg-white shadow-md w-full h-64">
         {/* 🔹 Contenedor del Logo y Título */}
         <div className="flex flex-col items-start">
-          {/* 🔹 Logos */}
-          <div className="navbar-logo">
-            <Image src="/api.jpg" alt="API-BCS Logo" width={550} height={55} />
-          </div>
+       
           {/* 🔹 Título */}
           <div>
             <h1 className="text-2xl font-extrabold text-red-800 mt-1 tracking-wide">

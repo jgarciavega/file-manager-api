@@ -1,7 +1,7 @@
 /* module.css de Navbar*/
 .navbar body{
   width: 100%;
-  height: 1%;
+  height: 11%;
  margin: 10px;
  padding:10px;
  background-color: #ffffff;
@@ -20,6 +20,7 @@
   }
   
   .navbar {
+    margin-top: 10px; /* Ajusta el valor según necesites */
     display: flex;
     align-items: center;
     justify-content: space-between; /* 🔹 Mantiene el balance de elementos */

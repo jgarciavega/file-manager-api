@@ -1,21 +1,37 @@
 .sidebar-container {
-  margin-top: 310px; /* Corregido */
+  position: relative;;
   height: 240vh;
   display: flex;
   flex-direction: column;
+  margin-top: 50; /* Ajusta esto */
+  padding-top: 10; /* Asegura que no haya espacio extra */
+  
 }
 
 .sidebar {
-  position:relative;
-  margin-left: 10px;
+  position: relative;
+  margin-left: 1px;
   display: flex;
-  width: 250px;
+  width: 400px;
   height: 100%;
   padding: 25px;
   flex-direction: column;
   background-color: #ffff;
   overflow-y: auto;
   transition: width 0.3s ease;
+ 
+}
+
+.sidebar-logo {
+  width: 150%; /* O un tamaño específico como 250px */
+  height: auto; /* Para mantener la proporción */
+  display: flex;
+  justify-content: center; /* Centra el logo */
+  align-items: center;
+  margin-top: -101px; /* Ajusta si es necesario */
+  position: relative;
+  z-index: 100;
+  
 }
 
 .sidebar-collapsed {
@@ -39,12 +55,20 @@
   z-index: 10;
 }
 
-.sub-menu {
+.menu-icon:hover {
+  color: #1b5ee4;
+}
+.sidebar-menu  {
+  margin-top: 50px;
+ padding: top 10px;/* espacio a la derecha del ícono */
+}
+
+.sub-menu item {
   overflow: hidden;
   max-height: 0;
   transition: max-height 0.5s ease-in-out;
   list-style-type: none;
-  padding: 0;
+  padding-left: 15; 
 }
 
 .open {

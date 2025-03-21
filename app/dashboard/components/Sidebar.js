@@ -22,35 +22,29 @@ import {
   faFileLines,
 } from "@fortawesome/free-solid-svg-icons";
 
-
 export default function Sidebar({ user, isSidebarCollapsed }) {
   const [openMenus, setOpenMenus] = useState([]);
   const [isUserInfoOpen, setUserInfoOpen] = useState(false);
 
-  // Abrir/cerrar menús
   const toggleMenu = (menu) => {
     setOpenMenus((prev) =>
       prev.includes(menu) ? prev.filter((m) => m !== menu) : [...prev, menu]
     );
   };
 
-  // Colapsar Sidebar
   const toggleSidebar = () => {
     isSidebarCollapsed(!isSidebarCollapsed);
     if (!isSidebarCollapsed) setOpenMenus([]);
   };
 
-  // Mostrar información usuario
   const toggleUserInfo = () => {
     setUserInfoOpen(!isUserInfoOpen);
-    console.log("Estado de isUserInfoOpen:", !isUserInfoOpen);
   };
 
   useEffect(() => {
     if (isSidebarCollapsed) setOpenMenus([]);
   }, [isSidebarCollapsed]);
 
-  /*confirmacion de cierre de sesion */
   const handleLogoutClick = () => {
     Swal.fire({
       title: "Cerrar sesión",
@@ -63,7 +57,6 @@ export default function Sidebar({ user, isSidebarCollapsed }) {
       cancelButtonText: "Cancelar",
     }).then((result) => {
       if (result.isConfirmed) {
-        //cierre de sesión real
         console.log("Sesión cerrada");
       }
     });
@@ -78,154 +71,132 @@ export default function Sidebar({ user, isSidebarCollapsed }) {
       >
         {!isSidebarCollapsed && (
           <>
-            <h1 className="text-3xl font-semibold text-gray-800 mb-4"> </h1>
-            <ul className="space-y-4">
-              {/* Gestión de archivos */}
-              <li className="font-bold text-red-800">
+            <div className="sidebar-logo">
+              <Image
+                src="/api.jpg"
+                alt="API-BCS Logo"
+                width={650}
+                height={10}
+                priority={true}
+              />
+            </div>
+            <ul className="space-y-10 mt-36">
+              <li className="font-bold text-red-800 flex items-center">
+                <FontAwesomeIcon
+                  icon={faBoxes}
+                  className="mr-3 text-blue-400"
+                  size="2x"
+                />
                 <a
                   onClick={() => toggleMenu("file")}
-                  className="flex items-center justify-between cursor-pointer"
+                  className="cursor-pointer flex-grow"
                 >
-                  <div>
-                    <FontAwesomeIcon
-                      icon={faBoxes}
-                      className="mr-2 text-blue-400"
-                      size="2x"
-                    />{" "}
-                    Gestión de archivos
-                  </div>
-                  <span>{openMenus.includes("file") ? "−" : "+"}</span>
+                  Gestión de archivos
                 </a>
-                {openMenus.includes("file") && (
-                  <ul
-                    className={`ml-6 text-violet-500 mt-2 space-y-2 ${
-                      styles["sub-menu"]
-                    } ${openMenus.includes("file") ? styles["open"] : ""}`}
-                  >
-                    <li>
-                      <FontAwesomeIcon icon={faUpload} className="mr-2" /> Subir
-                      Documentos
-                    </li>
-                    <li>
-                      <FontAwesomeIcon icon={faCheck} className="mr-2" /> Estado
-                      del Documento
-                    </li>
-                    <li>
-                      <FontAwesomeIcon icon={faStar} className="mr-2" />{" "}
-                      Favoritos/Marcados
-                    </li>
-                    <li>
-                      <FontAwesomeIcon icon={faHistory} className="mr-2" />{" "}
-                      Historial de Consultas
-                    </li>
-                  </ul>
-                )}
+                <span>{openMenus.includes("file") ? "−" : "+"}</span>
               </li>
+              {openMenus.includes("file") && (
+                <ul className="pl-10 text-violet-500 space-y-3">
+                  <li className="flex items-center">
+                    <FontAwesomeIcon icon={faUpload} className="mr-2" /> Subir
+                    Documentos
+                  </li>
+                  <li className="flex items-center">
+                    <FontAwesomeIcon icon={faCheck} className="mr-2" /> Estado
+                    del Documento
+                  </li>
+                  <li className="flex items-center">
+                    <FontAwesomeIcon icon={faStar} className="mr-2" />{" "}
+                    Favoritos/Marcados
+                  </li>
+                  <li className="flex items-center">
+                    <FontAwesomeIcon icon={faHistory} className="mr-2" />{" "}
+                    Historial de Consultas
+                  </li>
+                </ul>
+              )}
 
-              {/* Tareas Pendientes */}
-              <li className="font-bold text-red-800">
+              <li className="font-bold text-red-800 flex items-center">
+                <FontAwesomeIcon
+                  icon={faThumbtack}
+                  className="mr-3 text-blue-400"
+                  size="2x"
+                />
                 <a
                   onClick={() => toggleMenu("task")}
-                  className="flex items-center justify-between cursor-pointer"
+                  className="cursor-pointer flex-grow"
                 >
-                  <div>
-                    <FontAwesomeIcon
-                      icon={faThumbtack}
-                      className="mr-2 text-blue-400"
-                      size="2x"
-                    />{" "}
-                    Tareas Pendientes
-                  </div>
-                  <span>{openMenus.includes("task") ? "−" : "+"}</span>
+                  Tareas Pendientes
                 </a>
-                {openMenus.includes("task") && (
-                  <ul
-                    className={`ml-6 mt-2 text-violet-500 space-y-2 ${
-                      styles["sub-menu"]
-                    } ${openMenus.includes("task") ? styles["open"] : ""}`}
-                  >
-                    <li>
-                      <FontAwesomeIcon icon={faFileAlt} className="mr-2" />{" "}
-                      Documentos Pendientes de Validación
-                    </li>
-                    <li>
-                      <FontAwesomeIcon icon={faCheck} className="mr-2" />{" "}
-                      Verificación de Cumplimiento LEA-BCS
-                    </li>
-                  </ul>
-                )}
+                <span>{openMenus.includes("task") ? "−" : "+"}</span>
               </li>
+              {openMenus.includes("task") && (
+                <ul className="pl-10 text-violet-500 space-y-3">
+                  <li className="flex items-center">
+                    <FontAwesomeIcon icon={faFileAlt} className="mr-2" />{" "}
+                    Documentos Pendientes de Validación
+                  </li>
+                  <li className="flex items-center">
+                    <FontAwesomeIcon icon={faCheck} className="mr-2" />{" "}
+                    Verificación de Cumplimiento LEA-BCS
+                  </li>
+                </ul>
+              )}
 
-              {/* Consultas & Reportes */}
-              <li className="font-bold text-red-800">
+              <li className="font-bold text-red-800 flex items-center">
+                <FontAwesomeIcon
+                  icon={faChartBar}
+                  className="mr-3 text-blue-400"
+                  size="2x"
+                />
                 <a
                   onClick={() => toggleMenu("reports")}
-                  className="flex items-center justify-between cursor-pointer"
+                  className="cursor-pointer flex-grow"
                 >
-                  <div>
-                    <FontAwesomeIcon
-                      icon={faFileLines}
-                      className="mr-2 text-blue-400"
-                      size="2x"
-                    />
-                    Consultas & Reportes
-                  </div>
-                  <span>{openMenus.includes("reports") ? "−" : "+"}</span>
+                  Consultas & Reportes
                 </a>
-                {openMenus.includes("reports") && (
-                  <ul
-                    className={`ml-6 mt-2 text-violet-500 space-y-2 ${
-                      styles["sub-menu"]
-                    } ${openMenus.includes("reports") ? styles["open"] : ""}`}
-                  >
-                    <li>
-                      <FontAwesomeIcon icon={faHistory} className="mr-2" />{" "}
-                      Historial de Consultas
-                    </li>
-                    <li>
-                      <FontAwesomeIcon icon={faCheck} className="mr-2" />{" "}
-                      Informes
-                    </li>
-                  </ul>
-                )}
+                <span>{openMenus.includes("reports") ? "−" : "+"}</span>
               </li>
+              {openMenus.includes("reports") && (
+                <ul className="pl-10 text-violet-500 space-y-3">
+                  <li className="flex items-center">
+                    <FontAwesomeIcon icon={faHistory} className="mr-2" />{" "}
+                    Historial de Consultas
+                  </li>
+                  <li className="flex items-center">
+                    <FontAwesomeIcon icon={faCheck} className="mr-2" /> Informes
+                  </li>
+                </ul>
+              )}
 
-              {/* Configuración & Ayuda */}
-              <li className="font-bold text-red-800">
+              <li className="font-bold text-red-800 flex items-center">
+                <FontAwesomeIcon
+                  icon={faCog}
+                  className="mr-3 text-blue-400"
+                  size="2x"
+                />
                 <a
                   onClick={() => toggleMenu("settings")}
-                  className="flex items-center justify-between cursor-pointer"
+                  className="cursor-pointer flex-grow"
                 >
-                  <div>
-                    <FontAwesomeIcon
-                      icon={faCog}
-                      className="mr-2 text-blue-400"
-                      size="2x"
-                    />{" "}
-                    Configuración & Ayuda
-                  </div>
-                  <span>{openMenus.includes("settings") ? "−" : "+"}</span>
+                  Configuración & Ayuda
                 </a>
-                {openMenus.includes("settings") && (
-                  <ul
-                    className={`ml-6 mt-2 text-violet-500 space-y-2 ${
-                      styles["sub-menu"]
-                    } ${openMenus.includes("settings") ? styles["open"] : ""}`}
-                  >
-                    <li>
-                      <FontAwesomeIcon icon={faFileAlt} className="mr-2" />{" "}
-                      Ajustes
-                    </li>
-                    <li>
-                      <FontAwesomeIcon icon={faCheck} className="mr-2" /> Ayuda
-                    </li>
-                  </ul>
-                )}
+                <span>{openMenus.includes("settings") ? "−" : "+"}</span>
               </li>
+              {openMenus.includes("settings") && (
+                <ul className="pl-10 text-violet-500 space-y-3">
+                  <li className="flex items-center">
+                    <FontAwesomeIcon icon={faFileAlt} className="mr-2" />{" "}
+                    Ajustes
+                  </li>
+                  <li className="flex items-center">
+                    <FontAwesomeIcon icon={faCheck} className="mr-2" /> Ayuda
+                  </li>
+                </ul>
+              )}
 
-              {/* Cerrar sesión */}
               <li
-                className="font-bold cursor-pointer mt-12 text-gray-500"
+                className="font-bold cursor-pointer mt-12 text-gray-500 flex items-center"
                 onClick={handleLogoutClick}
               >
                 <FontAwesomeIcon
@@ -236,7 +207,6 @@ export default function Sidebar({ user, isSidebarCollapsed }) {
                 Cerrar sesión
               </li>
             </ul>
-
             /*Avatar */
             <div
               className={`${styles["user-info"]} mt-20 flex items-center gap-3`}
@@ -249,7 +219,7 @@ export default function Sidebar({ user, isSidebarCollapsed }) {
                 height={100}
                 className="rounded-full border border-gray-800"
               />
-              <p className=" font-bold text-blue-800 mt-2">{user.name}</p>
+              <p className=" font-bold text-black-800 mt-2">{user.name}</p>
               {isUserInfoOpen && (
                 <div className={styles["user-details"]}>
                   <p>
