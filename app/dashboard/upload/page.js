@@ -1,6 +1,7 @@
 "use client";
 
-import UploadFiles from "@/app/dashboard/components/UploadFiles";
+import UploadFiles from "../components/UploadFiles";
+
 
 export default function UploadPage() {
   return (

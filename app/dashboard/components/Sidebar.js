@@ -99,15 +99,15 @@ export default function Sidebar({ user, isSidebarCollapsed }) {
 
               {openMenus.includes("file") && (
                 <ul className="pl-10 text-violet-500 space-y-3">
-                  <li>
-                    <Link href="/dashboard/upload">
+                  <li className="font-bold text-violet-500">
+                    <a href="/dashboard/upload" className="flex items-center">
                       <FontAwesomeIcon
                         icon={faUpload}
                         className="mr-2 text-blue-400"
                         size="1x"
                       />
                       Subir Documento
-                    </Link>
+                    </a>
                   </li>
 
                   <li className="flex items-center">
