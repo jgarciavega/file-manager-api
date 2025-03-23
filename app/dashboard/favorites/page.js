@@ -42,11 +42,10 @@ export default function DocumentStatusPage() {
   };
 
   return (
-
     <div className={`p-6 ${darkMode ? "bg-gray-900 text-white" : "bg-white text-gray-900"}`}>
       {/* Encabezado con ícono de modo y avatar */}
       <div className="flex justify-between items-start mb-6">
-        <Image src="/api.jpg" alt="Logo API" width={320} height={10} />
+        <Image src="/api.jpg" alt="Logo API" width={320} height={50} />
 
         <div className="flex flex-col items-center gap-2 mr-4">
           <button
@@ -71,7 +70,7 @@ export default function DocumentStatusPage() {
       </div>
 
       <h1 className="text-4xl font-bold text-center mb-10 text-gray-600 dark:text-white">
-        Estado de Documentos
+        Favoritos-Marcado
       </h1>
 
       <div className="bg-white dark:bg-gray-800 shadow-md rounded-lg p-6 border border-gray-300 dark:border-gray-600">

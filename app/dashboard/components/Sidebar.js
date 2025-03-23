@@ -124,9 +124,18 @@ export default function Sidebar({ user, isSidebarCollapsed }) {
                     </Link>
                   </li>
 
-                  <li className="flex items-center">
-                    <FontAwesomeIcon icon={faStar} className="mr-2" />{" "}
-                    Favoritos/Marcados
+                  <li className="font-bold text-violet-500">
+                    <Link
+                      href="/dashboard/favorites"
+                      className="flex items-center"
+                    >
+                      <FontAwesomeIcon
+                        icon={faStar}
+                        className="mr-2 text-blue-400"
+                        size="1x"
+                      />
+                      Favoritos
+                    </Link>
                   </li>
                 </ul>
               )}
