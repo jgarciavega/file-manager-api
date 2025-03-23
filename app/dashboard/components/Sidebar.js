@@ -140,32 +140,44 @@ export default function Sidebar({ user, isSidebarCollapsed }) {
                 </ul>
               )}
 
-              <li className="font-bold text-red-800 flex items-center">
-                <FontAwesomeIcon
-                  icon={faThumbtack}
-                  className="mr-3 text-blue-400"
-                  size="2x"
-                />
+              {/* Tareas Pendientes */}
+              <li className="font-bold text-red-800">
                 <a
                   onClick={() => toggleMenu("task")}
-                  className="cursor-pointer flex-grow"
+                  className="flex items-center justify-between cursor-pointer"
                 >
-                  Tareas Pendientes
+                  <div>
+                    <FontAwesomeIcon
+                      icon={faThumbtack}
+                      className="mr-2 text-blue-400"
+                      size="2x"
+                    />{" "}
+                    Tareas Pendientes
+                  </div>
+                  <span>{openMenus.includes("task") ? "−" : "+"}</span>
                 </a>
-                <span>{openMenus.includes("task") ? "−" : "+"}</span>
+
+                {openMenus.includes("task") && (
+                  <ul className="ml-6 mt-2 text-violet-500 space-y-2">
+                    <li className="font-bold text-violet-500">
+                      <Link
+                        href="/dashboard/PendientesDeValidacion"
+                        className="flex items-center hover:text-blue-600 transition"
+                      >
+                        <FontAwesomeIcon
+                          icon={faFileAlt}
+                          className="mr-2 text-blue-400"
+                        />
+                      Pendientes de Validación
+                      </Link>
+                    </li>
+                    <li className="flex items-center">
+                      <FontAwesomeIcon icon={faCheck} className="mr-2" />
+                      Verificación de LEA-BCS
+                    </li>
+                  </ul>
+                )}
               </li>
-              {openMenus.includes("task") && (
-                <ul className="pl-10 text-violet-500 space-y-3">
-                  <li className="flex items-center">
-                    <FontAwesomeIcon icon={faFileAlt} className="mr-2" />{" "}
-                    Documentos Pendientes de Validación
-                  </li>
-                  <li className="flex items-center">
-                    <FontAwesomeIcon icon={faCheck} className="mr-2" />{" "}
-                    Verificación de Cumplimiento LEA-BCS
-                  </li>
-                </ul>
-              )}
 
               <li className="font-bold text-red-800 flex items-center">
                 <FontAwesomeIcon
