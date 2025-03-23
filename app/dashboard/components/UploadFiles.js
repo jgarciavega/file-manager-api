@@ -106,7 +106,11 @@ export default function UploadFiles() {
       </div>
 
       <h1 className="text-3xl font-bold text-center mb-6 text-gray-800">
-        Gestión de Archivos
+        <p className="text-4xl text-blue-600">Gestión de Archivos</p>
+        <div className="flex flex-col items-baseline  mt-2">
+          <a className="text-lg text-gray-600 ">Cargar Documento</a>
+          <a className="text-lg text-red-600 mt-2">Descargar Documento</a>
+        </div>
       </h1>
 
       <div className="bg-white shadow-md rounded-lg p-6 border border-red-200">

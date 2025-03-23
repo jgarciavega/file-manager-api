@@ -110,17 +110,23 @@ export default function Sidebar({ user, isSidebarCollapsed }) {
                     </a>
                   </li>
 
-                  <li className="flex items-center">
-                    <FontAwesomeIcon icon={faCheck} className="mr-2" /> Estado
-                    del Documento
+                  <li className="font-bold text-violet-500">
+                    <Link
+                      href="/dashboard/status"
+                      className="flex items-center"
+                    >
+                      <FontAwesomeIcon
+                        icon={faCheck}
+                        className="mr-2 text-blue-400"
+                        size="1x"
+                      />
+                      Estado del Documento
+                    </Link>
                   </li>
+
                   <li className="flex items-center">
                     <FontAwesomeIcon icon={faStar} className="mr-2" />{" "}
                     Favoritos/Marcados
-                  </li>
-                  <li className="flex items-center">
-                    <FontAwesomeIcon icon={faHistory} className="mr-2" />{" "}
-                    Historial de Consultas
                   </li>
                 </ul>
               )}

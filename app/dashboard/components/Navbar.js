@@ -23,7 +23,7 @@ export default function Navbar({ user, toggleSidebar }) {
        
           {/*Título */}
           <div>
-          <h1 className="!text-4xl font-extrabold text-red-800 mt-12 tracking-wide">
+          <h1 className="!text-2xl font-extrabold text-red-800 mt-12 tracking-wide">
           <p>GESTOR DE ARCHIVOS</p>
             </h1>
 
