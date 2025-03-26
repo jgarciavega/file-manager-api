@@ -29,7 +29,7 @@ function UploadPage() {
 
 
    // Estado de sidebar colapsado o no
-   const [isSidebarCollapsed, setSidebarCollapsed] = useState(false);
+   const [isSidebarCollapsed, setSidebarCollapsed] = useState(true);
    // alternar estado del sidebar
    const toggleSidebar = () => setSidebarCollapsed(prev => !prev);
 

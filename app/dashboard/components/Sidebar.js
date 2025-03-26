@@ -1,5 +1,5 @@
 "use client";
-
+import {useRouter} from "next/navigation";
 import Link from "next/link";
 import { useState, useEffect } from "react";
 import styles from "./Sidebar.module.css";
@@ -24,6 +24,7 @@ import {
 } from "@fortawesome/free-solid-svg-icons";
 
 export default function Sidebar({ user, isSidebarCollapsed }) {
+  const router = useRouter();
   const [openMenus, setOpenMenus] = useState([]);
   const [isUserInfoOpen, setUserInfoOpen] = useState(false);
 
@@ -58,10 +59,12 @@ export default function Sidebar({ user, isSidebarCollapsed }) {
       cancelButtonText: "Cancelar",
     }).then((result) => {
       if (result.isConfirmed) {
-        console.log("Sesión cerrada");
+        // Aquí haces el redirect al login
+        router.push("/");
       }
     });
   };
+
 
   return (
     <div className={styles["sidebar-container"]}>
