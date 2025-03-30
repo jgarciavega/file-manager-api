@@ -1,5 +1,4 @@
 "use client";
-
 import { useState } from "react";
 import Swal from "sweetalert2";
 import Image from "next/image";
@@ -28,10 +27,7 @@ export default function UploadFiles() {
     },
   ]);
 
-  const currentUser = {
-    name: "Julio Rubio",
-    avatar: "/julio-rubio.jpg",
-  };
+  const currentUser = { name: "Julio Rubio", avatar: "/julio-rubio.jpg" };
 
   const handleFileChange = (event) => {
     setSelectedFile(event.target.files[0]);
@@ -42,7 +38,6 @@ export default function UploadFiles() {
       Swal.fire("Error", "Selecciona un archivo antes de subirlo", "warning");
       return;
     }
-
     const reader = new FileReader();
     reader.onload = () => {
       const newFile = {
@@ -53,12 +48,10 @@ export default function UploadFiles() {
         content: reader.result,
         type: selectedFile.type,
       };
-
       setUploadedFiles([...uploadedFiles, newFile]);
       setSelectedFile(null);
       Swal.fire("Éxito", "Archivo subido correctamente", "success");
     };
-
     reader.readAsArrayBuffer(selectedFile);
   };
 
@@ -76,7 +69,9 @@ export default function UploadFiles() {
   };
 
   const handleDownload = (file) => {
-    const blob = new Blob([file.content], { type: file.type || "application/octet-stream" });
+    const blob = new Blob([file.content], {
+      type: file.type || "application/octet-stream",
+    });
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
     a.href = url;
@@ -86,17 +81,31 @@ export default function UploadFiles() {
   };
 
   const handleDelete = (id) => {
-    const confirm = window.confirm("¿Estás seguro de eliminar este archivo?");
-    if (confirm) {
+    const confirmDelete = window.confirm("¿Estás seguro de eliminar este archivo?");
+    if (confirmDelete) {
       setUploadedFiles((prev) => prev.filter((file) => file.id !== id));
     }
   };
 
   return (
-    <div className={`p-6 ${darkMode ? "bg-gray-900 text-white" : "bg-white text-gray-900"}`}>
-      <div className="flex justify-between items-center mb-8 mt-[-20px]">
-        <Image src="/api.jpg" alt="Logo API" width={650} height={60} />
-        <div className="flex flex-col items-center gap-2 mr-4">
+    // Agregamos la clase "dark" cuando darkMode es true para activar las variantes dark:
+    <div
+      className={`p-6 min-h-screen transition-all ${
+        darkMode ? "dark bg-gray-900 text-gray-200" : "bg-white text-gray-900"
+      }`}
+    >
+      {/* Header */}
+      <div className="flex justify-between items-center mb-8">
+        <Image
+          src={darkMode ? "/api-dark23.png" : "/api.jpg"}
+          alt="Logo API"
+          width={650}
+          height={60}
+          className={`transition duration-300 ${
+            darkMode ? "dark-logo" : "light-logo"
+          }`}
+        />
+        <div className="flex flex-col items-center gap-2">
           <button
             onClick={() => setDarkMode(!darkMode)}
             className="text-xl text-gray-700 dark:text-yellow-300 hover:text-black dark:hover:text-white transition"
@@ -108,26 +117,40 @@ export default function UploadFiles() {
             <Image
               src={currentUser.avatar}
               alt="Avatar"
-              width={100}
-              height={50}
+              width={60}
+              height={60}
               className="rounded-full border"
             />
-            <p className="font-semibold text-gray-800 dark:text-white">{currentUser.name}</p>
+            <p className="font-semibold text-gray-800 dark:text-white">
+              {currentUser.name}
+            </p>
           </div>
         </div>
       </div>
 
-      <h1 className="text-3xl font-bold text-center mb-6 text-gray-800 dark:text-white">
-        <p className="text-4xl text-blue-600 dark:text-blue-300">Gestión de Archivos</p>
-        <div className="flex flex-col items-baseline mt-2">
-          <a className="text-lg text-gray-600 dark:text-gray-300">Cargar Documento</a>
-          <a className="text-lg text-red-600 mt-2 dark:text-red-300">Descargar Documento</a>
-        </div>
+      {/* Título */}
+      <h1 className="text-3xl font-bold text-center mb-16 text-blue-600 dark:text-blue-300">
+        Gestión de Archivos
       </h1>
+      <div className="flex flex-col items-center mb-8">
+        <span className="text-2xl text-gray-600 dark:text-gray-300">
+          Cargar Documento
+        </span>
+        <span className="text-2xl text-red-600 mt-2 dark:text-red-300">
+          Descargar Documento
+        </span>
+      </div>
 
-      <div className="bg-white dark:bg-gray-800 shadow-md rounded-lg p-6 border border-red-200 dark:border-red-400">
-        <h2 className="text-lg font-bold mb-3 text-red-800 dark:text-red-300">Agregar Documento</h2>
-        <div className="border-dashed border-2 border-gray-600 rounded-lg p-6 text-center bg-gray-00">
+      {/* Sección de carga */}
+      <div
+        className={`shadow-md rounded-lg p-6 border ${
+          darkMode ? "bg-gray-800 border-red-400" : "bg-white border-red-200"
+        }`}
+      >
+        <h2 className="text-lg font-bold mb-3 text-red-800 dark:text-red-300">
+          Agregar Documento
+        </h2>
+        <div className="border-dashed border-2 border-gray-600 rounded-lg p-6 text-center">
           <input
             type="file"
             onChange={handleFileChange}
@@ -137,7 +160,7 @@ export default function UploadFiles() {
           <label htmlFor="fileInput" className="cursor-pointer">
             <FontAwesomeIcon
               icon={faUpload}
-              className="text-gray-600 text-2xl mb-2 dark:text-gray-300"
+              className="text-3xl text-blue-600 dark:text-gray-300 mb-2"
             />
             <p className="text-gray-600 mt-2 dark:text-gray-400">
               Arrastra o haz clic para seleccionar un archivo
@@ -145,6 +168,7 @@ export default function UploadFiles() {
           </label>
         </div>
 
+        {/* Botones */}
         <div className="flex justify-between mt-6">
           <button
             onClick={handleCancel}
@@ -154,9 +178,10 @@ export default function UploadFiles() {
           </button>
           <button
             onClick={handleUpload}
-            className="border border-gray-600 text-gray-800 dark:text-white px-6 py-2 rounded-md flex items-center"
+            className="border border-gray-600 text-gray-900 dark:text-gray-200 px-6 py-2 rounded-md flex items-center"
           >
-            <FontAwesomeIcon icon={faUpload} className="mr-2" /> Subir documento
+            <FontAwesomeIcon icon={faUpload} className="text-yellow-300 mr-2" />{" "}
+            Subir documento
           </button>
           <button
             onClick={handleSend}
@@ -167,26 +192,47 @@ export default function UploadFiles() {
         </div>
       </div>
 
-      <h2 className="text-lg font-bold mt-8 text-red-600 dark:text-red-300">Favoritos</h2>
-      <div className="bg-white dark:bg-gray-800 shadow-md rounded-lg p-6 border border-gray-300 dark:border-gray-500 mt-2">
+      {/* Tabla de Favoritos */}
+      <h2 className="text-lg font-bold mt-20 text-blue-800 dark:text-violet-600">
+        Favoritos
+      </h2>
+      <div
+        className={`shadow-md rounded-lg p-6 mt-2 border ${
+          darkMode ? "bg-gray-800 border-gray-500" : "bg-white border-gray-300"
+        }`}
+      >
         <table className="w-full table-auto border border-gray-400 dark:border-gray-500">
           <thead>
             <tr className="bg-red-200 text-gray-800 dark:bg-red-600 dark:text-white">
-              <th className="p-3 border border-gray-800 dark:border-gray-600">Documento</th>
-              <th className="p-3 border border-gray-800 dark:border-gray-600">Fecha</th>
-              <th className="p-3 border border-gray-800 dark:border-gray-600">Responsable</th>
-              <th className="p-3 border border-gray-800 dark:border-gray-600">Acciones</th>
+              <th className="p-3 border border-gray-800 dark:border-gray-600">
+                Documento
+              </th>
+              <th className="p-3 border border-gray-800 dark:border-gray-600">
+                Fecha
+              </th>
+              <th className="p-3 border border-gray-800 dark:border-gray-600">
+                Responsable
+              </th>
+              <th className="p-3 border border-gray-800 dark:border-gray-600">
+                Acciones
+              </th>
             </tr>
           </thead>
           <tbody>
             {uploadedFiles.map((file) => (
               <tr key={file.id} className="text-center">
-                <td className="p-3 border text-gray-800 dark:text-white dark:border-gray-600">{file.name}</td>
-                <td className="p-3 border text-gray-800 dark:text-white dark:border-gray-600">{file.date}</td>
-                <td className="p-3 border text-gray-800 dark:text-white dark:border-gray-600">{file.owner}</td>
+                <td className="p-3 border border-gray-800 dark:border-gray-600 text-gray-800 dark:text-white">
+                  {file.name}
+                </td>
+                <td className="p-3 border border-gray-800 dark:border-gray-600 text-gray-800 dark:text-white">
+                  {file.date}
+                </td>
+                <td className="p-3 border border-gray-800 dark:border-gray-600 text-gray-800 dark:text-white">
+                  {file.owner}
+                </td>
                 <td className="p-3 border border-gray-800 dark:border-gray-600 flex justify-center gap-4">
                   <button
-                    className="text-blue-600 dark:text-blue-400"
+                    className="text-blue-600 dark:text-blue-300"
                     onClick={() => handleDownload(file)}
                   >
                     <FontAwesomeIcon icon={faDownload} />
@@ -200,6 +246,16 @@ export default function UploadFiles() {
                 </td>
               </tr>
             ))}
+            {uploadedFiles.length === 0 && (
+              <tr>
+                <td
+                  colSpan="4"
+                  className="text-center p-4 text-gray-500 dark:text-gray-400"
+                >
+                  No hay documentos disponibles.
+                </td>
+              </tr>
+            )}
           </tbody>
         </table>
       </div>

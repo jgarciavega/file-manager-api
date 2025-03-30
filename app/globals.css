@@ -26,3 +26,69 @@ body {
 *{
   box-sizing: border-box;
 }
+
+/* 🌙 Estilos globales para modo oscuro */
+:root {
+  --bg-dark: #0f172a;
+  --text-dark: #ffffff;
+  --box-dark: #1e293b;
+  --border-dark: #334155;
+  --highlight-dark: #3b82f6;
+  --accent-red-dark: #f87171;
+}
+
+/* Aplica al contenedor general */
+.dark {
+  background-color: var(--bg-dark);
+  color: var(--text-dark);
+}
+
+/*modo oscuro*/
+.dark .box,
+.dark .form,
+.dark .card,
+.dark input,
+.dark textarea,
+.dark select {
+  background-color: var(--box-dark);
+  color: var(--text-dark);
+  border-color: var(--border-dark);
+}
+
+/* Títulos destacados */
+.dark .title,
+.dark h1,
+.dark h2,
+.dark h3 {
+  color: var(--highlight-dark);
+}
+
+/* Bordes y secciones especiales */
+.dark .bordered,
+.dark table,
+.dark .table {
+  border-color: var(--border-dark);
+}
+
+/* Estados y botones */
+.dark .btn-danger {
+  background-color: var(--accent-red-dark);
+  color: white;
+}
+
+.dark .btn-primary {
+  background-color: var(--highlight-dark);
+  color: white;
+}
+
+/* Moved the styles for .dark-logo and .light-logo to valid CSS */
+.dark-logo {
+  filter: brightness(3) contrast(1.0); /* Hace el logo más claro */
+  background-color: #1a1a2e; /* Fondo azul oscuro */
+  padding: 10px; /* Opcional: un margen interior para separarlo del fondo */
+  border-radius: 5px; /* Opcional: esquinas redondeadas */
+}
+
+.light-logo {
+  filter: brightness(1) contrast(1); /* Modo normal */
+}

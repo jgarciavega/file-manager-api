@@ -18,29 +18,19 @@ import {
  * Usamos "use client" para permitir hooks y modo oscuro.
  */
 export default function PendingDocumentsPage() {
-  /**
-   * Estado para manejar si estamos en modo oscuro o no.
-   */
+  
+   //Estado para manejar si estamos en modo oscuro o no.
+  
   const [darkMode, setDarkMode] = useState(false);
 
-  /**
-   * Información del usuario actual, solo para mostrar avatar y nombre.
-   */
+  
+    //solo para mostrar avatar y nombre.
+  
   const currentUser = {
     name: "Julio Rubio",
     avatar: "/julio-rubio.jpg",
   };
 
-  /**
-   * Datos principales: documentos en diferentes estados (pendiente, validado, etc.)
-   * Cada objeto tiene:
-   * - id: identificador
-   * - name: nombre del documento
-   * - date: fecha de subida
-   * - owner: responsable
-   * - status: estado actual
-   * - description: (opcional) detalle extra
-   */
   const [documents] = useState([
     {
       id: 1,
@@ -76,29 +66,22 @@ export default function PendingDocumentsPage() {
     },
   ]);
 
-  /**
-   * Filtro por estado:
-   * - 'Todos'
-   * - 'Pendiente'
-   * - 'Validado'
-   * - 'Rechazado'
-   */
+  
+  //filtro de busqueda
   const [filterState, setFilterState] = useState("Todos");
 
-  /**
-   * Búsqueda por nombre o responsable.
-   */
+    //Búsqueda por nombre o responsable.
+  
   const [searchTerm, setSearchTerm] = useState("");
 
-  /**
-   * Documento seleccionado para mostrar detalles más completos (modal).
-   */
+   //Documento seleccionado para mostrar detalles más completos (modal).
+  
   const [selectedDoc, setSelectedDoc] = useState(null);
 
-  /**
-   * Manejamos acciones sobre los documentos:
-   * Descargar, Validar, Rechazar, Ver detalles...
-   */
+  
+    //Manejamos acciones sobre los documentos:
+    //Descargar, Validar, Rechazar, Ver detalles...
+  
   const handleDownload = (doc) => {
     alert(`Descargando: ${doc.name}`);
     // Aquí iría la lógica real de descarga si tuvieras el contenido en doc.content
@@ -122,11 +105,6 @@ export default function PendingDocumentsPage() {
     setSelectedDoc(null);
   };
 
-  /**
-   * Filtramos la lista de documentos basada en:
-   * 1) Estado (si es diferente de 'Todos', debe coincidir)
-   * 2) Búsqueda (coincidencia parcial con nombre o responsable)
-   */
   const filteredDocs = documents.filter((doc) => {
     // Filtro por estado
     if (filterState !== "Todos" && doc.status !== filterState) {
@@ -142,14 +120,10 @@ export default function PendingDocumentsPage() {
   });
 
   return (
-    /**
-     * Aplicamos clase condicional para modo oscuro:
-     * Si darkMode es true, usamos "bg-gray-900 text-white"; si no, "bg-white text-gray-900".
-     * min-h-screen para ocupar toda la altura.
-     */
+  
     <div
       className={`p-6 min-h-screen ${
-        darkMode ? "bg-gray-900 text-white" : "bg-white text-gray-900"
+        darkMode ? "bg-gray-900 text-gray-800" : "bg-white text-gray-900"
       }`}
     >
       {/* Encabezado con logo y modo oscuro */}
@@ -158,7 +132,7 @@ export default function PendingDocumentsPage() {
         <Image src="/api.jpg" alt="Logo API" width={300} height={50} />
 
         {/* Modo oscuro + Avatar */}
-        <div className="flex flex-col items-center gap-2 mr-4">
+        <div className="flex flex-col items-center gap-4 mr-4">
           {/* Botón para cambiar tema */}
           <button
             onClick={() => setDarkMode(!darkMode)}
@@ -185,7 +159,7 @@ export default function PendingDocumentsPage() {
       </div>
 
       {/* Título principal */}
-      <h1 className="text-4xl font-bold text-center mb-10">
+      <h1 className="text-4xl text-blue-950 font-bold text-center mb-10">
         Documentos Pendientes de Validación
       </h1>
 
