@@ -39,7 +39,7 @@ function UploadPage() {
       <Sidebar user={user} isSidebarCollapsed={isSidebarCollapsed} />
 
       {/* Main Content */}
-      <div className="flex flex-col flex-1"> 
+      <div className="flex flex-col"> 
 
         {/* Navbar recibe nueva función para controlar sidebar */}
         <Navbar user={user} toggleSidebar={toggleSidebar} />
