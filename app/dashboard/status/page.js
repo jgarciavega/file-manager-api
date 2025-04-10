@@ -24,16 +24,22 @@ export default function DocumentStatusPage() {
     {
       id: 749,
       name: "Registro_Facturacion.docx",
+      classification: "Oficio",
+      jefatura: "Contraloría e Investigación",
       date: "10/12/2024",
       owner: "Arq. Julio Rubio",
-      status: "Pendiente",
+      status: "Subido",
+      observations: "Pendiente de validación",
     },
     {
-      id: 750,
+      id: 455,
       name: "Informe_Auditoria.pdf",
-      date: "15/01/2025",
-      owner: "Arq. Julio Rubio",
+      classification: "Cédula de Auditoría",
+      jefatura: "Contraloría y Resolución",
+      date: "15/01/2020",
+      owner: "Ing. Jorge Garcia",
       status: "Revisado",
+      observations: "Observaciones corregidas",
     },
   ]);
 
@@ -48,6 +54,14 @@ export default function DocumentStatusPage() {
     }
   };
 
+  const handleStatusChange = (id, newStatus) => {
+    setUploadedFiles((prev) =>
+      prev.map((file) =>
+        file.id === id ? { ...file, status: newStatus } : file
+      )
+    );
+  };
+
   const filteredFiles = uploadedFiles.filter(
     (file) =>
       file.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -57,13 +71,13 @@ export default function DocumentStatusPage() {
   return (
     <div
       className={`min-h-screen p-6 transition-all ${
-        darkMode ? "bg-gray-900 text-white" : "bg-white text-gray-900"
+        darkMode ? "bg-[#0d1b2a] text-white" : "bg-gray-50 text-gray-900"
       }`}
     >
       {/* Header */}
       <div
         className={`flex justify-between items-start mb-6 p-4 rounded-lg ${
-          darkMode ? "bg-gray-800" : "bg-white"
+          darkMode ? "bg-[#1a2b3c]" : "bg-white"
         }`}
       >
         <Image
@@ -71,7 +85,9 @@ export default function DocumentStatusPage() {
           alt="Logo API"
           width={450}
           height={60}
-          className="rounded-md"
+          className={
+            darkMode ? "rounded-xl shadow-lg bg-white/ p-2" : "rounded-md"
+          }
         />
 
         <div className="flex flex-col items-center gap-2 mr-4">
@@ -99,7 +115,7 @@ export default function DocumentStatusPage() {
       </div>
 
       {/* Título */}
-      <h1 className="text-3xl font-bold text-center mb-10 text-gray-700 dark:text-blue-200">
+      <h1 className="text-3xl font-bold text-center mb-10 text-blue-600 dark:text-blue-400">
         Estado de Documentos
       </h1>
 
@@ -108,7 +124,7 @@ export default function DocumentStatusPage() {
         <div className="relative w-full max-w-md">
           <input
             type="text"
-            placeholder="Buscar por nombre o responsable"
+            placeholder="Buscar"
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
             className={`w-full px-4 py-2 pr-10 border rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500
@@ -130,13 +146,13 @@ export default function DocumentStatusPage() {
       {/* Tabla */}
       <div
         className={`shadow-md rounded-lg p-6 border ${
-          darkMode ? "bg-gray-800 border-gray-700" : "bg-white border-gray-300"
+          darkMode ? "bg-[#1a2b3c] border-gray-800" : "bg-white border-gray-300"
         }`}
       >
         <table className="w-full table-auto text-sm">
-          <thead className={darkMode ? "bg-gray-700" : "bg-gray-200"}>
+          <thead className={darkMode ? "bg-gray-600" : "bg-gray-200"}>
             <tr>
-              {["Documento", "Fecha", "Responsable", "Estado", "Acciones"].map(
+              {["Folio", "Nombre", "Clasificación", "Jefatura", "Fecha", "Estado", "Observaciones", "Acciones"].map(
                 (title) => (
                   <th
                     key={title}
@@ -156,7 +172,7 @@ export default function DocumentStatusPage() {
             {filteredFiles.length === 0 ? (
               <tr>
                 <td
-                  colSpan="5"
+                  colSpan="8"
                   className={`text-center p-4 ${
                     darkMode ? "text-gray-400" : "text-gray-500"
                   }`}
@@ -169,54 +185,34 @@ export default function DocumentStatusPage() {
                 <tr
                   key={file.id}
                   className={`${
-                    darkMode ? "hover:bg-gray-700" : "hover:bg-gray-100"
+                    darkMode ? "hover:bg-gray-700" : "hover:bg-gray-200"
                   } transition`}
                 >
-                  <td
-                    className={`p-3 border ${
-                      darkMode
-                        ? "border-gray-700 text-white"
-                        : "border-gray-300 text-gray-800"
-                    }`}
-                  >
-                    {file.name}
+                  <td className="p-3 border dark:border-gray-700">{file.id}</td>
+                  <td className="p-3 border dark:border-gray-700">{file.name}</td>
+                  <td className="p-3 border dark:border-gray-700">{file.classification}</td>
+                  <td className="p-3 border dark:border-gray-700">{file.jefatura}</td>
+                  <td className="p-3 border dark:border-gray-700">{file.date}</td>
+
+                  <td className="p-3 border dark:border-gray-700">
+                    <select
+                      value={file.status}
+                      onChange={(e) => handleStatusChange(file.id, e.target.value)}
+                      className="w-full px-2 py-1 rounded-md dark:bg-gray-700 dark:text-white dark:border-gray-400"
+                    >
+                      <option value="Subido">📤 Subido</option>
+                      <option value="En revisión">⏳ En revisión</option>
+                      <option value="Revisado">✅ Revisado</option>
+                      <option value="Rechazado">❌ Rechazado</option>
+                      <option value="Aprobado">🎯 Aprobado</option>
+                    </select>
                   </td>
-                  <td
-                    className={`p-3 border ${
-                      darkMode
-                        ? "border-gray-700 text-white"
-                        : "border-gray-300 text-gray-800"
-                    }`}
-                  >
-                    {file.date}
+
+                  <td className="p-3 border dark:border-gray-600">
+                    {file.observations}
                   </td>
-                  <td
-                    className={`p-3 border ${
-                      darkMode
-                        ? "border-gray-700 text-white"
-                        : "border-gray-300 text-gray-800"
-                    }`}
-                  >
-                    {file.owner}
-                  </td>
-                  <td
-                    className={`p-3 border font-semibold ${
-                      darkMode ? "border-gray-700" : "border-gray-300"
-                    } ${
-                      file.status === "Pendiente"
-                        ? "text-yellow-500"
-                        : file.status === "Revisado"
-                        ? "text-blue-400"
-                        : "text-green-500"
-                    }`}
-                  >
-                    {file.status}
-                  </td>
-                  <td
-                    className={`p-3 border flex justify-center gap-4 ${
-                      darkMode ? "border-gray-700" : "border-gray-300"
-                    }`}
-                  >
+
+                  <td className="p-3 border flex justify-center gap-4 dark:border-gray-700">
                     <button
                       className="text-blue-600 dark:text-blue-400"
                       onClick={() => handleDownload(file)}
