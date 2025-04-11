@@ -22,7 +22,9 @@ export default function LoginPage() {
         email: data.email,
         password: data.password,
       });
+
       console.log("📌 Respuesta del login:", result);
+
       if (result?.error) {
         console.log("🚨 Error en el login:", result.error);
         setLoginError("Credenciales incorrectas");
@@ -36,11 +38,34 @@ export default function LoginPage() {
         return;
       }
 
-      // Si el login es exitoso
+      // ✅ Si el login es exitoso
       console.log("✅ Inicio de sesión exitoso, redirigiendo...");
+
+      // Asignar rol según el correo
+// Lista de usuarios autorizados y sus roles
+const usuariosAutorizados = {
+  "jorge.garcia@apibcs.com.mx": "admin",
+  "jrubio@apibcs.com.mx": "revisor",
+  "annel@apibcs.com.mx": "capturista",
+  "jose.monteverde@apibcs.com.mx": "capturista",
+  "blanca@apibcs.com.mx": "revisor",
+  "hdelreal@apibcs.com.mx":"revisor"
+};
+
+// Asignar rol según el correo
+const rolAsignado = usuariosAutorizados[data.email] || "capturista"; // capturista por defecto
+
+// Guardar usuario con rol dinámico
+const usuarioActivo = {
+  nombre: data.email,
+  rol: rolAsignado,
+};
+
+localStorage.setItem('usuarioActivo', JSON.stringify(usuarioActivo));
+
       setLoginError("");
       setAttempts(0);
-      router.push("/home"); // Redirigir a la página principal después del inicio de sesión
+      router.push("/home"); // Redirige a la página principal
     } catch (error) {
       console.error("Error durante el login:", error);
       setLoginError("Error al intentar iniciar sesión");
