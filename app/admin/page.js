@@ -1,7 +1,25 @@
 "use client";
-import React from "react";
+import React, { useEffect } from "react";
+import { useSession } from "next-auth/react";
+import { useRouter } from "next/navigation";
 
 export default function AdminHome() {
+  const { data: session, status } = useSession();
+  const router = useRouter();
+
+  // Protección: solo admins pueden acceder
+  useEffect(() => {
+    if (status === "loading") return;
+
+    if (!session || session.user.role !== "admin") {
+      router.push("/unauthorized"); // Puedes cambiarlo a "/home" si lo prefieres
+    }
+  }, [status, session, router]);
+
+  if (status === "loading") {
+    return <p className="text-white text-center mt-10">Cargando sesión...</p>;
+  }
+
   const resumen = {
     total: 128,
     revision: 15,
@@ -45,7 +63,7 @@ export default function AdminHome() {
         </p>
       </div>
 
-      {/* Tarjetas con bordes fuertes */}
+      {/* Tarjetas */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
         {[
           {
@@ -81,7 +99,7 @@ export default function AdminHome() {
         ))}
       </div>
 
-      {/* Tabla con bordes visibles */}
+      {/* Tabla */}
       <div className="bg-white dark:bg-[#1f2937] border-2 border-gray-300 dark:border-gray-600 rounded-2xl p-6 shadow-md">
         <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-6">
           Últimos Documentos Subidos

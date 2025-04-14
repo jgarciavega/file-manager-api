@@ -1,9 +1,29 @@
 "use client";
 
-import DarkModeToggle from "./../components/DarkModeToggle"; 
+import DarkModeToggle from "./../components/DarkModeToggle";
 import Link from "next/link";
+import Image from "next/image";
+import { useSession, signOut } from "next-auth/react";
+import avatarMap from "../../lib/avatarMap";
+import admMap from "../../lib/admMap";
+import profesionMap from "../../lib/profesionMap";
 
 export default function SidebarAdmin() {
+  const { data: session } = useSession();
+
+  const rawName = session?.user?.name || "";
+  const firstName = rawName.split(" ")[0]; // solo "Jorge"
+
+  const user = {
+    name: session?.user?.name || "Usuario",
+    email: session?.user?.email,
+    avatar: avatarMap[session?.user?.email] || "/default-avatar.png",
+    position: admMap[session?.user?.email] || "000",
+    title: profesionMap[session?.user?.email] || "",
+  };
+
+  console.log("👤 Usuario renderizado:", user);
+
   return (
     <aside className="w-64 bg-gray-900 text-white p-6 flex flex-col justify-between min-h-screen">
       <div>
@@ -51,9 +71,31 @@ export default function SidebarAdmin() {
         </ul>
       </div>
 
-      {/* Botón modo oscuro */}
-      <div className="mt-6 flex justify-center">
-        <DarkModeToggle />
+      <div className="flex flex-col items-center mt-8">
+        <Image
+          src={user.avatar}
+          alt="Avatar"
+          width={80}
+          height={80}
+          className="rounded-full border mb-2 object-cover bg-gray-700"
+        />
+        <p className="font-semibold text-sm">
+          {user.title} {user.shortName}
+        </p>
+
+        <p className="text-xs text-gray-300 mb-4">ADM: {user.position}</p>
+
+        <button
+          onClick={() => signOut({ callbackUrl: "/" })}
+          className="text-sm bg-red-600 hover:bg-red-700 px-4 py-1 rounded"
+        >
+          Cerrar sesión
+        </button>
+
+        {/* Botón modo oscuro */}
+        <div className="mt-4">
+          <DarkModeToggle />
+        </div>
       </div>
     </aside>
   );

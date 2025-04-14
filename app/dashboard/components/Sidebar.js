@@ -1,11 +1,16 @@
 "use client";
-import {useRouter} from "next/navigation";
+import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { useState, useEffect } from "react";
 import styles from "./Sidebar.module.css";
 import Image from "next/image";
 import Swal from "sweetalert2";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { useSession } from "next-auth/react";
+import admMap from "../../lib/admMap";
+import avatarMap from "../../lib/avatarMap";
+import profesionMap from "../../lib/profesionMap";
+
 import {
   faBars,
   faUpload,
@@ -19,14 +24,25 @@ import {
   faChartBar,
   faThumbtack,
   faBoxes,
-  faFolderTree,
-  faFileLines,
 } from "@fortawesome/free-solid-svg-icons";
 
-export default function Sidebar({ user, isSidebarCollapsed }) {
+export default function Sidebar({ isSidebarCollapsed }) {
+  const { data: session } = useSession();
   const router = useRouter();
   const [openMenus, setOpenMenus] = useState([]);
   const [isUserInfoOpen, setUserInfoOpen] = useState(false);
+
+  const email = session?.user?.email || "";
+  const fullName = session?.user?.name || "Usuario";
+
+  const user = {
+    name: fullName,
+    email: email,
+    avatar: avatarMap[email] || "/default-avatar.png",
+    position: admMap[email] || "000",
+    title: profesionMap[email] || "",
+    workArea: "Contraloría", // puedes cambiar esto a dinámico más adelante
+  };
 
   const toggleMenu = (menu) => {
     setOpenMenus((prev) =>
@@ -59,12 +75,10 @@ export default function Sidebar({ user, isSidebarCollapsed }) {
       cancelButtonText: "Cancelar",
     }).then((result) => {
       if (result.isConfirmed) {
-        // Aquí haces el redirect al login
         router.push("/");
       }
     });
   };
-
 
   return (
     <div className={styles["sidebar-container"]}>
@@ -78,10 +92,10 @@ export default function Sidebar({ user, isSidebarCollapsed }) {
             <div className="sidebar-logo">
               <Image
                 src="/api.jpg"
-                alt="API-BCS Logo"
+                alt={user.name}
                 width={650}
                 height={10}
-                priority={true}
+                className="rounded-full mx-auto mb-2"
               />
             </div>
             <ul className="space-y-10 mt-36">
@@ -154,7 +168,7 @@ export default function Sidebar({ user, isSidebarCollapsed }) {
                       icon={faThumbtack}
                       className="mr-2 text-blue-400"
                       size="2x"
-                    />{" "}
+                    />
                     Tareas Pendientes
                   </div>
                   <span>{openMenus.includes("task") ? "−" : "+"}</span>
@@ -171,7 +185,7 @@ export default function Sidebar({ user, isSidebarCollapsed }) {
                           icon={faFileAlt}
                           className="mr-2 text-blue-400"
                         />
-                      Pendientes de Validación
+                        Pendientes de Validación
                       </Link>
                     </li>
                     <li className="flex items-center">
@@ -199,11 +213,12 @@ export default function Sidebar({ user, isSidebarCollapsed }) {
               {openMenus.includes("reports") && (
                 <ul className="pl-10 text-violet-500 space-y-3">
                   <li className="flex items-center">
-                    <FontAwesomeIcon icon={faHistory} className="mr-2" />{" "}
+                    <FontAwesomeIcon icon={faHistory} className="mr-2" />
                     Historial de Consultas
                   </li>
                   <li className="flex items-center">
-                    <FontAwesomeIcon icon={faCheck} className="mr-2" /> Informes
+                    <FontAwesomeIcon icon={faCheck} className="mr-2" />
+                    Informes
                   </li>
                 </ul>
               )}
@@ -225,11 +240,12 @@ export default function Sidebar({ user, isSidebarCollapsed }) {
               {openMenus.includes("settings") && (
                 <ul className="pl-10 text-violet-500 space-y-3">
                   <li className="flex items-center">
-                    <FontAwesomeIcon icon={faFileAlt} className="mr-2" />{" "}
+                    <FontAwesomeIcon icon={faFileAlt} className="mr-2" />
                     Ajustes
                   </li>
                   <li className="flex items-center">
-                    <FontAwesomeIcon icon={faCheck} className="mr-2" /> Ayuda
+                    <FontAwesomeIcon icon={faCheck} className="mr-2" />
+                    Ayuda
                   </li>
                 </ul>
               )}
@@ -242,33 +258,37 @@ export default function Sidebar({ user, isSidebarCollapsed }) {
                   icon={faSignOutAlt}
                   className="mr-2 text-red-500"
                   size="2x"
-                />{" "}
+                />
                 Cerrar sesión
               </li>
             </ul>
-            /*Avatar */
+
+            {/* Avatar e información de usuario */}
             <div
-              className={`${styles["user-info"]} mt-20 flex items-center gap-3`}
+              className={`${styles["user-info"]} mt-12 cursor-pointer flex flex-col items-center gap-2`}
               onClick={toggleUserInfo}
             >
               <Image
                 src={user.avatar}
-                alt="Usuario"
-                width={120}
-                height={100}
-                className="rounded-full border border-gray-800"
+                alt={`Avatar de ${user.name}`}
+                width={80}
+                height={80}
+                className="rounded-full border-2 border-gray-600 object-cover"
               />
-              <p className=" font-bold text-black-800 mt-2">{user.name}</p>
+              <p className="font-bold text-black-800 mt-2">
+                {user.title} {user.name}
+              </p>
+
               {isUserInfoOpen && (
-                <div className={styles["user-details"]}>
-                  <p>
-                    <strong>Nombre:</strong> {user.name}
+                <div className="bg-blue-300 text-white p-3 rounded-xl shadow-lg text-xs text-left w-48 border-2 border-yellow-400 mt-2">
+                  <p className="mb-1">
+                    <strong>👤 :</strong> {user.name}
                   </p>
-                  <p>
-                    <strong>Área :</strong> {user.workArea}
+                  <p className="mb-1">
+                    <strong>📍 Área:</strong> {user.workArea}
                   </p>
-                  <p>
-                    <strong>ADM:</strong> {user.position}
+                  <p className="mb-1">
+                    <strong>🆔 ADM:</strong> {user.position}
                   </p>
                 </div>
               )}

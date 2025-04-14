@@ -7,7 +7,12 @@ import { useRouter } from "next/navigation";
 import Image from "next/image";
 
 export default function LoginPage() {
-  const { register, handleSubmit, setError, formState: { errors } } = useForm();
+  const {
+    register,
+    handleSubmit,
+    setError,
+    formState: { errors },
+  } = useForm();
   const router = useRouter();
   const [loginError, setLoginError] = useState("");
   const [attempts, setAttempts] = useState(0);
@@ -30,7 +35,9 @@ export default function LoginPage() {
         setLoginError("Credenciales incorrectas");
         setAttempts((prev) => prev + 1);
         if (attempts + 1 >= 3) {
-          setLoginError("Demasiados intentos fallidos. Redirigiendo a recuperación de contraseña...");
+          setLoginError(
+            "Demasiados intentos fallidos. Redirigiendo a recuperación de contraseña..."
+          );
           setTimeout(() => {
             router.push("/recover-password");
           }, 2000);
@@ -41,31 +48,21 @@ export default function LoginPage() {
       // ✅ Si el login es exitoso
       console.log("✅ Inicio de sesión exitoso, redirigiendo...");
 
-      // Asignar rol según el correo
-// Lista de usuarios autorizados y sus roles
-const usuariosAutorizados = {
-  "jorge.garcia@apibcs.com.mx": "admin",
-  "jrubio@apibcs.com.mx": "revisor",
-  "annel@apibcs.com.mx": "capturista",
-  "jose.monteverde@apibcs.com.mx": "capturista",
-  "blanca@apibcs.com.mx": "revisor",
-  "hdelreal@apibcs.com.mx":"revisor"
-};
+      // Obtener la sesión para conocer el rol
+      const res = await fetch("/api/auth/session");
+      const session = await res.json();
 
-// Asignar rol según el correo
-const rolAsignado = usuariosAutorizados[data.email] || "capturista"; // capturista por defecto
+      console.log("🧾 Sesión actual:", session);
 
-// Guardar usuario con rol dinámico
-const usuarioActivo = {
-  nombre: data.email,
-  rol: rolAsignado,
-};
-
-localStorage.setItem('usuarioActivo', JSON.stringify(usuarioActivo));
+      // Redirigir según el rol del usuario
+      if (session?.user?.role === "admin") {
+        router.push("/admin");
+      } else {
+        router.push("/home");
+      }
 
       setLoginError("");
       setAttempts(0);
-      router.push("/home"); // Redirige a la página principal
     } catch (error) {
       console.error("Error durante el login:", error);
       setLoginError("Error al intentar iniciar sesión");
@@ -100,8 +97,8 @@ localStorage.setItem('usuarioActivo', JSON.stringify(usuarioActivo));
               required: "El correo electrónico es obligatorio",
               pattern: {
                 value: EMAIL_REGEX,
-                message: "Por favor ingrese un correo electrónico válido"
-              }
+                message: "Por favor ingrese un correo electrónico válido",
+              },
             })}
             type="email"
             placeholder="Correo electrónico"
@@ -115,8 +112,8 @@ localStorage.setItem('usuarioActivo', JSON.stringify(usuarioActivo));
               required: "La contraseña es obligatoria",
               minLength: {
                 value: 6,
-                message: "La contraseña debe tener al menos 6 caracteres"
-              }
+                message: "La contraseña debe tener al menos 6 caracteres",
+              },
             })}
             type="password"
             placeholder="Contraseña"
@@ -129,11 +126,17 @@ localStorage.setItem('usuarioActivo', JSON.stringify(usuarioActivo));
             <p className="text-red-600 text-sm text-center">{loginError}</p>
           )}
           <div className="text-center mt-4">
-            <a href="/recover-password" className="text-[#0a0a0a] hover:text-[#7e4142]">
+            <a
+              href="/recover-password"
+              className="text-[#0a0a0a] hover:text-[#7e4142]"
+            >
               ¿Olvidaste tu contraseña?
             </a>
           </div>
-          <div className="text-center text-gray-600 relative" style={{ top: "-20px" }}>
+          <div
+            className="text-center text-gray-600 relative"
+            style={{ top: "-20px" }}
+          >
             Restablecer
           </div>
           <div className="flex justify-center">
