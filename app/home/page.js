@@ -25,13 +25,12 @@ export default function Home() {
   const email = session.user.email;
   const user = {
     name: session.user.name,
-    email: email,
-    avatar: avatarMap[email] || "/default-avatar.png",
-    position: admMap[email] || "000",
-    title: profesionMap[email] || "",
-    workArea: "Contraloría"
+    email: session.user.email,
+    avatar: avatarMap[session.user.email] || "/default-avatar.png",
+    position: admMap[session.user.email] || "000",
+    title: profesionMap[session.user.email] || "",
+    workArea: "Contraloría",
   };
-  
 
   return (
     <div className={`flex h-screen ${styles.background}`}>
@@ -39,15 +38,6 @@ export default function Home() {
 
       <div className="flex flex-col w-full">
         <Navbar user={user} toggleSidebar={toggleSidebar} />
-
-        <div className="p-6">
-          <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-4">
-            Bienvenido, {user.title} {user.name} 👋
-          </h1>
-          <p className="text-gray-600 dark:text-gray-300">
-            Área: {user.workArea} | Posición: {user.position}
-          </p>
-        </div>
       </div>
     </div>
   );

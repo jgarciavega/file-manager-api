@@ -1,6 +1,8 @@
+"use client";
+
 import { useState } from "react";
-import { Bell } from "lucide-react";
 import Image from "next/image";
+import avatarMap from "../../lib/avatarMap";
 import styles from "./Navbar.module.css";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
@@ -11,26 +13,26 @@ import {
 } from "@fortawesome/free-solid-svg-icons";
 
 export default function Navbar({ user, toggleSidebar }) {
-  // Estados para los interruptores deslizables
   const [reportesActivos, setReportesActivos] = useState(false);
   const [documentosActivos, setDocumentosActivos] = useState(false);
 
+  const saludo = ["annel", "blanca", "hdelreal"].includes(
+    user?.email?.split("@")[0]
+  )
+    ? "Bienvenida"
+    : "Bienvenido";
+
   return (
     <>
-      {/* 🔹 NAVBAR */}
+      {/* 🔹 NAVBAR SUPERIOR */}
       <nav className="relative flex items-center justify-between mr-auto px-4 py-12 bg-white shadow-md w-full h-64">
         <div className="flex flex-col items-start ml-8">
-       
-          {/*Título */}
-          <div>
           <h1 className="!text-2xl font-extrabold text-red-800 mt-12 tracking-wide">
-          <p>GESTOR DE ARCHIVOS</p>
-            </h1>
-
-            <h1 className="!text-3xl font-extrabold text-blue-950 mt-2 tracking-wide">
-              <p>Puerto de Pichilingue </p>
-            </h1>
-          </div>
+            <p>GESTOR DE ARCHIVOS</p>
+          </h1>
+          <h1 className="!text-3xl font-extrabold text-blue-950 mt-2 tracking-wide">
+            <p>Puerto de Pichilingue</p>
+          </h1>
         </div>
 
         {/* 🔹 Buscador */}
@@ -65,11 +67,11 @@ export default function Navbar({ user, toggleSidebar }) {
           onClick={toggleSidebar}
           className="text-blue-800 ml-auto text-3xl p-4 hover:bg-gray-400 rounded-md transition"
         >
-          <FontAwesomeIcon size="2xl"  icon={faBars} />
+          <FontAwesomeIcon size="2xl" icon={faBars} />
         </button>
       </nav>
 
-      {/* 🔹 Sección de Bienvenida */}
+      {/* 🔹 Sección de Bienvenida SOBRE la imagen */}
       <div className="relative shadow-md w-full">
         <Image
           src="/inicio.webp"
@@ -79,27 +81,30 @@ export default function Navbar({ user, toggleSidebar }) {
           height={400}
           className="rounded-lg"
         />
-        <div className="absolute top-0 right-0 w-1/2 h-full flex items-center p-8 bg-black bg-opacity-50 rounded-lg">
-          <div className="w-2/3 text-white text-justify">
-            <h2 className="text-4xl font-semibold tracking-wide mb-4">
-              Bienvenido
-            </h2>
-            <p className="text-lg leading-relaxed">
-              Se han enviado a tu cuenta nuevos archivos, puedes revisarlos
-              directamente mediante esta sección.
-            </p>
-            <button
-              className="mt-6 px-6 py-3 bg-transparent text-white border border-white rounded-md  hover:bg-white hover:text-black hover:shadow-lg transition-all 
-            duration-300 flex items-center"
-            >
-              Consultar
-              <FontAwesomeIcon icon={faChevronRight} className="ml-2" />
-            </button>
-          </div>
+
+        <div className="absolute top-0 right-0 w-1/2 h-full flex flex-col items-center justify-center p-8 bg-black bg-opacity-50 rounded-l-lg text-white">
+          <Image
+            src={user.avatar}
+            alt={`Avatar de ${user.name}`}
+            width={180}
+            height={100}
+            className="rounded-full border-4 border-white mb-4"
+          />
+          <h2 className="text-3xl font-semibold tracking-wide mb-2 text-center">
+            {saludo}: {user.title}
+          </h2>
+          <p className="text-lg leading-relaxed text-center">
+            Se han enviado a tu cuenta nuevos archivos, puedes revisarlos
+            directamente mediante esta sección.
+          </p>
+          <button className="mt-6 px-6 py-3 bg-transparent text-white border border-white rounded-md hover:bg-white hover:text-black hover:shadow-lg transition-all duration-300 flex items-center">
+            Consultar
+            <FontAwesomeIcon icon={faChevronRight} className="ml-2" />
+          </button>
         </div>
       </div>
 
-      {/* 🔹 Sección de reportes y documentos pendientes */}
+      {/* 🔹 Reportes y Documentos pendientes */}
       <div
         className={`${styles.container} p-6 grid grid-cols-1 md:grid-cols-2 gap-6`}
       >
@@ -107,7 +112,6 @@ export default function Navbar({ user, toggleSidebar }) {
         <div
           className={`${styles.customBox} p-4 rounded-md shadow hover:bg-blue-400 relative`}
         >
-          {/* 🔹 Botón deslizable */}
           <label className="absolute top-3 right-3 inline-flex items-center cursor-pointer">
             <input
               type="checkbox"
@@ -115,7 +119,7 @@ export default function Navbar({ user, toggleSidebar }) {
               checked={reportesActivos}
               onChange={() => setReportesActivos(!reportesActivos)}
             />
-            <div className="w-14 h-8 bg-gray-800 rounded-full peer-checked:bg-blue-500 peer-focus:ring-2 peer-focus:ring-blue-300 transition duration-300"></div>
+            <div className="w-14 h-8 bg-gray-800 rounded-full peer-checked:bg-blue-500 transition duration-300"></div>
             <div className="w-6 h-6 bg-white rounded-full shadow absolute top-[2px] left-1 peer-checked:left-7 transition-transform duration-300"></div>
           </label>
           <h1 className="text-3xl font-bold text-black">Reportes Generados</h1>
@@ -129,7 +133,6 @@ export default function Navbar({ user, toggleSidebar }) {
         <div
           className={`${styles.customBox} p-4 rounded-md shadow hover:bg-blue-400 relative`}
         >
-          {/* 🔹 Botón deslizable */}
           <label className="absolute top-3 right-3 inline-flex items-center cursor-pointer">
             <input
               type="checkbox"
@@ -137,7 +140,7 @@ export default function Navbar({ user, toggleSidebar }) {
               checked={documentosActivos}
               onChange={() => setDocumentosActivos(!documentosActivos)}
             />
-            <div className="w-14 h-8 bg-gray-800 rounded-full peer-checked:bg-blue-500 peer-focus:ring-2 peer-focus:ring-blue-300 transition duration-300"></div>
+            <div className="w-14 h-8 bg-gray-800 rounded-full peer-checked:bg-blue-500 transition duration-300"></div>
             <div className="w-6 h-6 bg-white rounded-full shadow absolute top-[2px] left-1 peer-checked:left-7 transition-transform duration-300"></div>
           </label>
           <h1 className="text-3xl font-bold text-black">

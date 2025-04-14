@@ -268,26 +268,20 @@ export default function Sidebar({ isSidebarCollapsed }) {
               className={`${styles["user-info"]} mt-12 cursor-pointer flex flex-col items-center gap-2`}
               onClick={toggleUserInfo}
             >
-              <Image
-                src={user.avatar}
-                alt={`Avatar de ${user.name}`}
-                width={80}
-                height={80}
-                className="rounded-full border-2 border-gray-600 object-cover"
-              />
-              <p className="font-bold text-black-800 mt-2">
-                {user.title} {user.name}
+          
+              <p className="font-bold text-black-800 mt-12 text-black">
+                {user.title} 
               </p>
 
               {isUserInfoOpen && (
-                <div className="bg-blue-300 text-white p-3 rounded-xl shadow-lg text-xs text-left w-48 border-2 border-yellow-400 mt-2">
-                  <p className="mb-1">
+                <div className="bg-blue-600 text-black p-3 rounded-xl shadow-lg text-left w-48 border-6 border-yellow-400 mt-1">
+                  <p className="mb-3">
                     <strong>👤 :</strong> {user.name}
                   </p>
-                  <p className="mb-1">
+                  <p className="mb-3">
                     <strong>📍 Área:</strong> {user.workArea}
                   </p>
-                  <p className="mb-1">
+                  <p className="mb-3">
                     <strong>🆔 ADM:</strong> {user.position}
                   </p>
                 </div>
