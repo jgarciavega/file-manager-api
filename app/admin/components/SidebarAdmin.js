@@ -61,6 +61,15 @@ export default function SidebarAdmin() {
             </Link>
           </li>
           <li>
+            <li>
+              <Link
+                href="/admin/verificacion-lea"
+                className="hover:text-blue-400 transition"
+              >
+                Verificación de LEA-BCS
+              </Link>
+            </li>
+
             <Link
               href="/admin/configuracion"
               className="hover:text-blue-400 transition"

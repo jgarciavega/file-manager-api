@@ -1,4 +1,5 @@
 "use client";
+
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { useState, useEffect } from "react";
@@ -24,6 +25,7 @@ import {
   faChartBar,
   faThumbtack,
   faBoxes,
+  faArrowLeft, // ✅ IMPORTANTE: agregado para el botón
 } from "@fortawesome/free-solid-svg-icons";
 
 export default function Sidebar({ isSidebarCollapsed }) {
@@ -41,7 +43,7 @@ export default function Sidebar({ isSidebarCollapsed }) {
     avatar: avatarMap[email] || "/default-avatar.png",
     position: admMap[email] || "000",
     title: profesionMap[email] || "",
-    workArea: "Contraloría", // puedes cambiar esto a dinámico más adelante
+    workArea: "Contraloría",
   };
 
   const toggleMenu = (menu) => {
@@ -99,6 +101,7 @@ export default function Sidebar({ isSidebarCollapsed }) {
               />
             </div>
             <ul className="space-y-10 mt-36">
+              {/* Gestión de archivos */}
               <li className="font-bold text-red-800 flex items-center">
                 <FontAwesomeIcon
                   icon={faBoxes}
@@ -126,12 +129,8 @@ export default function Sidebar({ isSidebarCollapsed }) {
                       Subir Documento
                     </a>
                   </li>
-
                   <li className="font-bold text-violet-500">
-                    <Link
-                      href="/dashboard/status"
-                      className="flex items-center"
-                    >
+                    <Link href="/dashboard/status" className="flex items-center">
                       <FontAwesomeIcon
                         icon={faCheck}
                         className="mr-2 text-blue-400"
@@ -140,12 +139,8 @@ export default function Sidebar({ isSidebarCollapsed }) {
                       Estado del Documento
                     </Link>
                   </li>
-
                   <li className="font-bold text-violet-500">
-                    <Link
-                      href="/dashboard/favorites"
-                      className="flex items-center"
-                    >
+                    <Link href="/dashboard/favorites" className="flex items-center">
                       <FontAwesomeIcon
                         icon={faStar}
                         className="mr-2 text-blue-400"
@@ -157,7 +152,7 @@ export default function Sidebar({ isSidebarCollapsed }) {
                 </ul>
               )}
 
-              {/* Tareas Pendientes */}
+              {/* Tareas pendientes */}
               <li className="font-bold text-red-800">
                 <a
                   onClick={() => toggleMenu("task")}
@@ -188,14 +183,23 @@ export default function Sidebar({ isSidebarCollapsed }) {
                         Pendientes de Validación
                       </Link>
                     </li>
-                    <li className="flex items-center">
-                      <FontAwesomeIcon icon={faCheck} className="mr-2" />
-                      Verificación de LEA-BCS
+                    <li className="font-bold text-violet-500">
+                      <Link
+                        href="/dashboard/verification"
+                        className="flex items-center hover:text-blue-600 transition"
+                      >
+                        <FontAwesomeIcon
+                          icon={faCheck}
+                          className="mr-2 text-blue-400"
+                        />
+                        Verificación de LEA-BCS
+                      </Link>
                     </li>
                   </ul>
                 )}
               </li>
 
+              {/* Consultas & Reportes */}
               <li className="font-bold text-red-800 flex items-center">
                 <FontAwesomeIcon
                   icon={faChartBar}
@@ -223,6 +227,7 @@ export default function Sidebar({ isSidebarCollapsed }) {
                 </ul>
               )}
 
+              {/* Configuración & Ayuda */}
               <li className="font-bold text-red-800 flex items-center">
                 <FontAwesomeIcon
                   icon={faCog}
@@ -250,6 +255,7 @@ export default function Sidebar({ isSidebarCollapsed }) {
                 </ul>
               )}
 
+              {/* Cerrar sesión */}
               <li
                 className="font-bold cursor-pointer mt-12 text-gray-500 flex items-center"
                 onClick={handleLogoutClick}
@@ -261,16 +267,20 @@ export default function Sidebar({ isSidebarCollapsed }) {
                 />
                 Cerrar sesión
               </li>
+
+              {/* ✅ Botón Volver al Inicio */}
+              <li className="font-bold text-blue-600 flex items-center justify-center">
+                
+              </li>
             </ul>
 
-            {/* Avatar e información de usuario */}
+            {/* Información de usuario */}
             <div
               className={`${styles["user-info"]} mt-12 cursor-pointer flex flex-col items-center gap-2`}
               onClick={toggleUserInfo}
             >
-          
               <p className="font-bold text-black-800 mt-12 text-black">
-                {user.title} 
+                {user.title}
               </p>
 
               {isUserInfoOpen && (

@@ -2,6 +2,9 @@
 
 import { useState } from "react";
 import Image from "next/image";
+import { useSession } from "next-auth/react";
+import avatarMap from "../../lib/avatarMap";
+import admMap from "../../lib/admMap";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
   faDownload,
@@ -9,15 +12,20 @@ import {
   faMoon,
   faSun,
   faSearch,
+  faArrowLeft,
 } from "@fortawesome/free-solid-svg-icons";
+import Link from "next/link";
 
 export default function DocumentStatusPage() {
+  const { data: session } = useSession();
   const [darkMode, setDarkMode] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
 
-  const currentUser = {
-    name: "Julio Rubio",
-    avatar: "/julio-rubio.jpg",
+  const user = {
+    name: session?.user?.name || "Usuario",
+    email: session?.user?.email,
+    avatar: avatarMap[session?.user?.email] || "/default-avatar.png",
+    position: admMap[session?.user?.email] || "000",
   };
 
   const [uploadedFiles, setUploadedFiles] = useState([
@@ -101,17 +109,27 @@ export default function DocumentStatusPage() {
 
           <div className="flex items-center gap-3">
             <Image
-              src={currentUser.avatar}
-              alt="Avatar"
+              src={user.avatar}
+              alt={`Avatar de ${user.name}`}
               width={80}
               height={50}
-              className="rounded-full border"
+              className="rounded-full border-2 border-white"
             />
             <p className="font-semibold text-gray-800 dark:text-white">
-              {currentUser.name}
+              {user.name}
             </p>
           </div>
         </div>
+      </div>
+
+      {/* Botón regresar */}
+      <div className="mb-6">
+        <Link
+          href="/home"
+          className="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-md"
+        >
+          <FontAwesomeIcon icon={faArrowLeft} /> Volver al Inicio
+        </Link>
       </div>
 
       {/* Título */}
@@ -131,7 +149,7 @@ export default function DocumentStatusPage() {
             ${
               darkMode
                 ? "bg-gray-800 text-white border-gray-600 placeholder-gray-400"
-                : "bg-white text-gray-800 border-gray-300"
+                : "bg-white text-gray-800 border-gray-400"
             }`}
           />
           <span className="absolute inset-y-0 right-3 flex items-center pointer-events-none">
@@ -146,26 +164,33 @@ export default function DocumentStatusPage() {
       {/* Tabla */}
       <div
         className={`shadow-md rounded-lg p-6 border ${
-          darkMode ? "bg-[#1a2b3c] border-gray-800" : "bg-white border-gray-300"
+          darkMode ? "bg-[#1a2b3c] border-gray-800" : "bg-white border-gray-400"
         }`}
       >
-        <table className="w-full table-auto text-sm">
+        <table className="w-full table-auto text-sm border-collapse">
           <thead className={darkMode ? "bg-gray-600" : "bg-gray-200"}>
             <tr>
-              {["Folio", "Nombre", "Clasificación", "Jefatura", "Fecha", "Estado", "Observaciones", "Acciones"].map(
-                (title) => (
-                  <th
-                    key={title}
-                    className={`p-3 border font-semibold text-sm ${
-                      darkMode
-                        ? "text-gray-100 border-gray-700"
-                        : "text-gray-700 border-gray-300"
-                    }`}
-                  >
-                    {title}
-                  </th>
-                )
-              )}
+              {[
+                "Folio",
+                "Nombre",
+                "Clasificación",
+                "Jefatura",
+                "Fecha",
+                "Estado",
+                "Observaciones",
+                "Acciones",
+              ].map((title) => (
+                <th
+                  key={title}
+                  className={`p-3 border font-semibold text-sm ${
+                    darkMode
+                      ? "text-gray-100 border-gray-700"
+                      : "text-gray-700 border border-gray-400"
+                  }`}
+                >
+                  {title}
+                </th>
+              ))}
             </tr>
           </thead>
           <tbody>
@@ -185,16 +210,15 @@ export default function DocumentStatusPage() {
                 <tr
                   key={file.id}
                   className={`${
-                    darkMode ? "hover:bg-gray-700" : "hover:bg-gray-200"
+                    darkMode ? "hover:bg-gray-700" : "hover:bg-gray-100"
                   } transition`}
                 >
-                  <td className="p-3 border dark:border-gray-700">{file.id}</td>
-                  <td className="p-3 border dark:border-gray-700">{file.name}</td>
-                  <td className="p-3 border dark:border-gray-700">{file.classification}</td>
-                  <td className="p-3 border dark:border-gray-700">{file.jefatura}</td>
-                  <td className="p-3 border dark:border-gray-700">{file.date}</td>
-
-                  <td className="p-3 border dark:border-gray-700">
+                  <td className="p-3 border border-gray-400 dark:border-gray-700">{file.id}</td>
+                  <td className="p-3 border border-gray-400 dark:border-gray-700">{file.name}</td>
+                  <td className="p-3 border border-gray-400 dark:border-gray-700">{file.classification}</td>
+                  <td className="p-3 border border-gray-400 dark:border-gray-700">{file.jefatura}</td>
+                  <td className="p-3 border border-gray-400 dark:border-gray-700">{file.date}</td>
+                  <td className="p-3 border border-gray-400 dark:border-gray-700">
                     <select
                       value={file.status}
                       onChange={(e) => handleStatusChange(file.id, e.target.value)}
@@ -207,12 +231,8 @@ export default function DocumentStatusPage() {
                       <option value="Aprobado">🎯 Aprobado</option>
                     </select>
                   </td>
-
-                  <td className="p-3 border dark:border-gray-600">
-                    {file.observations}
-                  </td>
-
-                  <td className="p-3 border flex justify-center gap-4 dark:border-gray-700">
+                  <td className="p-3 border border-gray-400 dark:border-gray-700">{file.observations}</td>
+                  <td className="p-3 border border-gray-400 dark:border-gray-700 flex justify-center gap-4">
                     <button
                       className="text-blue-600 dark:text-blue-400"
                       onClick={() => handleDownload(file)}

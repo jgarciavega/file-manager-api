@@ -2,6 +2,9 @@
 
 import { useState } from "react";
 import Image from "next/image";
+import Link from "next/link";
+import { useSession } from "next-auth/react";
+import avatarMap from "../../lib/avatarMap";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
   faDownload,
@@ -9,16 +12,19 @@ import {
   faMoon,
   faSun,
   faStar,
+  faArrowLeft,
 } from "@fortawesome/free-solid-svg-icons";
 
-export default function DocumentStatusPage() {
+export default function FavoritesPage() {
+  const { data: session } = useSession();
+  const user = {
+    name: session?.user?.name || "Usuario",
+    email: session?.user?.email,
+    avatar: avatarMap[session?.user?.email] || "/default-avatar.png",
+  };
+
   const [darkMode, setDarkMode] = useState(false);
   const [search, setSearch] = useState("");
-
-  const currentUser = {
-    name: "Julio Rubio",
-    avatar: "/julio-rubio.jpg",
-  };
 
   const [uploadedFiles, setUploadedFiles] = useState([
     {
@@ -39,17 +45,12 @@ export default function DocumentStatusPage() {
     },
   ]);
 
-  const handleDownload = (file) => {
-    alert(`Descargando: ${file.name}`);
-  };
-
+  const handleDownload = (file) => alert(`Descargando: ${file.name}`);
   const handleDelete = (id) => {
-    const confirm = window.confirm("¿Eliminar este archivo?");
-    if (confirm) {
+    if (confirm("¿Eliminar este archivo?")) {
       setUploadedFiles((prev) => prev.filter((file) => file.id !== id));
     }
   };
-
   const handleToggleFavorite = (id) => {
     setUploadedFiles((prev) =>
       prev.map((file) =>
@@ -60,9 +61,9 @@ export default function DocumentStatusPage() {
 
   const filteredFiles = uploadedFiles.filter(
     (file) =>
+      file.favorite &&
       (file.name.toLowerCase().includes(search.toLowerCase()) ||
-        file.owner.toLowerCase().includes(search.toLowerCase())) &&
-      file.favorite
+        file.owner.toLowerCase().includes(search.toLowerCase()))
   );
 
   const statusColor = (status) => {
@@ -79,11 +80,20 @@ export default function DocumentStatusPage() {
   };
 
   return (
-    <div className={`p-6 min-h-screen ${darkMode ? "bg-gray-900 text-white" : "bg-white text-gray-900"}`}>
+    <div
+      className={`p-6 min-h-screen transition-all ${
+        darkMode ? "bg-[#0d1b2a] text-white" : "bg-gray-50 text-gray-900"
+      }`}
+    >
+      {/* Encabezado superior */}
       <div className="flex justify-between items-start mb-6">
-        <Image src="/api.jpg" alt="Logo API" width={320} height={50} />
-
-        <div className="flex flex-col items-center gap-2 mr-4">
+        <Image
+          src={darkMode ? "/api-dark23.png" : "/api.jpg"}
+          alt="Logo API"
+          width={320}
+          height={50}
+        />
+        <div className="flex flex-col items-center gap-2">
           <button
             onClick={() => setDarkMode(!darkMode)}
             className="text-xl text-gray-700 dark:text-yellow-300 hover:text-black dark:hover:text-white transition"
@@ -91,80 +101,130 @@ export default function DocumentStatusPage() {
           >
             <FontAwesomeIcon icon={darkMode ? faSun : faMoon} />
           </button>
-
           <div className="flex items-center gap-2">
             <Image
-              src={currentUser.avatar}
+              src={user.avatar}
               alt="Avatar"
               width={45}
               height={45}
               className="rounded-full border border-gray-300"
             />
-            <span className="font-medium text-gray-800 dark:text-white">{currentUser.name}</span>
+            <span className="font-medium text-gray-600 dark:text-white">
+              {user.name}
+            </span>
           </div>
         </div>
       </div>
 
-      <h1 className="text-4xl font-bold text-center mb-6 text-gray-600 dark:text-white">
+      {/* Botón regreso */}
+      <div className="mb-6">
+        <Link
+          href="/home"
+          className="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-md"
+        >
+          <FontAwesomeIcon icon={faArrowLeft} /> Volver al Inicio
+        </Link>
+      </div>
+
+      {/* Título */}
+      <h1 className="text-4xl font-bold text-center mb-6 text-blue-600 dark:text-blue-400">
         Favoritos-Marcado
       </h1>
 
+      {/* Buscador */}
       <div className="flex justify-end mb-4">
         <input
           type="text"
           placeholder="🔍 Buscar por nombre o responsable"
-          className="px-4 py-2 rounded-md border text-black focus:outline-none"
+          className={`px-4 py-2 rounded-md border text-sm w-full max-w-sm focus:outline-none focus:ring-2 focus:ring-blue-500 ${
+            darkMode
+              ? "bg-gray-800 text-white border-gray-600 placeholder-gray-400"
+              : "bg-white text-gray-900 border-gray-400 placeholder-gray-600"
+          }`}
           value={search}
           onChange={(e) => setSearch(e.target.value)}
         />
       </div>
 
-      <div className="bg-white dark:bg-gray-800 shadow-md rounded-lg p-6 border border-gray-300 dark:border-gray-600">
-        <table className="w-full table-auto border border-gray-400 dark:border-gray-600">
-          <thead>
-            <tr className="bg-red-200 text-gray-800 dark:bg-red-500 dark:text-white">
-              <th className="p-3 border border-gray-800 dark:border-gray-600">Documento</th>
-              <th className="p-3 border border-gray-800 dark:border-gray-600">Fecha</th>
-              <th className="p-3 border border-gray-800 dark:border-gray-600">Responsable</th>
-              <th className="p-3 border border-gray-800 dark:border-gray-600">Estado</th>
-              <th className="p-3 border border-gray-800 dark:border-gray-600">Acciones</th>
+      {/* Tabla */}
+      <div
+        className={`shadow-md rounded-lg p-6 border ${
+          darkMode ? "bg-[#1a2b3c] border-gray-800" : "bg-white border-gray-400"
+        }`}
+      >
+        <table className="w-full table-auto text-sm border-collapse">
+          <thead className={darkMode ? "bg-gray-700 text-white" : "bg-gray-200"}>
+            <tr>
+              {["Documento", "Fecha", "Responsable", "Estado", "Acciones"].map(
+                (header) => (
+                  <th
+                    key={header}
+                    className={`p-3 border font-semibold text-sm ${
+                      darkMode ? "border-gray-600" : "border-gray-400"
+                    }`}
+                  >
+                    {header}
+                  </th>
+                )
+              )}
             </tr>
           </thead>
           <tbody>
-            {filteredFiles.map((file) => (
-              <tr key={file.id} className="text-center">
-                <td className="p-3 border text-gray-800 dark:text-white dark:border-gray-600">{file.name}</td>
-                <td className="p-3 border text-gray-800 dark:text-white dark:border-gray-600">{file.date}</td>
-                <td className="p-3 border text-gray-800 dark:text-white dark:border-gray-600">{file.owner}</td>
-                <td className={`p-3 border font-semibold ${statusColor(file.status)} dark:border-gray-600`}>
-                  {file.status}
-                </td>
-                <td className="p-3 border border-gray-800 dark:border-gray-600 flex justify-center gap-4">
-                  <button
-                    className="text-blue-600 dark:text-blue-400"
-                    onClick={() => handleDownload(file)}
+            {filteredFiles.length > 0 ? (
+              filteredFiles.map((file) => (
+                <tr
+                  key={file.id}
+                  className={`text-center ${
+                    darkMode
+                      ? "even:bg-[#2c3e50] odd:bg-[#1a2634]"
+                      : "even:bg-gray-50 odd:bg-white"
+                  }`}
+                >
+                  <td className="p-3 border dark:border-gray-600 border-gray-400">
+                    {file.name}
+                  </td>
+                  <td className="p-3 border dark:border-gray-600 border-gray-400">
+                    {file.date}
+                  </td>
+                  <td className="p-3 border dark:border-gray-600 border-gray-400">
+                    {file.owner}
+                  </td>
+                  <td
+                    className={`p-3 border font-semibold ${statusColor(
+                      file.status
+                    )} dark:border-gray-600 border-gray-400`}
                   >
-                    <FontAwesomeIcon icon={faDownload} />
-                  </button>
-                  <button
-                    className="text-red-600 dark:text-red-400"
-                    onClick={() => handleDelete(file.id)}
-                  >
-                    <FontAwesomeIcon icon={faTrash} />
-                  </button>
-                  <button
-                    className="text-yellow-500"
-                    onClick={() => handleToggleFavorite(file.id)}
-                    title="Quitar de favoritos"
-                  >
-                    <FontAwesomeIcon icon={faStar} />
-                  </button>
-                </td>
-              </tr>
-            ))}
-            {filteredFiles.length === 0 && (
+                    {file.status}
+                  </td>
+                  <td className="p-3 border flex justify-center gap-4 dark:border-gray-600 border-gray-400">
+                    <button
+                      className="text-blue-600 dark:text-blue-400"
+                      onClick={() => handleDownload(file)}
+                    >
+                      <FontAwesomeIcon icon={faDownload} />
+                    </button>
+                    <button
+                      className="text-red-600 dark:text-red-400"
+                      onClick={() => handleDelete(file.id)}
+                    >
+                      <FontAwesomeIcon icon={faTrash} />
+                    </button>
+                    <button
+                      className="text-yellow-500"
+                      onClick={() => handleToggleFavorite(file.id)}
+                      title="Quitar de favoritos"
+                    >
+                      <FontAwesomeIcon icon={faStar} />
+                    </button>
+                  </td>
+                </tr>
+              ))
+            ) : (
               <tr>
-                <td colSpan="5" className="text-center p-4 text-gray-500 dark:text-gray-300">
+                <td
+                  colSpan="5"
+                  className="text-center p-4 text-gray-500 dark:text-gray-300"
+                >
                   No hay documentos marcados como favoritos.
                 </td>
               </tr>
