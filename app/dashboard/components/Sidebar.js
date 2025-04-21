@@ -25,7 +25,7 @@ import {
   faChartBar,
   faThumbtack,
   faBoxes,
-  faArrowLeft, // ✅ IMPORTANTE: agregado para el botón
+  faArrowLeft, 
 } from "@fortawesome/free-solid-svg-icons";
 
 export default function Sidebar({ isSidebarCollapsed }) {
@@ -101,6 +101,7 @@ export default function Sidebar({ isSidebarCollapsed }) {
               />
             </div>
             <ul className="space-y-10 mt-36">
+
               {/* Gestión de archivos */}
               <li className="font-bold text-red-800 flex items-center">
                 <FontAwesomeIcon

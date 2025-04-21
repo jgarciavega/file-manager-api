@@ -31,7 +31,7 @@ export default function UploadNew() {
   });
 
   const [uploadedFiles, setUploadedFiles] = useState([]);
-  const [darkMode, setDarkMode] = useState(true);
+  const [darkMode, setDarkMode] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
 
   const currentUser = {

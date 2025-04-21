@@ -12,7 +12,7 @@ export default function SidebarAdmin() {
   const { data: session } = useSession();
 
   const rawName = session?.user?.name || "";
-  const firstName = rawName.split(" ")[0]; // solo "Jorge"
+  const firstName = rawName.split(" ")[0];
 
   const user = {
     name: session?.user?.name || "Usuario",
@@ -61,15 +61,14 @@ export default function SidebarAdmin() {
             </Link>
           </li>
           <li>
-            <li>
-              <Link
-                href="/admin/verificacion-lea"
-                className="hover:text-blue-400 transition"
-              >
-                Verificación de LEA-BCS
-              </Link>
-            </li>
-
+            <Link
+              href="/admin/verificacion-lea"
+              className="hover:text-blue-400 transition"
+            >
+              Verificación de LEA-BCS
+            </Link>
+          </li>
+          <li>
             <Link
               href="/admin/configuracion"
               className="hover:text-blue-400 transition"
@@ -89,9 +88,8 @@ export default function SidebarAdmin() {
           className="rounded-full border mb-2 object-cover bg-gray-700"
         />
         <p className="font-semibold text-sm">
-          {user.title} {user.shortName}
+          {user.title} {firstName}
         </p>
-
         <p className="text-xs text-gray-300 mb-4">ADM: {user.position}</p>
 
         <button
@@ -101,7 +99,6 @@ export default function SidebarAdmin() {
           Cerrar sesión
         </button>
 
-        {/* Botón modo oscuro */}
         <div className="mt-4">
           <DarkModeToggle />
         </div>

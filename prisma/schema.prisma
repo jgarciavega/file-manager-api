@@ -1,0 +1,117 @@
+generator client {
+  provider = "prisma-client-js"
+  output   = "./node_modules/@prisma/client"
+}
+
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+model bitacora {
+  id           Int       @id @default(autoincrement())
+  usuario_id   Int?
+  rol          String?   @db.VarChar(45)
+  accion       String?   @db.VarChar(45)
+  ip           String?   @db.VarChar(45)
+  descripcion  String?   @db.VarChar(255)
+  fecha_inicio DateTime? @default(now()) @db.DateTime(0)
+  fecha_act    DateTime? @db.DateTime(0)
+
+  @@index([usuario_id], map: "usuario_id")
+}
+
+model departamentos {
+  id          Int     @id @default(autoincrement())
+  nombre      String? @db.VarChar(50)
+  descripcion String? @db.VarChar(600)
+  activo      Int?    @default(1) @db.TinyInt
+}
+
+model documentos {
+  id                  Int       @id @default(autoincrement())
+  nombre              String?   @db.VarChar(50)
+  descripcion         String?   @db.VarChar(100)
+  mime                String?   @db.VarChar(50)
+  ruta                String?   @db.VarChar(255)
+  tipos_documentos_id Int?
+  usuarios_id         Int?
+  fecha_subida        DateTime? @default(now()) @db.DateTime(0)
+
+  @@index([tipos_documentos_id], map: "tipos_documentos_id")
+  @@index([usuarios_id], map: "usuarios_id")
+}
+
+model periodos {
+  id           Int       @id @default(autoincrement())
+  periodo      String?   @db.VarChar(50)
+  fecha_inicio DateTime? @db.Date
+  fecha_final  DateTime? @db.Date
+  activo       Int?      @default(1) @db.TinyInt
+}
+
+model procesos {
+  id               Int                 @id @default(autoincrement())
+  estatus          procesos_estatus
+  resultado        procesos_resultado?
+  fecha_inicio     DateTime?           @db.Date
+  fecha_fin        DateTime?           @db.Date
+  departamentos_id Int?
+  periodos_id      Int?
+
+  @@index([departamentos_id], map: "departamentos_id")
+  @@index([periodos_id], map: "periodos_id")
+}
+
+model roles {
+  id             Int        @id @default(autoincrement())
+  tipo           roles_tipo
+  descripcion    String?    @db.VarChar(280)
+  activo         Int?       @default(1) @db.TinyInt
+  fecha_creacion DateTime?  @default(now()) @db.DateTime(0)
+}
+
+model tipos_documentos {
+  id   Int     @id @default(autoincrement())
+  tipo String? @db.VarChar(50)
+}
+
+model usuarios {
+  id               Int     @id @default(autoincrement())
+  nombre           String? @db.VarChar(50)
+  apellidos        String? @db.VarChar(100)
+  email            String? @unique(map: "email") @db.VarChar(100)
+  password         String? @db.VarChar(50)
+  departamentos_id Int?
+  activo           Int?    @default(1) @db.TinyInt
+
+  @@index([departamentos_id], map: "departamentos_id")
+}
+
+model usuarios_has_roles {
+  usuarios_id Int
+  roles_id    Int
+
+   usuarios    usuarios @relation(fields: [usuarios_id], references: [id])
+  roles       roles    @relation(fields: [roles_id], references: [id])
+
+  @@id([usuarios_id, roles_id])
+}
+
+enum procesos_estatus {
+  en_proceso
+  terminado
+}
+
+enum roles_tipo {
+  admin
+  capturista
+  revisor
+}
+
+enum procesos_resultado {
+  aprobado
+  rechazado
+  en_revisi_n @map("en_revisión")
+}
