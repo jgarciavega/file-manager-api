@@ -3,8 +3,8 @@
 import { useState } from "react";
 import Image from "next/image";
 import { useSession } from "next-auth/react";
-import avatarMap from "../../lib/avatarMap";
-import admMap from "../../lib/admMap";
+import avatarMap from "../../../lib/avatarMap";
+import admMap from "../../../lib/admMap";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
   faDownload,

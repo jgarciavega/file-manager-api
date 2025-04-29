@@ -4,7 +4,7 @@ import { useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { useSession } from "next-auth/react";
-import avatarMap from "../../lib/avatarMap";
+import avatarMap from "../../../lib/avatarMap";
 import {
   faDownload,
   faCheck,

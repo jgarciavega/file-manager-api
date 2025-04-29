@@ -4,9 +4,9 @@ import DarkModeToggle from "./../components/DarkModeToggle";
 import Link from "next/link";
 import Image from "next/image";
 import { useSession, signOut } from "next-auth/react";
-import avatarMap from "../../lib/avatarMap";
-import admMap from "../../lib/admMap";
-import profesionMap from "../../lib/profesionMap";
+import avatarMap from "../../../lib/avatarMap";
+import admMap from "../../../lib/admMap";
+import profesionMap from "../../../lib/profesionMap";
 
 export default function SidebarAdmin() {
   const { data: session } = useSession();

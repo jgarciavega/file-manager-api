@@ -11,7 +11,7 @@ import {
   faArrowLeft,
 } from "@fortawesome/free-solid-svg-icons";
 import { useSession } from "next-auth/react";
-import avatarMap from "../../lib/avatarMap";
+import avatarMap from "../../../lib/avatarMap";
 import Link from "next/link";
 
 export default function UploadNew() {

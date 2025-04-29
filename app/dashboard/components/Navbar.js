@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import Image from "next/image";
-import avatarMap from "../../lib/avatarMap";
+import avatarMap from "../../../lib/avatarMap";
 import styles from "./Navbar.module.css";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {

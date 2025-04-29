@@ -5,9 +5,9 @@ import { useState } from "react";
 import Sidebar from "../dashboard/components/Sidebar";
 import Navbar from "../dashboard/components/Navbar";
 import styles from "./HomePage.module.css";
-import avatarMap from "../lib/avatarMap";
-import admMap from "../lib/admMap";
-import profesionMap from "../lib/profesionMap";
+import avatarMap from "../../lib/avatarMap";
+import admMap from "../../lib/admMap";
+import profesionMap from "../../lib/profesionMap";
 
 export default function Home() {
   const { data: session, status } = useSession();

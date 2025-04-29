@@ -8,9 +8,9 @@ import Image from "next/image";
 import Swal from "sweetalert2";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { useSession } from "next-auth/react";
-import admMap from "../../lib/admMap";
-import avatarMap from "../../lib/avatarMap";
-import profesionMap from "../../lib/profesionMap";
+import admMap from "../../../lib/admMap";
+import avatarMap from "../../../lib/avatarMap";
+import profesionMap from "../../../lib/profesionMap";
 
 import {
   faBars,

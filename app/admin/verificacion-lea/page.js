@@ -5,8 +5,8 @@ import Image from "next/image";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faArrowLeft } from "@fortawesome/free-solid-svg-icons";
 import Link from "next/link";
-import avatarMap from "../../lib/avatarMap";
-import admMap from "../../lib/admMap";
+import avatarMap from "../../../lib/avatarMap";
+import admMap from "../../../lib/admMap";
 
 export default function VerificacionLEA() {
   const { data: session, status } = useSession();
