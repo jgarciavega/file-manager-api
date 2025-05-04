@@ -1,98 +1,149 @@
-'use client';
+"use client";
+import { useEffect, useState } from "react";
 
-import { useEffect, useState } from 'react';
+const roles = ["admin", "revisor", "capturista"];
 
-const roles = ['admin', 'revisor', 'capturista'];
-
-export default function Usuarios() {
+export default function UsuariosPage() {
   const [usuarios, setUsuarios] = useState([]);
-  const [nuevoUsuario, setNuevoUsuario] = useState({ nombre: '', rol: 'capturista' });
+  const [loading, setLoading] = useState(true);
+  const [nuevoUsuario, setNuevoUsuario] = useState({
+    nombre: "",
+    rol: "capturista",
+  });
 
-  // Leer usuarios guardados en localStorage al iniciar
+  // 1️⃣ Al montar, traemos la lista
   useEffect(() => {
-    const datosGuardados = localStorage.getItem('usuarios');
-    if (datosGuardados) {
-      setUsuarios(JSON.parse(datosGuardados));
-    } else {
-      // Si no hay datos, usamos estos por defecto
-      const usuariosIniciales = [
-        { id: 1, nombre: 'Jorge', rol: 'admin' },
-        { id: 2, nombre: 'Andrea', rol: 'capturista' },
-        { id: 3, nombre: 'Luis', rol: 'revisor' },
-      ];
-      setUsuarios(usuariosIniciales);
-      localStorage.setItem('usuarios', JSON.stringify(usuariosIniciales));
-    }
+    fetch("/api/usuarios")
+      .then((r) => r.json())
+      .then((data) => setUsuarios(data))
+      .catch(console.error)
+      .finally(() => setLoading(false));
   }, []);
 
-  // Guardar en localStorage cada vez que cambia la lista
-  useEffect(() => {
-    localStorage.setItem('usuarios', JSON.stringify(usuarios));
-  }, [usuarios]);
+  if (loading) {
+    return <div className="p-6 text-center">Cargando usuarios…</div>;
+  }
 
-  const handleChange = (e) => {
-    const { name, value } = e.target;
-    setNuevoUsuario((prev) => ({ ...prev, [name]: value }));
+  // 2️⃣ Crear usuario via API
+  const handleAgregar = async () => {
+    if (!nuevoUsuario.nombre.trim()) return;
+    setLoading(true);
+    try {
+      const res = await fetch("/api/usuarios", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(nuevoUsuario),
+      });
+      if (!res.ok) throw new Error("Falló creación");
+      const creado = await res.json();
+      setUsuarios((prev) => [...prev, creado]); // ✅ añadimos al state
+      setNuevoUsuario({ nombre: "", rol: "capturista" });
+    } catch (err) {
+      console.error(err);
+      alert("No se pudo agregar");
+    } finally {
+      setLoading(false);
+    }
   };
 
-  const handleAgregar = () => {
-    if (nuevoUsuario.nombre.trim() === '') return;
-
-    const nuevo = {
-      id: usuarios.length ? usuarios[usuarios.length - 1].id + 1 : 1,
-      nombre: nuevoUsuario.nombre,
-      rol: nuevoUsuario.rol,
-    };
-
-    setUsuarios([...usuarios, nuevo]);
-    setNuevoUsuario({ nombre: '', rol: 'capturista' });
+  // 3️⃣ Cambiar rol via API
+  const cambiarRol = async (id, rol) => {
+    try {
+      const res = await fetch(`/api/usuarios/${id}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ rol }),
+      });
+      if (!res.ok) throw new Error();
+      setUsuarios((prev) => prev.map((u) => (u.id === id ? { ...u, rol } : u)));
+    } catch {
+      alert("Error actualizando rol");
+    }
   };
 
-  const cambiarRol = (id, nuevoRol) => {
-    setUsuarios((prev) =>
-      prev.map((u) => (u.id === id ? { ...u, rol: nuevoRol } : u))
-    );
-  };
-
-  const eliminarUsuario = (id) => {
-    setUsuarios((prev) => prev.filter((u) => u.id !== id));
+  // 4️⃣ Eliminar usuario via API
+  const eliminarUsuario = async (id) => {
+    if (!confirm("¿Seguro que deseas eliminar?")) return;
+    try {
+      const res = await fetch(`/api/usuarios/${id}`, { method: "DELETE" });
+      if (!res.ok) throw new Error();
+      setUsuarios((prev) => prev.filter((u) => u.id !== id));
+    } catch {
+      alert("No se pudo eliminar");
+    }
   };
 
   return (
-    <div className="space-y-8">
-      <h1 className="text-2xl font-bold text-gray-800 dark:text-white">Gestión de Usuarios</h1>
+    <div className="p-6 space-y-8">
+      <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">
+        Gestión de Usuarios
+      </h1>
 
-      {/* Tabla de usuarios */}
       <div className="overflow-x-auto">
-        <table className="min-w-full bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg text-sm">
-          <thead className="bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300">
+        <table
+          className="
+            min-w-full 
+            border border-gray-400 bg-white 
+            dark:border-gray-700 dark:bg-gray-800 
+            border-collapse
+          "
+        >
+          <thead className="bg-gray-200 dark:bg-gray-800">
             <tr>
-              <th className="p-3 text-left">ID</th>
-              <th className="p-3 text-left">Nombre</th>
-              <th className="p-3 text-left">Rol</th>
-              <th className="p-3 text-left">Acciones</th>
+              {["ID", "Nombre", "Rol", "Acciones"].map((h) => (
+                <th
+                  key={h}
+                  className="
+                    px-4 py-2 
+                    border border-gray-400 dark:border-gray-700 
+                    text-left 
+                    font-medium 
+                    text-gray-700 dark:text-gray-300
+                  "
+                >
+                  {h}
+                </th>
+              ))}
             </tr>
           </thead>
           <tbody>
-            {usuarios.map((u) => (
-              <tr key={u.id} className="border-t border-gray-100 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700 transition">
-                <td className="p-3 text-gray-800 dark:text-gray-200">{u.id}</td>
-                <td className="p-3 text-gray-800 dark:text-gray-200">{u.nombre}</td>
-                <td className="p-3">
+            {usuarios.map((u, i) => (
+              <tr
+                key={u.id}
+                className={`
+                  hover:bg-gray-100 dark:hover:bg-gray-700 transition
+                  ${i % 2 === 0 ? "even:bg-gray-50 dark:even:bg-gray-700" : ""}
+                `}
+              >
+                <td className="px-4 py-2 border border-gray-400 dark:border-gray-700 text-gray-800 dark:text-gray-200">
+                  {u.id}
+                </td>
+                <td className="px-4 py-2 border border-gray-400 dark:border-gray-700 text-gray-800 dark:text-gray-200">
+                  {u.nombre}
+                </td>
+                <td className="px-4 py-2 border border-gray-400 dark:border-gray-700">
                   <select
                     value={u.rol}
                     onChange={(e) => cambiarRol(u.id, e.target.value)}
-                    className="bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded px-2 py-1 text-gray-800 dark:text-white"
+                    className="
+                      w-full 
+                      bg-white dark:bg-gray-700 
+                      border border-gray-300 dark:border-gray-600 
+                      rounded px-2 py-1 
+                      text-gray-800 dark:text-gray-100
+                    "
                   >
                     {roles.map((r) => (
-                      <option key={r} value={r}>{r}</option>
+                      <option key={r} value={r}>
+                        {r}
+                      </option>
                     ))}
                   </select>
                 </td>
-                <td className="p-3">
+                <td className="px-4 py-2 border border-gray-400 dark:border-gray-700">
                   <button
                     onClick={() => eliminarUsuario(u.id)}
-                    className="text-red-500 hover:underline"
+                    className="text-red-600 hover:underline"
                   >
                     Eliminar
                   </button>
@@ -103,43 +154,41 @@ export default function Usuarios() {
         </table>
       </div>
 
-      {/* Formulario para nuevo usuario */}
-      <div className="bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 p-6 rounded-lg">
-        <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Agregar nuevo usuario</h2>
-
-        <div className="grid sm:grid-cols-2 gap-4">
-          <div>
-            <label className="block mb-1 text-sm text-gray-700 dark:text-gray-300">Nombre</label>
-            <input
-              type="text"
-              name="nombre"
-              value={nuevoUsuario.nombre}
-              onChange={handleChange}
-              className="w-full p-2 border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
-              placeholder="Nombre del usuario"
-            />
-          </div>
-
-          <div>
-            <label className="block mb-1 text-sm text-gray-700 dark:text-gray-300">Rol</label>
-            <select
-              name="rol"
-              value={nuevoUsuario.rol}
-              onChange={handleChange}
-              className="w-full p-2 border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
-            >
-              {roles.map((r) => (
-                <option key={r} value={r}>{r}</option>
-              ))}
-            </select>
-          </div>
+      <div className="bg-white dark:bg-gray-800 border border-gray-400 dark:border-gray-700 p-6 rounded-lg">
+        <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">
+          Agregar Usuario
+        </h2>
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+          <input
+            type="text"
+            name="nombre"
+            value={nuevoUsuario.nombre}
+            onChange={(e) =>
+              setNuevoUsuario((prev) => ({ ...prev, nombre: e.target.value }))
+            }
+            placeholder="Nombre"
+            className="col-span-2 p-2 border border-gray-400 dark:border-gray-600 rounded bg-white dark:bg-gray-700 text-gray-800 dark:text-gray-100"
+          />
+          <select
+            name="rol"
+            value={nuevoUsuario.rol}
+            onChange={(e) =>
+              setNuevoUsuario((prev) => ({ ...prev, rol: e.target.value }))
+            }
+            className="p-2 border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-700 text-gray-800 dark:text-gray-100"
+          >
+            {roles.map((r) => (
+              <option key={r} value={r}>
+                {r}
+              </option>
+            ))}
+          </select>
         </div>
-
         <button
           onClick={handleAgregar}
-          className="mt-4 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded transition"
+          className="mt-4 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded"
         >
-          Agregar Usuario
+          Agregar
         </button>
       </div>
     </div>
