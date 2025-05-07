@@ -131,7 +131,7 @@ export default function Sidebar({ isSidebarCollapsed }) {
                     </a>
                   </li>
                   <li className="font-bold text-violet-500">
-                    <Link href="/dashboard/status" className="flex items-center">
+                    <Link href="/dashboard/estado-documento" className="flex items-center">
                       <FontAwesomeIcon
                         icon={faCheck}
                         className="mr-2 text-blue-400"
