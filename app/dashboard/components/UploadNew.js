@@ -1,124 +1,99 @@
-"use client";
+'use client'
 
-import { useState } from "react";
-import Image from "next/image";
-import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import {
-  faUpload,
-  faMoon,
-  faSun,
-  faSearch,
-  faArrowLeft,
-} from "@fortawesome/free-solid-svg-icons";
-import { useSession } from "next-auth/react";
-import avatarMap from "../../../lib/avatarMap";
-import Link from "next/link";
+import { useState } from 'react'
+import Image from 'next/image'
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
+import { faUpload, faMoon, faSun, faArrowLeft } from '@fortawesome/free-solid-svg-icons'
+import { useSession } from 'next-auth/react'
+import avatarMap from '../../../lib/avatarMap'
+import Link from 'next/link'
 
 export default function UploadNew() {
-  const { data: session } = useSession();
+  const { data: session } = useSession()
+  const userEmail  = session?.user?.email  || 'default'
+  const userName   = session?.user?.name   || 'Usuario'
+  const userAvatar = avatarMap[userEmail]  || '/default-avatar.png'
 
-  const userEmail = session?.user?.email || "default";
-  const userName = session?.user?.name || "Usuario";
-  const userAvatar = avatarMap[userEmail] || "/default-avatar.png";
-
-  const [document, setDocument] = useState({
-    name: "",
-    origin: "",
-    classification: "",
-    jefatura: "",
-    review: "",
-    file: null,
-  });
-
-  const [uploadedFiles, setUploadedFiles] = useState([]);
-  const [darkMode, setDarkMode] = useState(false);
-  const [searchQuery, setSearchQuery] = useState("");
+  const [form, setForm] = useState({
+    nombre:         '',
+    origin:         '',
+    classification: '',
+    jefatura:       '',
+    review:         '',
+    file:           null,
+  })
+  const [uploadedFiles, setUploadedFiles] = useState([])
+  const [darkMode, setDarkMode]     = useState(false)
+  const [searchQuery, setSearchQuery] = useState('')
 
   const currentUser = {
-    name: userName,
+    name:   userName,
     avatar: userAvatar,
-    logo: "/api-dark23.png",
-  };
+    logo:   '/api-dark23.png',
+  }
 
-  const handleChange = (e) => {
-    const { name, value, files } = e.target;
-    setDocument((prev) => ({
-      ...prev,
-      [name]: files ? files[0] : value,
-    }));
-  };
+  const handleChange = e => {
+    const { name, value, files } = e.target
+    setForm(f => ({ ...f, [name]: files ? files[0] : value }))
+  }
 
   const handleUpload = async () => {
-    if (!document.file || !document.name) {
-      alert("Faltan campos obligatorios.");
-      return;
+    if (!form.file) {
+      alert('❗ Debes seleccionar un archivo.')
+      return
     }
 
-    const formData = new FormData();
-    formData.append("file", document.file);
-    formData.append("name", document.name);
-    formData.append("origin", document.origin);
-    formData.append("classification", document.classification);
-    formData.append("jefatura", document.jefatura);
-    formData.append("review", document.review);
+    const fd = new FormData()
+    fd.append('file', form.file)
+    fd.append('nombre',         form.nombre || form.file.name)
+    fd.append('origin',         form.origin)
+    fd.append('classification', form.classification)
+    fd.append('jefatura',       form.jefatura)
+    fd.append('review',         form.review)
+    fd.append('usuarioId',      session.user.id)
 
     try {
-      const res = await fetch("/api/upload", {
-        method: "POST",
-        body: formData,
-      });
+      const res = await fetch('/api/upload', { method: 'POST', body: fd })
+      if (!res.ok) throw new Error('Error en el servidor')
+      const { documento } = await res.json()
 
-      if (res.ok) {
-        const result = await res.json();
-        const newEntry = {
-          id: Date.now(),
-          ...document,
-          date: new Date().toLocaleDateString(),
-          owner: currentUser.name,
-          filename: result.files.file.originalFilename,
-        };
-        setUploadedFiles((prev) => [...prev, newEntry]);
-        alert("✅ Documento subido exitosamente");
-        setDocument({
-          name: "",
-          origin: "",
-          classification: "",
-          jefatura: "",
-          review: "",
-          file: null,
-        });
-      } else {
-        alert("❌ Error al subir el documento");
-      }
-    } catch (error) {
-      console.error(error);
-      alert("❌ Error al conectar con el servidor");
+      setUploadedFiles(prev => [{
+        id:          documento.id,
+        nombre:      documento.nombre,
+        origin:      form.origin,
+        classification: form.classification,
+        jefatura:    form.jefatura,
+        review:      documento.descripcion,
+        fecha:       new Date(documento.fecha_subida).toLocaleDateString(),
+        owner:       currentUser.name,
+        ruta:        documento.ruta,
+      }, ...prev])
+
+      alert('✅ Documento subido exitosamente')
+      setForm({ nombre:'', origin:'', classification:'', jefatura:'', review:'', file:null })
+      document.getElementById('file-input').value = ''
+
+    } catch (err) {
+      console.error(err)
+      alert('❌ Error al subir el documento')
     }
-  };
+  }
 
-  const filteredFiles = uploadedFiles.filter((doc) =>
-    [doc.name, doc.review, doc.id.toString()].some((field) =>
-      field.toLowerCase().includes(searchQuery.toLowerCase())
-    )
-  );
+  const filtered = uploadedFiles.filter(doc =>
+    doc.nombre.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    doc.owner.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    doc.id.toString().includes(searchQuery)
+  )
 
   return (
-    <div
-      className={`min-h-screen p-4 transition-all ${
-        darkMode ? "bg-[#0d1b2a] text-gray-100" : "bg-gray-50 text-gray-800"
-      }`}
-    >
+    <div className={`${darkMode ? 'dark' : ''} min-h-screen bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-gray-100 p-6`}>
       {/* Header */}
-      <div
-        className={`flex justify-between items-start mb-6 p-4 rounded-lg ${
-          darkMode ? "bg-[#1a2b3c]" : "bg-white shadow"
-        }`}
-      >
-        <Image src={currentUser.logo} alt="Logo API" width={300} height={60} />
-        <div className="flex flex-col items-center gap-2">
+      <div className="flex justify-between items-center mb-6 p-4 bg-white dark:bg-gray-800 rounded-lg shadow">
+        <Image src={currentUser.logo} alt="Logo API" width={300} height={60} priority />
+        <div className="flex items-center gap-4">
           <button
-            onClick={() => setDarkMode(!darkMode)}
-            className="text-xl"
+            onClick={() => setDarkMode(d => !d)}
+            className="text-2xl text-gray-700 dark:text-yellow-300"
             title="Cambiar modo"
           >
             <FontAwesomeIcon icon={darkMode ? faSun : faMoon} />
@@ -129,194 +104,152 @@ export default function UploadNew() {
               alt="Avatar"
               width={50}
               height={50}
-              className="rounded-full border border-gray-300"
+              className="rounded-full border-2 border-gray-300 dark:border-gray-600"
             />
-            <span className="font-medium">{currentUser.name}</span>
+            <span className="font-medium text-gray-800 dark:text-gray-100">
+              {currentUser.name}
+            </span>
           </div>
         </div>
       </div>
 
-      {/* Botón volver */}
-      <div className="mb-6">
-        <Link
-          href="/home"
-          className="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-md"
-        >
-          <FontAwesomeIcon icon={faArrowLeft} />
-          Volver al Inicio
-        </Link>
-      </div>
-
-      <h1 className="text-4xl font-bold text-center mb-10 text-blue-500">
-        Subir Documento
-      </h1>
-
-      <div
-        className={`p-8 mb-10 rounded-lg shadow-md ${
-          darkMode ? "bg-[#1f2937]" : "bg-white"
-        }`}
+      {/* Volver */}
+      <Link
+        href="/home"
+        className="inline-flex items-center gap-2 mb-6 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded"
       >
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
-          {[{ label: "Nombre del Documento *", name: "name" }, { label: "Origen", name: "origin" }].map(
-            ({ label, name }) => (
-              <div key={name}>
-                <label className="block font-semibold">{label}</label>
-                <input
-                  type="text"
-                  name={name}
-                  value={document[name]}
-                  onChange={handleChange}
-                  className={`w-full p-2 rounded-md border focus:outline-none focus:border-blue-500 transition-all duration-200
-                    ${
-                      darkMode
-                        ? "bg-gray-800 border-gray-600 text-gray-100"
-                        : "bg-white border-gray-400 text-gray-800"
-                    }`}
-                />
-              </div>
-            )
-          )}
+        <FontAwesomeIcon icon={faArrowLeft} /> Volver al Inicio
+      </Link>
 
-          {[{
-            label: "Clasificación",
-            name: "classification",
-            options: ["Oficio", "Memorándum", "Circular", "Cédula de Auditoría", "Expediente de Investigación"],
-          },
-          {
-            label: "Dirección / Jefatura",
-            name: "jefatura",
-            options: ["Contraloría e Investigación", "Contraloría y Resolución", "Contraloría y Substanciación", "Control Administrativo"],
-          }].map(({ label, name, options }) => (
-            <div key={name}>
-              <label className="block font-semibold">{label}</label>
-              <select
-                name={name}
-                value={document[name]}
+      <h1 className="text-4xl font-bold text-center mb-8 text-blue-500">Subir Documento</h1>
+
+      {/* Formulario */}
+      <div className="p-6 mb-10 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          {/* Campos texto */}
+          {[
+            { label: 'Nombre del Documento *', name: 'nombre' },
+            { label: 'Origen',               name: 'origin' }
+          ].map(fld => (
+            <div key={fld.name}>
+              <label className="block mb-1 font-semibold text-gray-700 dark:text-gray-200">
+                {fld.label}
+              </label>
+              <input
+                type="text"
+                name={fld.name}
+                value={form[fld.name]}
                 onChange={handleChange}
-                className={`w-full p-2 rounded-md border ${
-                  darkMode
-                    ? "bg-gray-800 border-gray-600 text-gray-100"
-                    : "bg-white border-gray-300 text-gray-800"
-                }`}
+                className="w-full p-2 rounded border border-gray-400 bg-gray-100 dark:border-gray-600 dark:bg-gray-700 text-gray-900 dark:text-gray-100 placeholder-gray-600 dark:placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 transition"
+              />
+            </div>
+          ))}
+
+          {/* Selects */}
+          {[
+            {
+              label:   'Clasificación',
+              name:    'classification',
+              options: ['Oficio','Memorándum','Circular','Cédula de Auditoría','Expediente de Investigación']
+            },
+            {
+              label:   'Dirección / Jefatura',
+              name:    'jefatura',
+              options: ['Contraloría e Investigación','Contraloría y Resolución','Contraloría y Substanciación','Control Administrativo']
+            }
+          ].map(fld => (
+            <div key={fld.name}>
+              <label className="block mb-1 font-semibold text-gray-700 dark:text-gray-200">
+                {fld.label}
+              </label>
+              <select
+                name={fld.name}
+                value={form[fld.name]}
+                onChange={handleChange}
+                className="w-full p-2 rounded border border-gray-400 bg-gray-100 dark:border-gray-600 dark:bg-gray-700 text-gray-900 dark:text-gray-100 transition"
               >
                 <option value="">Seleccione una opción</option>
-                {options.map((opt) => (
-                  <option key={opt} value={opt}>
-                    {opt}
-                  </option>
+                {fld.options.map(opt => (
+                  <option key={opt} value={opt}>{opt}</option>
                 ))}
               </select>
             </div>
           ))}
 
+          {/* Reseña */}
           <div className="md:col-span-2">
-            <label className="block font-semibold">Reseña</label>
+            <label className="block mb-1 font-semibold text-gray-700 dark:text-gray-200">
+              Reseña
+            </label>
             <textarea
               name="review"
-              value={document.review}
+              rows={3}
+              value={form.review}
               onChange={handleChange}
-              rows="3"
-              className={`w-full p-2 rounded-md border ${
-                darkMode
-                  ? "bg-gray-800 border-gray-600 text-gray-100"
-                  : "bg-white border-gray-400 text-gray-800"
-              }`}
+              className="w-full p-2 rounded border border-gray-400 bg-gray-100 dark:border-gray-600 dark:bg-gray-700 text-gray-900 dark:text-gray-100 placeholder-gray-600 dark:placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 transition"
             />
           </div>
         </div>
 
-        <div className="mb-4">
-          <label className="block font-semibold">Seleccionar archivo *</label>
+        {/* File input */}
+        <div className="mt-6">
+          <label className="block mb-1 font-semibold text-gray-700 dark:text-gray-200">
+            Seleccionar archivo *
+          </label>
           <input
+            id="file-input"
             type="file"
             name="file"
             onChange={handleChange}
-            className={`w-full mt-2 rounded border ${
-              darkMode
-                ? "bg-gray-800 border-gray-600 text-gray-100"
-                : "bg-white border-gray-300 text-gray-800"
-            }`}
+            className="w-full p-2 rounded border border-gray-400 bg-gray-100 dark:border-gray-600 dark:bg-gray-700 text-gray-900 dark:text-gray-100 transition"
           />
         </div>
 
         <button
           onClick={handleUpload}
-          className="bg-blue-600 text-white px-6 py-2 rounded-md flex items-center gap-2 hover:bg-blue-700 transition"
+          className="mt-6 px-6 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded flex items-center gap-2 transition"
         >
           <FontAwesomeIcon icon={faUpload} /> Subir Documento
         </button>
       </div>
 
-      {/* Buscador */}
-      <div className="flex justify-end mb-4">
-        <div className="relative w-full max-w-sm">
-          <input
-            type="text"
-            placeholder="Buscar por folio, nombre o reseña..."
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            className={`w-full px-4 py-2 pr-10 rounded-md border shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 ${
-              darkMode
-                ? "bg-gray-800 border-gray-600 text-gray-100 placeholder-gray-400"
-                : "bg-white border-gray-300 text-gray-800 placeholder-gray-500"
-            }`}
-          />
-          <span className="absolute inset-y-0 right-3 flex items-center pointer-events-none">
-            <FontAwesomeIcon
-              icon={faSearch}
-              className={darkMode ? "text-gray-300" : "text-gray-400"}
-            />
-          </span>
-        </div>
-      </div>
-
       {/* Tabla */}
-      <div className={`rounded-lg shadow-md ${darkMode ? "bg-[#1e293b]" : "bg-white"}`}>
-        <table className="min-w-full text-sm border border-gray-300 dark:border-gray-700">
+      <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow">
+        <table className="w-full text-sm border-collapse">
           <thead>
-            <tr
-              className={`text-center font-semibold ${
-                darkMode ? "bg-[#2d3748] text-white" : "bg-gray-200 text-gray-800"
-              }`}
-            >
-              {["Folio", "Nombre", "Origen", "Clasificación", "Jefatura", "Reseña", "Fecha", "Responsable"].map((th) => (
-                <th key={th} className="p-3 border border-gray-600">
-                  {th}
-                </th>
+            <tr className="text-center font-semibold bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-gray-100">
+              {['ID','Nombre','Origen','Clasificación','Jefatura','Reseña','Fecha','Responsable','Descargar'].map(th => (
+                <th key={th} className="p-2 border border-gray-400 dark:border-gray-600">{th}</th>
               ))}
             </tr>
           </thead>
           <tbody>
-            {filteredFiles.length === 0 ? (
+            {filtered.length === 0 ? (
               <tr>
-                <td colSpan="8" className="p-4 text-center text-gray-400">
+                <td colSpan={9} className="p-4 text-center text-gray-500 dark:text-gray-400">
                   No hay documentos disponibles.
                 </td>
               </tr>
-            ) : (
-              filteredFiles.map((doc) => (
-                <tr
-                  key={doc.id}
-                  className={`text-center ${
-                    darkMode
-                      ? "even:bg-[#2c3e50] odd:bg-[#1a2634] text-gray-100"
-                      : "even:bg-gray-50 odd:bg-white text-gray-800"
-                  }`}
-                >
-                  <td className="p-3 border border-gray-600">{doc.id}</td>
-                  <td className="p-3 border border-gray-600">{doc.name}</td>
-                  <td className="p-3 border border-gray-600">{doc.origin}</td>
-                  <td className="p-3 border border-gray-600">{doc.classification}</td>
-                  <td className="p-3 border border-gray-600">{doc.jefatura}</td>
-                  <td className="p-3 border border-gray-600">{doc.review}</td>
-                  <td className="p-3 border border-gray-600">{doc.date}</td>
-                  <td className="p-3 border border-gray-600">{doc.owner}</td>
-                </tr>
-              ))
-            )}
+            ) : filtered.map(doc => (
+              <tr key={doc.id} className="text-center odd:bg-white even:bg-gray-50 dark:odd:bg-gray-700 dark:even:bg-gray-600">
+                <td className="p-2 border border-gray-400 dark:border-gray-600">{doc.id}</td>
+                <td className="p-2 border border-gray-400 dark:border-gray-600">{doc.nombre}</td>
+                <td className="p-2 border border-gray-400 dark:border-gray-600">{doc.origin}</td>
+                <td className="p-2 border border-gray-400 dark:border-gray-600">{doc.classification}</td>
+                <td className="p-2 border border-gray-400 dark:border-gray-600">{doc.jefatura}</td>
+                <td className="p-2 border border-gray-400 dark:border-gray-600">{doc.review}</td>
+                <td className="p-2 border border-gray-400 dark:border-gray-600">{doc.fecha}</td>
+                <td className="p-2 border border-gray-400 dark:border-gray-600">{doc.owner}</td>
+                <td className="p-2 border border-gray-400 dark:border-gray-600">
+                  <a href={doc.ruta} download className="text-blue-600 dark:text-blue-300 hover:underline">
+                    📥
+                  </a>
+                </td>
+              </tr>
+            ))}
           </tbody>
         </table>
       </div>
     </div>
-  );
+  )
 }
