@@ -1,19 +1,20 @@
-'use client'
+'use client';
 
-import { useState } from 'react'
-import Image from 'next/image'
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { faUpload, faMoon, faSun, faArrowLeft } from '@fortawesome/free-solid-svg-icons'
-import { useSession } from 'next-auth/react'
-import avatarMap from '../../../lib/avatarMap'
-import Link from 'next/link'
+import { useState, useRef } from 'react';
+import Image from 'next/image';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { faUpload, faMoon, faSun, faArrowLeft } from '@fortawesome/free-solid-svg-icons';
+import { useSession } from 'next-auth/react';
+import avatarMap from '../../../lib/avatarMap';
+import Link from 'next/link';
 
 export default function UploadNew() {
-  const { data: session } = useSession()
-  const userEmail  = session?.user?.email  || 'default'
-  const userName   = session?.user?.name   || 'Usuario'
-  const userAvatar = avatarMap[userEmail]  || '/default-avatar.png'
+  const { data: session } = useSession();
+  const userEmail  = session?.user?.email  || 'default';
+  const userName   = session?.user?.name   || 'Usuario';
+  const userAvatar = avatarMap[userEmail]  || '/default-avatar.png';
 
+  // Guardamos el formulario completo: nombre, origin, classification, jefatura, review y file
   const [form, setForm] = useState({
     nombre:         '',
     origin:         '',
@@ -21,72 +22,120 @@ export default function UploadNew() {
     jefatura:       '',
     review:         '',
     file:           null,
-  })
-  const [uploadedFiles, setUploadedFiles] = useState([])
-  const [darkMode, setDarkMode]     = useState(false)
-  const [searchQuery, setSearchQuery] = useState('')
+  });
+
+  // Tabla de archivos recién subidos (solo local, para que aparezcan al instante)
+  const [uploadedFiles, setUploadedFiles] = useState([]);
+  const [darkMode, setDarkMode]       = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
+
+  // Referencia para limpiar el <input type="file"> después de subir
+  const fileInputRef = useRef(null);
 
   const currentUser = {
     name:   userName,
     avatar: userAvatar,
-    logo:   '/api-dark23.png',
-  }
+    logo:   '/api-dark23.png', // la imagen de tu logo
+  };
 
-  const handleChange = e => {
-    const { name, value, files } = e.target
-    setForm(f => ({ ...f, [name]: files ? files[0] : value }))
-  }
+  // Cada vez que cambie un campo (o se elija un archivo), lo guardamos en `form`
+  const handleChange = (e) => {
+    const { name, value, files } = e.target;
+    setForm(prev => ({
+      ...prev,
+      [name]: files ? files[0] : value
+    }));
+  };
 
+  // Función que dispara la subida al presionar el botón
   const handleUpload = async () => {
+    // Validaciones mínimas
+    if (!form.nombre.trim()) {
+      alert('❗ El nombre del documento es obligatorio.');
+      return;
+    }
     if (!form.file) {
-      alert('❗ Debes seleccionar un archivo.')
-      return
+      alert('❗ Debes seleccionar un archivo.');
+      return;
+    }
+    if (form.file.size > 10 * 1024 * 1024) {
+      alert('❌ El archivo es demasiado grande. Máximo 10MB.');
+      return;
     }
 
-    const fd = new FormData()
-    fd.append('file', form.file)
-    fd.append('nombre',         form.nombre || form.file.name)
-    fd.append('origin',         form.origin)
-    fd.append('classification', form.classification)
-    fd.append('jefatura',       form.jefatura)
-    fd.append('review',         form.review)
-    fd.append('usuarioId',      session.user.id)
+    // Construimos el FormData con los mismos nombres que espera tu API:
+    // - file     => multipart
+    // - nombre   => nombre del doc
+    // - origin
+    // - classification
+    // - jefatura
+    // - review
+    // - usuarioId (se toma de `session.user.id`)
+    const fd = new FormData();
+    fd.append('file',           form.file);
+    fd.append('nombre',         form.nombre);
+    fd.append('origin',         form.origin);
+    fd.append('classification', form.classification);
+    fd.append('jefatura',       form.jefatura);
+    fd.append('review',         form.review);
+    fd.append('usuarioId',      session.user?.id || '');
 
     try {
-      const res = await fetch('/api/upload', { method: 'POST', body: fd })
-      if (!res.ok) throw new Error('Error en el servidor')
-      const { documento } = await res.json()
+      const res = await fetch('/api/upload', {
+        method: 'POST',
+        body: fd
+      });
 
-      setUploadedFiles(prev => [{
-        id:          documento.id,
-        nombre:      documento.nombre,
-        origin:      form.origin,
-        classification: form.classification,
-        jefatura:    form.jefatura,
-        review:      documento.descripcion,
-        fecha:       new Date(documento.fecha_subida).toLocaleDateString(),
-        owner:       currentUser.name,
-        ruta:        documento.ruta,
-      }, ...prev])
+      if (!res.ok) throw new Error('Error en el servidor');
 
-      alert('✅ Documento subido exitosamente')
-      setForm({ nombre:'', origin:'', classification:'', jefatura:'', review:'', file:null })
-      document.getElementById('file-input').value = ''
+      const { documento } = await res.json();
 
+      // Si llegó bien el JSON y hay un documento creado, lo agregamos a la tabla en pantalla:
+      setUploadedFiles(prev => [
+        {
+          id:            documento.id,
+          nombre:        documento.nombre,
+          origin:        form.origin,
+          classification:form.classification,
+          jefatura:      form.jefatura,
+          review:        documento.descripcion,
+          fecha:         new Date(documento.fecha_subida).toLocaleDateString(),
+          owner:         currentUser.name,
+          ruta:          documento.ruta
+        },
+        ...prev
+      ]);
+
+      alert('✅ Documento subido exitosamente');
+
+      // Reiniciamos el formulario y limpiamos el input file
+      setForm({
+        nombre:         '',
+        origin:         '',
+        classification: '',
+        jefatura:       '',
+        review:         '',
+        file:           null
+      });
+      if (fileInputRef.current) {
+        fileInputRef.current.value = '';
+      }
     } catch (err) {
-      console.error(err)
-      alert('❌ Error al subir el documento')
+      console.error(err);
+      alert('❌ Error al subir el documento');
     }
-  }
+  };
 
+  // Filtrar los documentos recién subidos para la tabla
   const filtered = uploadedFiles.filter(doc =>
     doc.nombre.toLowerCase().includes(searchQuery.toLowerCase()) ||
     doc.owner.toLowerCase().includes(searchQuery.toLowerCase()) ||
     doc.id.toString().includes(searchQuery)
-  )
+  );
 
   return (
     <div className={`${darkMode ? 'dark' : ''} min-h-screen bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-gray-100 p-6`}>
+
       {/* Header */}
       <div className="flex justify-between items-center mb-6 p-4 bg-white dark:bg-gray-800 rounded-lg shadow">
         <Image src={currentUser.logo} alt="Logo API" width={300} height={60} priority />
@@ -113,7 +162,7 @@ export default function UploadNew() {
         </div>
       </div>
 
-      {/* Volver */}
+      {/* Volver al Inicio */}
       <Link
         href="/home"
         className="inline-flex items-center gap-2 mb-6 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded"
@@ -123,10 +172,9 @@ export default function UploadNew() {
 
       <h1 className="text-4xl font-bold text-center mb-8 text-blue-500">Subir Documento</h1>
 
-      {/* Formulario */}
-      <div className="p-6 mb-10 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow">
+      {/* Formulario de carga */}
+      <div className="p-6 mb-10 bg-gray-50 dark:bg-gray-800 border-2 border-gray-300 dark:border-gray-600 rounded-lg shadow-lg">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          {/* Campos texto */}
           {[
             { label: 'Nombre del Documento *', name: 'nombre' },
             { label: 'Origen',               name: 'origin' }
@@ -140,22 +188,21 @@ export default function UploadNew() {
                 name={fld.name}
                 value={form[fld.name]}
                 onChange={handleChange}
-                className="w-full p-2 rounded border border-gray-400 bg-gray-100 dark:border-gray-600 dark:bg-gray-700 text-gray-900 dark:text-gray-100 placeholder-gray-600 dark:placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 transition"
+                className="w-full p-2 rounded border-2 border-gray-400 dark:border-gray-600 bg-gray-100 dark:bg-gray-700 text-gray-900 dark:text-gray-100 placeholder-gray-600 dark:placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 transition"
               />
             </div>
           ))}
 
-          {/* Selects */}
           {[
             {
               label:   'Clasificación',
               name:    'classification',
-              options: ['Oficio','Memorándum','Circular','Cédula de Auditoría','Expediente de Investigación']
+              options: ['Oficio', 'Memorándum', 'Circular', 'Cédula de Auditoría', 'Expediente de Investigación']
             },
             {
               label:   'Dirección / Jefatura',
               name:    'jefatura',
-              options: ['Contraloría e Investigación','Contraloría y Resolución','Contraloría y Substanciación','Control Administrativo']
+              options: ['Contraloría e Investigación', 'Contraloría y Resolución', 'Contraloría y Substanciación', 'Control Administrativo']
             }
           ].map(fld => (
             <div key={fld.name}>
@@ -166,7 +213,7 @@ export default function UploadNew() {
                 name={fld.name}
                 value={form[fld.name]}
                 onChange={handleChange}
-                className="w-full p-2 rounded border border-gray-400 bg-gray-100 dark:border-gray-600 dark:bg-gray-700 text-gray-900 dark:text-gray-100 transition"
+                className="w-full p-2 rounded border-2 border-gray-400 dark:border-gray-600 bg-gray-100 dark:bg-gray-700 text-gray-900 dark:text-gray-100 hover:ring-2 hover:ring-blue-500 transition"
               >
                 <option value="">Seleccione una opción</option>
                 {fld.options.map(opt => (
@@ -186,7 +233,7 @@ export default function UploadNew() {
               rows={3}
               value={form.review}
               onChange={handleChange}
-              className="w-full p-2 rounded border border-gray-400 bg-gray-100 dark:border-gray-600 dark:bg-gray-700 text-gray-900 dark:text-gray-100 placeholder-gray-600 dark:placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 transition"
+              className="w-full p-2 rounded border-2 border-gray-400 dark:border-gray-600 bg-gray-100 dark:bg-gray-700 text-gray-900 dark:text-gray-100 placeholder-gray-600 dark:placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 transition"
             />
           </div>
         </div>
@@ -197,28 +244,28 @@ export default function UploadNew() {
             Seleccionar archivo *
           </label>
           <input
-            id="file-input"
+            ref={fileInputRef}
             type="file"
             name="file"
             onChange={handleChange}
-            className="w-full p-2 rounded border border-gray-400 bg-gray-100 dark:border-gray-600 dark:bg-gray-700 text-gray-900 dark:text-gray-100 transition"
+            className="w-full p-2 rounded border-2 border-gray-400 dark:border-gray-600 bg-gray-100 dark:bg-gray-700 text-gray-900 dark:text-gray-100 transition"
           />
         </div>
 
         <button
           onClick={handleUpload}
-          className="mt-6 px-6 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded flex items-center gap-2 transition"
+          className="mt-6 px-6 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg border-2 flex items-center gap-2 transition"
         >
           <FontAwesomeIcon icon={faUpload} /> Subir Documento
         </button>
       </div>
 
-      {/* Tabla */}
+      {/* Tabla de documentos recién subidos */}
       <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow">
         <table className="w-full text-sm border-collapse">
           <thead>
             <tr className="text-center font-semibold bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-gray-100">
-              {['ID','Nombre','Origen','Clasificación','Jefatura','Reseña','Fecha','Responsable','Descargar'].map(th => (
+              {['ID', 'Nombre', 'Origen', 'Clasificación', 'Jefatura', 'Reseña', 'Fecha', 'Responsable', 'Descargar'].map(th => (
                 <th key={th} className="p-2 border border-gray-400 dark:border-gray-600">{th}</th>
               ))}
             </tr>
@@ -231,7 +278,10 @@ export default function UploadNew() {
                 </td>
               </tr>
             ) : filtered.map(doc => (
-              <tr key={doc.id} className="text-center odd:bg-white even:bg-gray-50 dark:odd:bg-gray-700 dark:even:bg-gray-600">
+              <tr
+                key={doc.id}
+                className={`text-center odd:bg-white even:bg-gray-50 dark:odd:bg-gray-700 dark:even:bg-gray-600 text-gray-800 dark:text-gray-100`}
+              >
                 <td className="p-2 border border-gray-400 dark:border-gray-600">{doc.id}</td>
                 <td className="p-2 border border-gray-400 dark:border-gray-600">{doc.nombre}</td>
                 <td className="p-2 border border-gray-400 dark:border-gray-600">{doc.origin}</td>
@@ -241,7 +291,11 @@ export default function UploadNew() {
                 <td className="p-2 border border-gray-400 dark:border-gray-600">{doc.fecha}</td>
                 <td className="p-2 border border-gray-400 dark:border-gray-600">{doc.owner}</td>
                 <td className="p-2 border border-gray-400 dark:border-gray-600">
-                  <a href={doc.ruta} download className="text-blue-600 dark:text-blue-300 hover:underline">
+                  <a
+                    href={doc.ruta}
+                    download
+                    className="text-blue-600 dark:text-blue-300 hover:underline"
+                  >
                     📥
                   </a>
                 </td>
@@ -251,5 +305,5 @@ export default function UploadNew() {
         </table>
       </div>
     </div>
-  )
+  );
 }
