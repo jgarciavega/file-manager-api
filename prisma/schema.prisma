@@ -25,7 +25,7 @@ model bitacora {
 
 model departamentos {
   id          Int      @id @default(autoincrement())
-  nombre      String  @unique @db.VarChar(50) // Unique para evitar nombres duplicados
+  nombre      String   @db.Textduplicados
   descripcion String?  @db.VarChar(600)
   activo      Boolean  @default(true)
 
@@ -33,27 +33,36 @@ model departamentos {
 }
 
 model documentos {
-  id                   Int      @id @default(autoincrement())
-  nombre               String
-  descripcion          String?
-  mime                 String   @db.VarChar(255)
-  ruta                 String
-  tipos_documentos_id  Int
-  usuarios_id          Int
-  fecha_subida         DateTime
+  id                  Int       @id @default(autoincrement())
+  nombre              String    @db.VarChar(255) 
+  descripcion         String?   @db.Text
+  mime                String    @db.VarChar(255)    
+  ruta                String
+  tipos_documentos_id Int?
+  usuarios_id         Int?
+  fecha_subida        DateTime
+
+  tipos_documentos tipos_documentos? @relation(fields: [tipos_documentos_id], references: [id])
+  usuarios         usuarios?         @relation(fields: [usuarios_id], references: [id])
+
+  @@index([tipos_documentos_id])
+  @@index([usuarios_id])
+}
+
+model favoritos {
+  id               Int      @id @default(autoincrement())
+  usuarios_id      Int
+  documentos_id    Int
+  fecha_agregado   DateTime @default(now())
+  fecha_modificado DateTime?
+  @@unique([usuarios_id, documentos_id])
 }
 
 
-  tipos_documentos tipos_documentos @relation(fields: [tipos_documentos_id], references: [id])
-  usuarios         usuarios         @relation(fields: [usuarios_id], references: [id])
-
-  @@index([tipos_documentos_id], map: "tipos_documentos_id")
-  @@index([usuarios_id], map: "usuarios_id")
-}
 
 model periodos {
   id           Int       @id @default(autoincrement())
-  periodo      String    @unique @db.VarChar(50) // Se evita duplicación de nombres
+  periodo      String    @unique @db.VarChar(50) // evita duplicación de nombres
   fecha_inicio DateTime  @db.Date
   fecha_final  DateTime  @db.Date
   activo       Boolean   @default(true)

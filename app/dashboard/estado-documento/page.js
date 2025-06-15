@@ -1,7 +1,6 @@
 'use client';
 
-import { useState } from "react";
-import profesionMap from "../../../lib/profesionMap";
+import { useState, useEffect } from "react";
 import Image from "next/image";
 import { useSession } from "next-auth/react";
 import avatarMap from "../../../lib/avatarMap";
@@ -17,14 +16,7 @@ import {
 } from "@fortawesome/free-solid-svg-icons";
 import Link from "next/link";
 
-
-/**
- * 👉 Migrado desde `app/dashboard/status/page.js`
- *    • Carpeta renombrada a `estado-documento`
- *    • Componente renombrado a EstadoDocumentoPage
- */
 export default function EstadoDocumentoPage() {
-  // Session & usuario
   const { data: session } = useSession();
   const user = {
     name: session?.user?.name || "Usuario",
@@ -33,36 +25,113 @@ export default function EstadoDocumentoPage() {
     position: admMap[session?.user?.email] || "000",
   };
 
-  // Dark mode + búsqueda
+  const tiposDocumentos = [
+    { id: 1, tipo: "Informe" },
+    { id: 2, tipo: "Oficio" },
+    { id: 3, tipo: "Cédula de Auditoría" },
+    { id: 4, tipo: "Factura" },
+  ];
+
+  const jefaturas = [
+    { id: 1, nombre: "Contraloría e Investigación" },
+    { id: 2, nombre: "Contraloría y Resolución" },
+    { id: 3, nombre: "Dirección General" },
+    { id: 4, nombre: "Dirección Administrativa" },
+  ];
+
   const [darkMode, setDarkMode] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
+  const [uploadedFiles, setUploadedFiles] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [modalObs, setModalObs] = useState({ open: false, text: "" });
 
-  // Datos de ejemplo (antes estaba en status/page.js)
-  const [uploadedFiles, setUploadedFiles] = useState([
-    {
-      id: 749,
-      name: "Registro_Facturacion.docx",
-      classification: "Oficio",
-      jefatura: "Contraloría e Investigación",
-      date: "10/12/2024",
-      owner: "Arq. Julio Rubio",
-      status: "Subido",
-      observations: "Pendiente de validación",
-    },
-    {
-      id: 455,
-      name: "Informe_Auditoria.pdf",
-      classification: "Cédula de Auditoría",
-      jefatura: "Contraloría y Resolución",
-      date: "15/01/2020",
-      owner: "Ing. Jorge Garcia",
-      status: "Revisado",
-      observations: "Observaciones corregidas",
-    },
-  ]);
+  useEffect(() => {
+    const fetchDocs = async () => {
+      try {
+        const res = await fetch("/api/documentos");
+        const data = await res.json();
+        setUploadedFiles(data);
+      } catch (error) {
+        alert("Error al cargar documentos");
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchDocs();
+  }, []);
+
+  const handleObsClick = (obs) => {
+    if (obs) setModalObs({ open: true, text: obs });
+  };
+
+  const handleStatusChange = async (id, newStatus) => {
+    if (user.position !== "admin") return;
+    try {
+      const res = await fetch(`/api/documentos/${id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ status: newStatus }),
+      });
+      if (res.ok) {
+        setUploadedFiles((prev) =>
+          prev.map((file) =>
+            file.id === id ? { ...file, status: newStatus } : file
+          )
+        );
+      } else {
+        alert('No se pudo actualizar el estado');
+      }
+    } catch (error) {
+      alert('Error de red al actualizar el estado');
+    }
+  };
+
+  const handleClasificacionChange = async (id, newTipoId) => {
+    if (user.position !== "admin") return;
+    try {
+      const res = await fetch(`/api/documentos/${id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ tipos_documentos_id: Number(newTipoId) }),
+      });
+      if (res.ok) {
+        setUploadedFiles((prev) =>
+          prev.map((file) =>
+            file.id === id ? { ...file, tipos_documentos_id: Number(newTipoId) } : file
+          )
+        );
+      } else {
+        alert('No se pudo actualizar la clasificación');
+      }
+    } catch (error) {
+      alert('Error de red al actualizar la clasificación');
+    }
+  };
+
+  const handleJefaturaChange = async (id, newJefaturaId) => {
+    if (user.position !== "admin") return;
+    try {
+      const res = await fetch(`/api/documentos/${id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ jefatura_id: Number(newJefaturaId) }),
+      });
+      if (res.ok) {
+        setUploadedFiles((prev) =>
+          prev.map((file) =>
+            file.id === id ? { ...file, jefatura_id: Number(newJefaturaId) } : file
+          )
+        );
+      } else {
+        alert('No se pudo actualizar la jefatura/dirección');
+      }
+    } catch (error) {
+      alert('Error de red al actualizar la jefatura/dirección');
+    }
+  };
 
   const handleDownload = (file) => {
-    alert(`Descargando: ${file.name}`);
+    alert(`Descargando: ${file.nombre}`);
   };
 
   const handleDelete = (id) => {
@@ -71,36 +140,57 @@ export default function EstadoDocumentoPage() {
     }
   };
 
-  const handleStatusChange = (id, newStatus) => {
-    setUploadedFiles((prev) =>
-      prev.map((file) =>
-        file.id === id ? { ...file, status: newStatus } : file
-      )
-    );
-  };
-
   const filteredFiles = uploadedFiles.filter(
     (file) =>
-      file.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      file.owner.toLowerCase().includes(searchTerm.toLowerCase())
+      (file.nombre?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      file.usuarios?.nombre?.toLowerCase().includes(searchTerm.toLowerCase()))
   );
+
+  if (loading) {
+    return (
+      <div className={`p-10 text-center ${darkMode ? "bg-[#0d1b2a] text-white min-h-screen" : ""}`}>
+        Cargando documentos...
+      </div>
+    );
+  }
 
   return (
     <div className={`min-h-screen p-6 transition-all ${darkMode ? "bg-[#0d1b2a] text-white" : "bg-gray-50 text-gray-900"}`}>
-      {/* ——— Header ——— */}
-      <div className={`flex justify-between items-start mb-6 p-4 rounded-lg ${darkMode ? "bg-[#1a2b3c]" : "bg-white"}`}>
-        <Image
-          src={darkMode ? "/api-dark23.png" : "/api.jpg"}
-          alt="Logo API"
-          width={450}
-          height={60}
-          className={darkMode ? "rounded-xl shadow-lg bg-white p-2" : "rounded-md"}
-        />
+      {/* Modal de observaciones */}
+      {modalObs.open && (
+        <div className="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center z-50">
+          <div className={`p-6 rounded shadow-lg max-w-md w-full ${darkMode ? "bg-[#1a2b3c] text-white" : "bg-white"}`}>
+            <h2 className="font-bold mb-2">Observaciones</h2>
+            <p className="mb-4">{modalObs.text}</p>
+            <button
+              className="px-4 py-2 bg-blue-600 text-white rounded"
+              onClick={() => setModalObs({ open: false, text: "" })}
+            >
+              Cerrar
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* Header */}
+      <div className={`flex justify-between items-start mb-6 p-4 rounded-lg shadow-xl ${darkMode ? "bg-[#16213e]" : "bg-white"}`}>
+        {/* Logo institucional */}
+        <div className="flex items-center gap-6">
+      
+          <Image
+            src={darkMode ? "/api-dark23.png" : "/api.jpg"}
+            alt="Logo API BCS"
+            width={350}
+            height={90}
+            className="rounded-md"
+            priority
+          />
+        </div>
 
         <div className="flex flex-col items-center gap-2 mr-4">
           <button
             onClick={() => setDarkMode(!darkMode)}
-            className="text-xl text-gray-700 dark:text-yellow-300 hover:text-black dark:hover:text-white transition"
+            className={`text-xl ${darkMode ? "text-yellow-300" : "text-gray-700"} hover:text-black dark:hover:text-white transition`}
             title="Cambiar modo"
           >
             <FontAwesomeIcon icon={darkMode ? faSun : faMoon} />
@@ -110,29 +200,29 @@ export default function EstadoDocumentoPage() {
             <Image
               src={user.avatar}
               alt={`Avatar de ${user.name}`}
-              width={80}
-              height={50}
+              width={60}
+              height={60}
               className="rounded-full border-2 border-white"
             />
-            <p className="font-semibold text-gray-800 dark:text-white">
+            <p className={`font-semibold ${darkMode ? "text-white" : "text-gray-800"}`}>
               {user.name}
             </p>
           </div>
         </div>
       </div>
 
-      {/* ——— Botón regresar ——— */}
+      {/* Botón regresar */}
       <div className="mb-6">
         <Link
           href="/home"
-          className="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-md"
+          className="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-md shadow"
         >
-          <FontAwesomeIcon icon={faArrowLeft} /> Volver al Dashboard
+          <FontAwesomeIcon icon={faArrowLeft} /> Volver al Inicio
         </Link>
       </div>
 
-      {/* ——— Título y buscador ——— */}
-      <h1 className="text-3xl font-bold text-center mb-10 text-blue-600 dark:text-blue-400">
+      {/* Título y buscador */}
+      <h1 className={`text-3xl font-bold text-center mb-10 ${darkMode ? "text-blue-300" : "text-blue-600"}`}>
         Estado de Documentos
       </h1>
 
@@ -145,7 +235,7 @@ export default function EstadoDocumentoPage() {
             onChange={(e) => setSearchTerm(e.target.value)}
             className={`w-full px-4 py-2 pr-10 border rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 ${
               darkMode
-                ? "bg-gray-800 text-white border-gray-600 placeholder-gray-400"
+                ? "bg-[#1a2b3c] text-white border-gray-700 placeholder-gray-400"
                 : "bg-white text-gray-800 border-gray-400"
             }`}
           />
@@ -158,21 +248,19 @@ export default function EstadoDocumentoPage() {
         </div>
       </div>
 
-      {/* ——— Tabla de documentos ——— */}
-      <div className={`shadow-md rounded-lg p-6 border ${darkMode ? "bg-[#1a2b3c] border-gray-800" : "bg-white border-gray-400"}`}>
+      {/* Tabla de documentos */}
+      <div className={`shadow-xl rounded-lg p-6 border ${darkMode ? "bg-[#16213e] border-gray-700" : "bg-white border-gray-200"}`}>
         <table className="w-full table-auto text-sm border-collapse">
-          <thead className={darkMode ? "bg-gray-600" : "bg-gray-200"}>
+          <thead className={darkMode ? "bg-[#1a2b3c]" : "bg-gray-100"}>
             <tr>
-              {["Folio","Nombre","Clasificación","Jefatura","Fecha","Estado","Observaciones","Acciones"].map((title) => (
-                <th
-                  key={title}
-                  className={`p-3 border font-semibold text-sm ${
-                    darkMode ? "text-gray-100 border-gray-700" : "text-gray-700 border-gray-400"
-                  }`}
-                >
-                  {title}
-                </th>
-              ))}
+              <th className={`p-3 border font-semibold text-sm ${darkMode ? "border-gray-700 text-blue-200" : ""}`}>Folio</th>
+              <th className={`p-3 border font-semibold text-sm ${darkMode ? "border-gray-700 text-blue-200" : ""}`}>Nombre</th>
+              <th className={`p-3 border font-semibold text-sm ${darkMode ? "border-gray-700 text-blue-200" : ""}`}>Clasificación</th>
+              <th className={`p-3 border font-semibold text-sm ${darkMode ? "border-gray-700 text-blue-200" : ""}`}>Jefatura/Dirección</th>
+              <th className={`p-3 border font-semibold text-sm ${darkMode ? "border-gray-700 text-blue-200" : ""}`}>Fecha</th>
+              <th className={`p-3 border font-semibold text-sm ${darkMode ? "border-gray-700 text-blue-200" : ""}`}>Estado</th>
+              <th className={`p-3 border font-semibold text-sm ${darkMode ? "border-gray-700 text-blue-200" : ""}`}>Observaciones</th>
+              <th className={`p-3 border font-semibold text-sm ${darkMode ? "border-gray-700 text-blue-200" : ""}`}>Acciones</th>
             </tr>
           </thead>
           <tbody>
@@ -184,17 +272,46 @@ export default function EstadoDocumentoPage() {
               </tr>
             ) : (
               filteredFiles.map((file) => (
-                <tr key={file.id} className={`${darkMode ? "hover:bg-gray-700" : "hover:bg-gray-100"} transition`}>
-                  <td className="p-3 border border-gray-400 dark:border-gray-700">{file.id}</td>
-                  <td className="p-3 border border-gray-400 dark:border-gray-700">{file.name}</td>
-                  <td className="p-3 border border-gray-400 dark:border-gray-700">{file.classification}</td>
-                  <td className="p-3 border border-gray-400 dark:border-gray-700">{file.jefatura}</td>
-                  <td className="p-3 border border-gray-400 dark:border-gray-700">{file.date}</td>
-                  <td className="p-3 border border-gray-400 dark:border-gray-700">
+                <tr key={file.id} className={`${darkMode ? "hover:bg-[#24304a]" : "hover:bg-blue-50"} transition`}>
+                  <td className={`p-3 border ${darkMode ? "border-gray-700" : "border-gray-300"}`}>{file.id}</td>
+                  <td className={`p-3 border ${darkMode ? "border-gray-700" : "border-gray-300"}`}>{file.nombre}</td>
+                  <td className={`p-3 border ${darkMode ? "border-gray-700" : "border-gray-300"}`}>
+                    <select
+                      value={file.tipos_documentos_id}
+                      disabled={user.position !== "admin"}
+                      className={`w-full px-2 py-1 rounded-md ${darkMode ? "bg-[#1a2b3c] text-white border-gray-700" : "bg-white text-gray-800 border-gray-400"}`}
+                      onChange={user.position === "admin"
+                        ? (e) => handleClasificacionChange(file.id, e.target.value)
+                        : undefined}
+                    >
+                      {tiposDocumentos.map((tipo) => (
+                        <option key={tipo.id} value={tipo.id}>{tipo.tipo}</option>
+                      ))}
+                    </select>
+                  </td>
+                  <td className={`p-3 border ${darkMode ? "border-gray-700" : "border-gray-300"}`}>
+                    <select
+                      value={file.jefatura_id}
+                      disabled={user.position !== "admin"}
+                      className={`w-full px-2 py-1 rounded-md ${darkMode ? "bg-[#1a2b3c] text-white border-gray-700" : "bg-white text-gray-800 border-gray-400"}`}
+                      onChange={user.position === "admin"
+                        ? (e) => handleJefaturaChange(file.id, e.target.value)
+                        : undefined}
+                    >
+                      {jefaturas.map((j) => (
+                        <option key={j.id} value={j.id}>{j.nombre}</option>
+                      ))}
+                    </select>
+                  </td>
+                  <td className={`p-3 border ${darkMode ? "border-gray-700" : "border-gray-300"}`}>
+                    {file.fecha_subida ? new Date(file.fecha_subida).toLocaleDateString() : ""}
+                  </td>
+                  <td className={`p-3 border ${darkMode ? "border-gray-700" : "border-gray-300"}`}>
                     <select
                       value={file.status}
                       onChange={(e) => handleStatusChange(file.id, e.target.value)}
-                      className="w-full px-2 py-1 rounded-md dark:bg-gray-700 dark:text-white dark:border-gray-400"
+                      className={`w-full px-2 py-1 rounded-md ${darkMode ? "bg-[#1a2b3c] text-white border-gray-700" : "bg-white text-gray-800 border-gray-400"}`}
+                      disabled={user.position !== "admin"}
                     >
                       <option value="Subido">📤 Subido</option>
                       <option value="En revisión">⏳ En revisión</option>
@@ -203,14 +320,23 @@ export default function EstadoDocumentoPage() {
                       <option value="Aprobado">🎯 Aprobado</option>
                     </select>
                   </td>
-                  <td className="p-3 border border-gray-400 dark:border-gray-700">{file.observations}</td>
-                  <td className="p-3 border border-gray-400 dark:border-gray-700 flex justify-center gap-4">
-                    <button className="text-blue-600 dark:text-blue-400" onClick={() => handleDownload(file)}>
-                      <FontAwesomeIcon icon={faDownload} />
-                    </button>
-                    <button className="text-red-600 dark:text-red-400" onClick={() => handleDelete(file.id)}>
-                      <FontAwesomeIcon icon={faTrash} />
-                    </button>
+                  <td
+                    className={`p-3 border ${darkMode ? "border-gray-700" : "border-gray-300"} cursor-pointer underline`}
+                    onClick={() => handleObsClick(file.observaciones || file.observations || file.resena || "")}
+                  >
+                    {(file.observaciones || file.observations || file.resena) ? "Ver observación" : ""}
+                  </td>
+                  <td className={`p-3 border ${darkMode ? "border-gray-700" : "border-gray-300"} flex justify-center gap-4`}>
+                    {user.position === 'admin' && (
+                      <>
+                        <button className="text-blue-400 dark:text-blue-300 text-lg" onClick={() => handleDownload(file)}>
+                          <FontAwesomeIcon icon={faDownload} />
+                        </button>
+                        <button className="text-red-500 dark:text-red-400 text-lg" onClick={() => handleDelete(file.id)}>
+                          <FontAwesomeIcon icon={faTrash} />
+                        </button>
+                      </>
+                    )}
                   </td>
                 </tr>
               ))

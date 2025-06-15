@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useRouter } from "next/navigation";
@@ -25,7 +26,8 @@ import {
   faChartBar,
   faThumbtack,
   faBoxes,
-  faArrowLeft, 
+  faArrowLeft,
+  faFolderOpen, // <-- Importa el icono de carpeta abierta
 } from "@fortawesome/free-solid-svg-icons";
 
 export default function Sidebar({ isSidebarCollapsed }) {
@@ -148,6 +150,17 @@ export default function Sidebar({ isSidebarCollapsed }) {
                         size="1x"
                       />
                       Favoritos
+                    </Link>
+                  </li>
+                  {/* Nuevo submenú Mis Documentos */}
+                  <li className="font-bold text-violet-500">
+                    <Link href="/dashboard/mis-documentos" className="flex items-center">
+                      <FontAwesomeIcon
+                        icon={faFolderOpen}
+                        className="mr-2 text-blue-400"
+                        size="1x"
+                      />
+                      Mis Documentos
                     </Link>
                   </li>
                 </ul>

@@ -1,0 +1,133 @@
+-- CREATE DATABASE Gestor; 
+USE Gestor;
+SELECT * FROM USUARIOS LIMIT 10;
+SELECT * FROM ROLES;
+SELECT * FROM USUARIOS_HAS_ROLES;
+SELECT * FROM TIPO_DOCUMENTOS;
+SELECT *FROM DOCUMENTOS;
+SHOW TABLES IN Gestor;
+ 
+
+
+INSERT INTO roles (tipo, descripcion, activo) VALUES
+('admin',      'Administrador', 1),
+('capturista', 'Capturista',    1),
+('revisor',    'Revisor',       1);
+
+INSERT INTO tipos_documentos (tipo) VALUES ('PDF');
+INSERT INTO usuarios (nombre, apellidos, email, password, departamentos_id, activo)
+  VALUES ('Jorge','García','jorge@example.com','123456', 1, 1);
+INSERT INTO documentos
+  (nombre, descripcion, mime, ruta, tipos_documentos_id, usuarios_id)
+  VALUES 
+  ('Acta de Nacimiento','PDF firmado','application/pdf','/uploads/acta.pdf', 1, 1);
+
+
+INSERT INTO tipos_documentos (id, tipo) VALUES 
+  (1, 'Informe'),
+  (2, 'Oficio'),
+  (3, 'Circular');
+
+
+CREATE TABLE ROLES(
+id INT PRIMARY KEY AUTO_INCREMENT,
+tipo ENUM('admin', 'capturista', 'revisor')NOT NULL,
+descripcion VARCHAR(280),
+activo TINYINT DEFAULT 1,
+fecha_creacion DATETIME DEFAULT CURRENT_TIMESTAMP
+);
+
+
+
+CREATE TABLE USUARIOS(
+id INT PRIMARY KEY AUTO_INCREMENT,
+nombre VARCHAR(50),
+apellidos VARCHAR(100),
+email VARCHAR(100)UNIQUE,
+password VARCHAR(50),
+departamentos_id INT,
+activo TINYINT DEFAULT 1,
+FOREIGN KEY(departamentos_id)REFERENCES departamentos(id)
+);
+
+CREATE TABLE DEPARTAMENTOS(
+id INT PRIMARY KEY AUTO_INCREMENT,
+nombre VARCHAR(50),
+descripcion VARCHAR(600),
+activo TINYINT DEFAULT 1
+);
+
+CREATE TABLE USUARIOS_HAS_ROLES(
+usuarios_id INT,
+roles_id INT,
+PRIMARY KEY(usuarios_id, roles_id),
+FOREIGN KEY(usuarios_id)REFERENCES usuarios(id),
+FOREIGN KEY(roles_id)REFERENCES roles(id)
+);
+
+CREATE TABLE TIPOS_DOCUMENTOS(
+id INT PRIMARY KEY AUTO_INCREMENT,
+tipo VARCHAR(50)
+);
+
+CREATE TABLE DOCUMENTOS(
+id INT PRIMARY KEY AUTO_INCREMENT,
+nombre VARCHAR(50),
+descripcion VARCHAR(100),
+mime VARCHAR(50),
+ruta VARCHAR(255),
+tipos_documentos_id INT,
+usuarios_id INT,
+fecha_subida DATETIME DEFAULT CURRENT_TIMESTAMP,
+FOREIGN KEY (tipos_documentos_id) REFERENCES tipos_documentos(id),
+FOREIGN KEY (usuarios_id) REFERENCES usuarios(id)
+);
+
+CREATE TABLE PERIODOS(
+id INT PRIMARY KEY AUTO_INCREMENT,
+periodo VARCHAR(50),
+fecha_inicio DATE,
+fecha_final DATE,
+activo TINYINT DEFAULT 1
+);
+
+CREATE TABLE PROCESOS (
+id INT PRIMARY KEY AUTO_INCREMENT,
+estatus ENUM('en_proceso', 'terminado') NOT NULL,
+resultado ENUM('aprobado', 'rechazado', 'en_revisión'),
+fecha_inicio DATE,
+fecha_fin DATE,
+departamentos_id INT,
+periodos_id INT,
+FOREIGN KEY (departamentos_id) REFERENCES departamentos(id),
+FOREIGN KEY (periodos_id) REFERENCES periodos(id)
+);
+
+CREATE TABLE BITACORA (
+id INT PRIMARY KEY AUTO_INCREMENT,
+usuario_id INT,
+rol VARCHAR(45),
+accion VARCHAR(45),
+ip VARCHAR(45),
+descripcion VARCHAR(255),
+fecha_inicio DATETIME DEFAULT CURRENT_TIMESTAMP,
+fecha_act DATETIME,
+FOREIGN KEY (usuario_id)REFERENCES usuarios(id)
+);
+
+
+
+
+INSERT INTO usuarios (nombre, apellidos, email, password, departamentos_id, activo)
+VALUES 
+  ('Blanca', 'Ramirez', 'blanca@apibcs.com.mx', '123456', 3, 1),
+  ('Jose', 'Monteverde', 'jose_monteverde@apibcs.com.mx', '123456', 2 , 1);
+
+
+
+
+
+
+
+
+
