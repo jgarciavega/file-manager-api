@@ -53,30 +53,55 @@ export default function MisDocumentosPage() {
   const email = session?.user?.email || "";
   const avatar = avatarMap[email] || "/default-avatar.png";
   const userName = session?.user?.name || "Usuario";
+  const userId = session?.user?.id;
 
   // Carga inicial de documentos
   useEffect(() => {
-    if (!session?.user?.email) return;
-    fetch(`/api/documentos?usuario=${session.user.email}`)
+    if (!userId) return;
+    setLoading(true);
+    fetch(`/api/documentos?usuarioId=${userId}`)
       .then((res) => res.json())
       .then((data) => setDocs(data))
       .finally(() => setLoading(false));
-  }, [session]);
+  }, [userId]);
+
+  // Carga inicial de favoritos desde la BD
+  useEffect(() => {
+    if (!userId) return;
+    fetch(`/api/favoritos?usuario_id=${userId}`)
+      .then((res) => res.json())
+      .then((data) => setFavoritos(Array.isArray(data) ? data.map(Number) : []));
+  }, [userId]);
 
   // Descargar documento
   const handleDownload = (doc) => {
-    // Aquí podrías implementar la descarga real
     alert(`Descargando: ${doc.nombre}`);
+    // Aquí puedes implementar la lógica real de descarga si tienes la ruta del archivo
   };
 
-  // Toggle favoritos
-  const toggleFavorito = (id) => {
-    setFavoritos((prev) =>
-      prev.includes(id) ? prev.filter((f) => f !== id) : [...prev, id]
-    );
-    setFavMsg(
-      favoritos.includes(id) ? "Eliminado de favoritos" : "Agregado a favoritos"
-    );
+  // Toggle favoritos sincronizado con la BD
+  const toggleFavorito = async (id) => {
+    if (!userId) return;
+    let response;
+    if (favoritos.includes(id)) {
+      response = await fetch('/api/favoritos', {
+        method: 'DELETE',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ usuario_id: userId, documentos_id: id })
+      });
+    } else {
+      response = await fetch('/api/favoritos', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ usuario_id: userId, documentos_id: id })
+      });
+    }
+    const data = await response.json();
+    console.log("Respuesta del backend favoritos:", data);
+    // Refresca favoritos después de la acción
+    fetch(`/api/favoritos?usuario_id=${userId}`)
+      .then((res) => res.json())
+      .then((data) => setFavoritos(Array.isArray(data) ? data.map(Number) : []));
     setTimeout(() => setFavMsg(""), 1200);
   };
 
@@ -103,9 +128,6 @@ export default function MisDocumentosPage() {
     <div className={`${darkMode ? "bg-[#0d1b2a] text-white" : "bg-gray-50 text-gray-900"} min-h-screen flex flex-col`}>  
       {/* Navbar superior */}
       <header className={`${darkMode ? "bg-[#16213e] border-b border-[#222f43]" : "bg-white border-b border-gray-200"} flex justify-between items-center px-8 py-5 shadow`}>  
-        {/* Logos */}
-        <div className="flex items-center gap-4">
-                    {/* Logos */}
         <div className="flex items-center gap-4">
           <Image
             src="/api-dark23.png"
@@ -116,10 +138,7 @@ export default function MisDocumentosPage() {
             priority
             style={{ filter: darkMode ? "invert(1) brightness(2)" : "none" }}
           />
-        
         </div>
-        </div>
-        {/* Modo oscuro y avatar */}
         <div className="flex items-center gap-6">
           <button
             onClick={() => setDarkMode(!darkMode)}
@@ -193,7 +212,6 @@ export default function MisDocumentosPage() {
           {favMsg && <span className="ml-4 text-green-400 font-semibold">{favMsg}</span>}
         </form>
 
-        {/* Tabla */}
         <div className={`${darkMode ? "bg-[#16213e] border-[#222f43]" : "bg-white border-gray-200"} mx-8 shadow-lg rounded-lg border overflow-x-auto`}>  
           {loading ? (
             <div className="text-center py-10">Cargando...</div>
@@ -224,7 +242,10 @@ export default function MisDocumentosPage() {
                         title={favoritos.includes(doc.id) ? "Quitar de favoritos" : "Agregar a favoritos"}
                         className="text-xl"
                       >
-                        <FontAwesomeIcon icon={favoritos.includes(doc.id) ? faStarSolid : faStarRegular} className={favoritos.includes(doc.id) ? "text-yellow-400" : "text-gray-500"} />
+                        <FontAwesomeIcon
+                          icon={favoritos.includes(doc.id) ? faStarSolid : faStarRegular}
+                          className={favoritos.includes(doc.id) ? "text-yellow-400" : "text-gray-500"}
+                        />
                       </button>
                     </td>
                     <td className="p-3 border flex justify-center gap-4">

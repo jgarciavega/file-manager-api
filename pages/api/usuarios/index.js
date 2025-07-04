@@ -22,14 +22,12 @@ export default async function handler(req, res) {
           email: u.email,
           departamentos_id: u.departamentos_id,
           activo: u.activo,
-          rol: u.usuarios_has_roles[0]?.roles.tipo ?? null
+          rol: u.usuarios_has_roles[0]?.roles?.tipo ?? null
         }))
         return res.status(200).json(resultado)
       } catch (err) {
-        console.error(err)
+        console.error('ERROR GET usuarios:', err)
         return res.status(500).json({ error: 'Error al consultar usuarios' })
-      } finally {
-        await prisma.$disconnect()
       }
 
     case 'POST':
@@ -61,10 +59,8 @@ export default async function handler(req, res) {
           rol: r.tipo
         })
       } catch (err) {
-        console.error(err)
+        console.error('ERROR POST usuarios:', err)
         return res.status(500).json({ error: 'No se pudo crear usuario' })
-      } finally {
-        await prisma.$disconnect()
       }
 
     default:

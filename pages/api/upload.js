@@ -1,5 +1,3 @@
-// pages/api/upload.js
-
 import { IncomingForm } from 'formidable';
 import fs from 'fs';
 import path from 'path';
@@ -20,67 +18,83 @@ export default async function handler(req, res) {
     return res.status(405).end(`Método ${req.method} no permitido`);
   }
 
-  // 📁 Crear directorio si no existe
+  // Crear directorio si no existe
   const uploadDir = path.join(process.cwd(), 'public', 'uploads');
   await fs.promises.mkdir(uploadDir, { recursive: true });
 
-  // 📌 Configuración del formulario
-  const form = new IncomingForm();
-  form.uploadDir = uploadDir;
-  form.keepExtensions = true;
-  form.multiples = false;
-  form.maxFileSize = 50 * 1024 * 1024; // 50 MB
-
-  // 🛑 Verificar tamaño antes de procesar el archivo
-  form.on('part', (part) => {
-    if (part.byteCount > form.maxFileSize) {
-      return res.status(413).json({ error: 'Archivo demasiado grande' });
-    }
+  // Configuración del formulario
+  const form = new IncomingForm({
+    uploadDir,
+    keepExtensions: true,
+    multiples: false,
+    maxFileSize: 100 * 1024 * 1024, // 100 MB
   });
 
-  // 📤 Procesar el formulario
+  // Procesar el formulario
   form.parse(req, async (err, fields, files) => {
     if (err) {
       console.error('Error parseando formulario:', err);
       return res.status(500).json({ error: 'Error al procesar el formulario' });
     }
 
-    // 📌 Obtener valores del formulario
-    const nombre = fields.nombre?.[0] || '';
-    const review = fields.review?.[0] || '';
-    const usuarioId = Number(fields.usuarioId?.[0]) || 1;
+    // LOG para depuración
+    console.log("FIELDS:", fields);
+    console.log("FILES:", files);
 
-    // 📁 Verificar si el archivo se recibió
+    // Función helper para extraer valores (formidable puede devolver arrays)
+    const getValue = (field) => {
+      if (Array.isArray(field)) {
+        return field[0] || '';
+      }
+      return field || '';
+    };
+
+    // Obtener valores del formulario
+    const nombre = getValue(fields.nombre);
+    const origin = getValue(fields.origin);
+    const classification = getValue(fields.classification);
+    const jefatura = getValue(fields.jefatura);
+    const review = getValue(fields.review);
+    const usuarioId = Number(getValue(fields.usuarioId)) || 1;
+
+    // Verificar si el archivo se recibió
     let uploadedFile = Array.isArray(files.file) ? files.file[0] : files.file;
     if (!uploadedFile) {
+      console.error("No se recibió archivo");
       return res.status(400).json({ error: 'No se recibió ningún archivo' });
     }
 
-    // 🖼️ Obtener información del archivo
+    // Obtener información del archivo
     const finalFilename = uploadedFile.newFilename || path.basename(uploadedFile.filepath);
     const savedPath = `/uploads/${finalFilename}`;
 
     try {
-      // 🗄️ Guardar en la base de datos
+      // Guardar en la base de datos
       const documento = await prisma.documentos.create({
         data: {
           nombre: nombre || uploadedFile.originalFilename || finalFilename,
-          descripcion: review,
-          mime: uploadedFile.mimetype,
+          descripcion: review || null,
+          mime: uploadedFile.mimetype || 'application/octet-stream',
           ruta: savedPath,
-          tipos_documentos_id: 1,
+          tipos_documentos_id: 1, // Asegúrate de que este ID existe en tu tabla tipos_documentos
           usuarios_id: usuarioId,
           fecha_subida: new Date(),
         },
       });
 
-      // ✅ Responder al frontend
-      return res.status(200).json({ documento });
+      console.log("Documento guardado exitosamente:", documento);
+
+      // Responder al frontend
+      return res.status(200).json({
+        documento,
+        message: 'Documento subido exitosamente'
+      });
     } catch (dbErr) {
       console.error('Error guardando en BD:', dbErr);
-      return res.status(500).json({ error: 'No se pudo guardar en la base de datos' });
-    } finally {
-      await prisma.$disconnect();
+      return res.status(500).json({
+        error: 'No se pudo guardar en la base de datos',
+        details: dbErr.message
+      });
     }
   });
 }

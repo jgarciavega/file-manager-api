@@ -9,7 +9,12 @@ import avatarMap from '../../../lib/avatarMap';
 import Link from 'next/link';
 
 export default function UploadNew() {
-  const { data: session } = useSession();
+  const { data: session, status } = useSession();
+
+  // Log para depuración de session
+  console.log('Session status:', status);
+  console.log('Session data:', session);
+  
   const userEmail  = session?.user?.email  || 'default';
   const userName   = session?.user?.name   || 'Usuario';
   const userAvatar = avatarMap[userEmail]  || '/default-avatar.png';
@@ -38,6 +43,14 @@ export default function UploadNew() {
     logo:   '/api-dark23.png', // la imagen de tu logo
   };
 
+  if (status === "loading") {
+    return <p className="text-center p-10">Cargando sesión...</p>;
+  }
+
+  if (status === "unauthenticated") {
+    return <p className="text-center p-10">No estás autenticado. Por favor, inicia sesión.</p>;
+  }
+
   // Cada vez que cambie un campo (o se elija un archivo), lo guardamos en `form`
   const handleChange = (e) => {
     const { name, value, files } = e.target;
@@ -58,10 +71,27 @@ export default function UploadNew() {
       alert('❗ Debes seleccionar un archivo.');
       return;
     }
-    if (form.file.size > 10 * 1024 * 1024) {
-      alert('❌ El archivo es demasiado grande. Máximo 10MB.');
+    if (form.file.size > 100 * 1024 * 1024) {
+      alert('❌ El archivo es demasiado grande. Máximo 100MB.');
       return;
     }
+
+    // Verificar que tenemos el ID del usuario
+    if (!session?.user?.id) {
+      alert('❌ Error: No se pudo obtener el ID del usuario. Por favor, inicia sesión nuevamente.');
+      return;
+    }
+
+    console.log('Iniciando subida con datos:', {
+      nombre: form.nombre,
+      origin: form.origin,
+      classification: form.classification,
+      jefatura: form.jefatura,
+      review: form.review,
+      usuarioId: session.user.id,
+      fileName: form.file.name,
+      fileSize: form.file.size
+    });
 
     // Construimos el FormData con los mismos nombres que espera tu API:
     // - file     => multipart
@@ -78,30 +108,42 @@ export default function UploadNew() {
     fd.append('classification', form.classification);
     fd.append('jefatura',       form.jefatura);
     fd.append('review',         form.review);
-    fd.append('usuarioId',      session.user?.id || '');
+    fd.append('usuarioId',      session.user.id);
 
     try {
+      console.log('Enviando petición a /api/upload...');
       const res = await fetch('/api/upload', {
         method: 'POST',
         body: fd
       });
 
-      if (!res.ok) throw new Error('Error en el servidor');
+      console.log('Respuesta recibida:', res.status, res.statusText);
 
-      const { documento } = await res.json();
+      if (!res.ok) {
+        const errorData = await res.json().catch(() => ({}));
+        console.error('Error en la respuesta:', errorData);
+        throw new Error(`Error del servidor: ${res.status} - ${errorData.error || res.statusText}`);
+      }
+
+      const data = await res.json();
+      console.log('Datos recibidos:', data);
+
+      if (!data.documento) {
+        throw new Error('No se recibió información del documento creado');
+      }
 
       // Si llegó bien el JSON y hay un documento creado, lo agregamos a la tabla en pantalla:
       setUploadedFiles(prev => [
         {
-          id:            documento.id,
-          nombre:        documento.nombre,
+          id:            data.documento.id,
+          nombre:        data.documento.nombre,
           origin:        form.origin,
           classification:form.classification,
           jefatura:      form.jefatura,
-          review:        documento.descripcion,
-          fecha:         new Date(documento.fecha_subida).toLocaleDateString(),
+          review:        data.documento.descripcion,
+          fecha:         new Date(data.documento.fecha_subida).toLocaleDateString(),
           owner:         currentUser.name,
-          ruta:          documento.ruta
+          ruta:          data.documento.ruta
         },
         ...prev
       ]);
@@ -121,8 +163,8 @@ export default function UploadNew() {
         fileInputRef.current.value = '';
       }
     } catch (err) {
-      console.error(err);
-      alert('❌ Error al subir el documento');
+      console.error('Error completo:', err);
+      alert(`❌ Error al subir el documento: ${err.message}`);
     }
   };
 

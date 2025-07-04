@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { useSession } from "next-auth/react";
@@ -25,45 +25,80 @@ export default function FavoritesPage() {
 
   const [darkMode, setDarkMode] = useState(false);
   const [search, setSearch] = useState("");
+  const [favoritos, setFavoritos] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const userId = session?.user?.id;
 
-  const [uploadedFiles, setUploadedFiles] = useState([
-    {
-      id: 749,
-      name: "Registro_Facturacion.docx",
-      date: "10/12/2024",
-      owner: "Arq. Julio Rubio",
-      status: "Pendiente",
-      favorite: true,
-    },
-    {
-      id: 750,
-      name: "Informe_Auditoria.pdf",
-      date: "15/01/2025",
-      owner: "Arq. Julio Rubio",
-      status: "Revisado",
-      favorite: true,
-    },
-  ]);
+  // Cargar favoritos desde la base de datos
+  useEffect(() => {
+    if (!userId) return;
+    
+    const cargarFavoritos = async () => {
+      try {
+        setLoading(true);
+        const response = await fetch(`/api/favoritos-documentos?usuario_id=${userId}`);
+        if (response.ok) {
+          const data = await response.json();
+          setFavoritos(data);
+        } else {
+          console.error('Error al cargar favoritos:', response.statusText);
+        }
+      } catch (error) {
+        console.error('Error al cargar favoritos:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
 
-  const handleDownload = (file) => alert(`Descargando: ${file.name}`);
-  const handleDelete = (id) => {
-    if (confirm("¿Eliminar este archivo?")) {
-      setUploadedFiles((prev) => prev.filter((file) => file.id !== id));
+    cargarFavoritos();
+  }, [userId]);
+
+  const handleDownload = (file) => {
+    if (file.ruta) {
+      // Crear un enlace temporal para descargar
+      const link = document.createElement('a');
+      link.href = file.ruta;
+      link.download = file.nombre;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    } else {
+      alert(`Descargando: ${file.nombre}`);
     }
   };
-  const handleToggleFavorite = (id) => {
-    setUploadedFiles((prev) =>
-      prev.map((file) =>
-        file.id === id ? { ...file, favorite: !file.favorite } : file
-      )
-    );
+
+  const handleDelete = async (id) => {
+    if (confirm("¿Eliminar este archivo de favoritos?")) {
+      try {
+        const response = await fetch('/api/favoritos', {
+          method: 'DELETE',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ usuario_id: userId, documentos_id: id })
+        });
+
+        if (response.ok) {
+          // Remover de la lista local
+          setFavoritos(prev => prev.filter(file => file.id !== id));
+        } else {
+          alert('Error al eliminar de favoritos');
+        }
+      } catch (error) {
+        console.error('Error al eliminar de favoritos:', error);
+        alert('Error al eliminar de favoritos');
+      }
+    }
   };
 
-  const filteredFiles = uploadedFiles.filter(
+  const formatDate = (dateString) => {
+    if (!dateString) return 'N/A';
+    const date = new Date(dateString);
+    return date.toLocaleDateString('es-ES');
+  };
+
+  const filteredFiles = favoritos.filter(
     (file) =>
-      file.favorite &&
-      (file.name.toLowerCase().includes(search.toLowerCase()) ||
-        file.owner.toLowerCase().includes(search.toLowerCase()))
+      file.nombre?.toLowerCase().includes(search.toLowerCase()) ||
+      file.responsable?.toLowerCase().includes(search.toLowerCase())
   );
 
   const statusColor = (status) => {
@@ -78,6 +113,18 @@ export default function FavoritesPage() {
         return "text-gray-800 dark:text-white";
     }
   };
+
+  if (loading) {
+    return (
+      <div className={`p-6 min-h-screen transition-all ${
+        darkMode ? "bg-[#0d1b2a] text-white" : "bg-gray-50 text-gray-900"
+      }`}>
+        <div className="flex justify-center items-center h-64">
+          <div className="text-xl">Cargando favoritos...</div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div
@@ -128,7 +175,7 @@ export default function FavoritesPage() {
 
       {/* Título */}
       <h1 className="text-4xl font-bold text-center mb-6 text-blue-600 dark:text-blue-400">
-        Favoritos-Marcado
+        Mis Favoritos
       </h1>
 
       {/* Buscador */}
@@ -155,7 +202,7 @@ export default function FavoritesPage() {
         <table className="w-full table-auto text-sm border-collapse">
           <thead className={darkMode ? "bg-gray-700 text-white" : "bg-gray-200"}>
             <tr>
-              {["Documento", "Fecha", "Responsable", "Estado", "Acciones"].map(
+              {["Documento", "Fecha", "Responsable", "Tipo", "Acciones"].map(
                 (header) => (
                   <th
                     key={header}
@@ -181,40 +228,31 @@ export default function FavoritesPage() {
                   }`}
                 >
                   <td className="p-3 border dark:border-gray-600 border-gray-400">
-                    {file.name}
+                    {file.nombre}
                   </td>
                   <td className="p-3 border dark:border-gray-600 border-gray-400">
-                    {file.date}
+                    {formatDate(file.fecha_subida)}
                   </td>
                   <td className="p-3 border dark:border-gray-600 border-gray-400">
-                    {file.owner}
+                    {file.responsable || 'N/A'}
                   </td>
-                  <td
-                    className={`p-3 border font-semibold ${statusColor(
-                      file.status
-                    )} dark:border-gray-600 border-gray-400`}
-                  >
-                    {file.status}
+                  <td className="p-3 border dark:border-gray-600 border-gray-400">
+                    {file.tipo}
                   </td>
                   <td className="p-3 border flex justify-center gap-4 dark:border-gray-600 border-gray-400">
                     <button
                       className="text-blue-600 dark:text-blue-400"
                       onClick={() => handleDownload(file)}
+                      title="Descargar"
                     >
                       <FontAwesomeIcon icon={faDownload} />
                     </button>
                     <button
                       className="text-red-600 dark:text-red-400"
                       onClick={() => handleDelete(file.id)}
+                      title="Eliminar de favoritos"
                     >
                       <FontAwesomeIcon icon={faTrash} />
-                    </button>
-                    <button
-                      className="text-yellow-500"
-                      onClick={() => handleToggleFavorite(file.id)}
-                      title="Quitar de favoritos"
-                    >
-                      <FontAwesomeIcon icon={faStar} />
                     </button>
                   </td>
                 </tr>

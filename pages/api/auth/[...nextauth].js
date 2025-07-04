@@ -12,22 +12,23 @@ export default NextAuth({
       },
       async authorize(credentials) {
         // Definimos fullName para incluir apellidos en el nombre real
+             // ...existing code...
         const users = {
-          "jorge.garcia@apibcs.com.mx":     { password: "123456", fullName: "Jorge García Vega", role: "admin"        },
-          "jrubio@apibcs.com.mx":           { password: "123456", fullName: "Julio Rubio",      role: "revisor"     },
-          "annel@apibcs.com.mx":            { password: "123456", fullName: "Annel Torres",      role: "capturista"  },
-          "blanca@apibcs.com.mx":           { password: "123456", fullName: "Blanca Ramírez",   role: "capturista"  },
-          "jose.monteverde@apibcs.com.mx":  { password: "123456", fullName: "José Monteverde",  role: "capturista"  },
-          "hdelreal@apibcs.com.mx":         { password: "123456", fullName: "Lupita Del Real",  role: "capturista"  },
+          "jorge.garcia@apibcs.com.mx": { id: 1, password: "123456", fullName: "Jorge García Vega", role: "admin" },
+          "jrubio@apibcs.com.mx": { id: 3, password: "123456", fullName: "Julio Rubio", role: "revisor" },
+          "annel@apibcs.com.mx": { id: 2, password: "123456", fullName: "Annel Torres", role: "capturista" },
+          "blanca@apibcs.com.mx": { id: 18, password: "123456", fullName: "Blanca Ramírez", role: "capturista" },
+          "jose.monteverde@apibcs.com.mx": { id: 19, password: "123456", fullName: "José Monteverde", role: "capturista" },
+          "hdelreal@apibcs.com.mx": { id: 6, password: "123456", fullName: "Lupita Del Real", role: "capturista" },
         };
 
         const user = users[credentials.email];
         if (user && user.password === credentials.password) {
           return {
-            id:    credentials.email,
+            id: user.id, // <-- Aquí va el id numérico
             email: credentials.email,
-            name:  user.fullName,   // <-- nombre limpio, sin "Ing."
-            role:  user.role,
+            name: user.fullName,
+            role: user.role,
           };
         }
         return null;

@@ -1,17 +1,17 @@
-import next from "@next/eslint-plugin-next";
+import globals from "globals";
+import pluginJs from "@eslint/js";
+import pluginReactConfig from "eslint-plugin-react/configs/recommended.js";
+import pluginReactHooks from "eslint-plugin-react-hooks";
 
 /** @type {import("eslint").Linter.FlatConfig[]} */
 export default [
-  next.configs.recommended, // 🔹 Configuración oficial de Next.js
+  { languageOptions: { globals: globals.browser } },
+  pluginJs.configs.recommended,
+  pluginReactConfig,
+  pluginReactHooks.configs.recommended,
   {
-    languageOptions: {
-      ecmaVersion: "latest",
-    },
     rules: {
-      "react/no-unescaped-entities": "off",
-      "react/jsx-key": "warn",
-      "react-hooks/rules-of-hooks": "error",
-      "react-hooks/exhaustive-deps": "warn"
+      "react/react-in-jsx-scope": "off",
     }
   }
 ];
