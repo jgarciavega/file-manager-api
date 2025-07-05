@@ -5,16 +5,16 @@ import Image from 'next/image';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faUpload, faMoon, faSun, faArrowLeft } from '@fortawesome/free-solid-svg-icons';
 import { useSession } from 'next-auth/react';
+import { CircularProgressbar, buildStyles } from 'react-circular-progressbar';
+import 'react-circular-progressbar/dist/styles.css';
 import avatarMap from '../../../lib/avatarMap';
 import Link from 'next/link';
 
 export default function UploadNew() {
   const { data: session, status } = useSession();
 
-  // Log para depuración de session
-  console.log('Session status:', status);
-  console.log('Session data:', session);
-  
+  // Eliminados logs de sesión para mayor seguridad
+
   const userEmail  = session?.user?.email  || 'default';
   const userName   = session?.user?.name   || 'Usuario';
   const userAvatar = avatarMap[userEmail]  || '/default-avatar.png';
@@ -33,6 +33,10 @@ export default function UploadNew() {
   const [uploadedFiles, setUploadedFiles] = useState([]);
   const [darkMode, setDarkMode]       = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
+
+  // Estados para el progress bar circular
+  const [uploading, setUploading] = useState(false);
+  const [uploadProgress, setUploadProgress] = useState(0);
 
   // Referencia para limpiar el <input type="file"> después de subir
   const fileInputRef = useRef(null);
@@ -60,7 +64,7 @@ export default function UploadNew() {
     }));
   };
 
-  // Función que dispara la subida al presionar el botón
+  // Función que dispara la subida con progress bar
   const handleUpload = async () => {
     // Validaciones mínimas
     if (!form.nombre.trim()) {
@@ -82,51 +86,98 @@ export default function UploadNew() {
       return;
     }
 
-    console.log('Iniciando subida con datos:', {
-      nombre: form.nombre,
-      origin: form.origin,
-      classification: form.classification,
-      jefatura: form.jefatura,
-      review: form.review,
-      usuarioId: session.user.id,
-      fileName: form.file.name,
-      fileSize: form.file.size
-    });
+    // Iniciar estados de progreso
+    setUploading(true);
+    setUploadProgress(0);
 
-    // Construimos el FormData con los mismos nombres que espera tu API:
-    // - file     => multipart
-    // - nombre   => nombre del doc
-    // - origin
-    // - classification
-    // - jefatura
-    // - review
-    // - usuarioId (se toma de `session.user.id`)
+    // Para archivos pequeños, simular progreso mínimo
+    const isSmallFile = form.file.size < 1024 * 1024; // menos de 1MB
+    let progressInterval;
+    
+    if (isSmallFile) {
+      // Simular progreso para archivos pequeños
+      let simulatedProgress = 0;
+      progressInterval = setInterval(() => {
+        simulatedProgress += Math.random() * 25;
+        if (simulatedProgress < 90) {
+          setUploadProgress(Math.floor(simulatedProgress));
+        }
+      }, 100);
+    }
+
+    // Construimos el FormData
     const fd = new FormData();
-    fd.append('file',           form.file);
-    fd.append('nombre',         form.nombre);
-    fd.append('origin',         form.origin);
+    fd.append('file', form.file);
+    fd.append('nombre', form.nombre);
+    fd.append('origin', form.origin);
     fd.append('classification', form.classification);
-    fd.append('jefatura',       form.jefatura);
-    fd.append('review',         form.review);
-    fd.append('usuarioId',      session.user.id);
+    fd.append('jefatura', form.jefatura);
+    fd.append('review', form.review);
+    fd.append('usuarioId', session.user.id);
 
     try {
-      console.log('Enviando petición a /api/upload...');
-      const res = await fetch('/api/upload', {
-        method: 'POST',
-        body: fd
+      // Usar XMLHttpRequest para monitorear progreso
+      const xhr = new XMLHttpRequest();
+      let realProgressStarted = false;
+
+      // Monitorear el progreso de subida
+      xhr.upload.addEventListener('progress', (e) => {
+        if (e.lengthComputable) {
+          realProgressStarted = true;
+          // Limpiar intervalo simulado si el progreso real comenzó
+          if (progressInterval) {
+            clearInterval(progressInterval);
+            progressInterval = null;
+          }
+          const percentComplete = Math.round((e.loaded / e.total) * 100);
+          setUploadProgress(percentComplete);
+        }
       });
 
-      console.log('Respuesta recibida:', res.status, res.statusText);
+      // Evento loadstart para asegurar que comience
+      xhr.upload.addEventListener('loadstart', () => {
+        if (!realProgressStarted) {
+          setUploadProgress(5); // Al menos mostrar 5%
+        }
+      });
 
-      if (!res.ok) {
-        const errorData = await res.json().catch(() => ({}));
-        console.error('Error en la respuesta:', errorData);
-        throw new Error(`Error del servidor: ${res.status} - ${errorData.error || res.statusText}`);
+      // Promesa para manejar la respuesta
+      const uploadPromise = new Promise((resolve, reject) => {
+        xhr.onload = () => {
+          if (xhr.status === 200) {
+            try {
+              resolve(JSON.parse(xhr.responseText));
+            } catch (e) {
+              reject(new Error('Error al procesar la respuesta del servidor'));
+            }
+          } else {
+            reject(new Error(`Error ${xhr.status}: ${xhr.statusText}`));
+          }
+        };
+        xhr.onerror = () => reject(new Error('Error de red'));
+      });
+
+      // Configurar y enviar la petición
+      xhr.open('POST', '/api/upload');
+      xhr.setRequestHeader('Cache-Control', 'no-cache');
+      xhr.setRequestHeader('X-Requested-With', 'XMLHttpRequest');
+      xhr.send(fd);
+
+      // Para archivos pequeños, asegurar que llegue al 90% antes de completar
+      if (isSmallFile) {
+        setTimeout(() => {
+          if (!realProgressStarted) {
+            setUploadProgress(90);
+          }
+        }, 500);
       }
 
-      const data = await res.json();
-      console.log('Datos recibidos:', data);
+      // Esperar la respuesta
+      const data = await uploadPromise;
+
+      // Asegurar que llegue al 100% antes de procesar
+      setUploadProgress(100);
+      await new Promise(resolve => setTimeout(resolve, 300));
 
       if (!data.documento) {
         throw new Error('No se recibió información del documento creado');
@@ -162,9 +213,19 @@ export default function UploadNew() {
       if (fileInputRef.current) {
         fileInputRef.current.value = '';
       }
+
     } catch (err) {
-      console.error('Error completo:', err);
       alert(`❌ Error al subir el documento: ${err.message}`);
+    } finally {
+      // Limpiar intervalo simulado si existe
+      if (progressInterval) {
+        clearInterval(progressInterval);
+      }
+      // Limpiar estados de progreso después de una pausa
+      setTimeout(() => {
+        setUploading(false);
+        setUploadProgress(0);
+      }, 500);
     }
   };
 
@@ -177,6 +238,36 @@ export default function UploadNew() {
 
   return (
     <div className={`${darkMode ? 'dark' : ''} min-h-screen bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-gray-100 p-6`}>
+
+      {/* Progress Bar Circular Modal */}
+      {uploading && (
+        <div className="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center z-50">
+          <div className="bg-white dark:bg-gray-800 p-8 rounded-xl shadow-2xl text-center border-2 border-gray-200 dark:border-gray-600">
+            <div className="w-32 h-32 mx-auto mb-6">
+              <CircularProgressbar
+                value={uploadProgress}
+                text={`${uploadProgress}%`}
+                styles={buildStyles({
+                  textSize: '16px',
+                  pathColor: darkMode ? '#60A5FA' : '#3B82F6',
+                  textColor: darkMode ? '#F3F4F6' : '#1F2937',
+                  trailColor: darkMode ? '#374151' : '#E5E7EB',
+                  backgroundColor: darkMode ? '#1F2937' : '#F3F4F6',
+                })}
+              />
+            </div>
+            <p className="text-xl font-bold text-gray-800 dark:text-gray-100 mb-2">
+              Subiendo archivo...
+            </p>
+            <p className="text-sm text-gray-600 dark:text-gray-300 mb-2">
+              {form.file?.name}
+            </p>
+            <p className="text-xs text-gray-500 dark:text-gray-400">
+              {form.file && `${(form.file.size / 1024 / 1024).toFixed(2)} MB`}
+            </p>
+          </div>
+        </div>
+      )}
 
       {/* Header */}
       <div className="flex justify-between items-center mb-6 p-4 bg-white dark:bg-gray-800 rounded-lg shadow">
@@ -230,7 +321,8 @@ export default function UploadNew() {
                 name={fld.name}
                 value={form[fld.name]}
                 onChange={handleChange}
-                className="w-full p-2 rounded border-2 border-gray-400 dark:border-gray-600 bg-gray-100 dark:bg-gray-700 text-gray-900 dark:text-gray-100 placeholder-gray-600 dark:placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 transition"
+                disabled={uploading}
+                className="w-full p-2 rounded border-2 border-gray-400 dark:border-gray-600 bg-gray-100 dark:bg-gray-700 text-gray-900 dark:text-gray-100 placeholder-gray-600 dark:placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 transition disabled:opacity-50"
               />
             </div>
           ))}
@@ -255,7 +347,8 @@ export default function UploadNew() {
                 name={fld.name}
                 value={form[fld.name]}
                 onChange={handleChange}
-                className="w-full p-2 rounded border-2 border-gray-400 dark:border-gray-600 bg-gray-100 dark:bg-gray-700 text-gray-900 dark:text-gray-100 hover:ring-2 hover:ring-blue-500 transition"
+                disabled={uploading}
+                className="w-full p-2 rounded border-2 border-gray-400 dark:border-gray-600 bg-gray-100 dark:bg-gray-700 text-gray-900 dark:text-gray-100 hover:ring-2 hover:ring-blue-500 transition disabled:opacity-50"
               >
                 <option value="">Seleccione una opción</option>
                 {fld.options.map(opt => (
@@ -275,7 +368,8 @@ export default function UploadNew() {
               rows={3}
               value={form.review}
               onChange={handleChange}
-              className="w-full p-2 rounded border-2 border-gray-400 dark:border-gray-600 bg-gray-100 dark:bg-gray-700 text-gray-900 dark:text-gray-100 placeholder-gray-600 dark:placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 transition"
+              disabled={uploading}
+              className="w-full p-2 rounded border-2 border-gray-400 dark:border-gray-600 bg-gray-100 dark:bg-gray-700 text-gray-900 dark:text-gray-100 placeholder-gray-600 dark:placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 transition disabled:opacity-50"
             />
           </div>
         </div>
@@ -290,15 +384,27 @@ export default function UploadNew() {
             type="file"
             name="file"
             onChange={handleChange}
-            className="w-full p-2 rounded border-2 border-gray-400 dark:border-gray-600 bg-gray-100 dark:bg-gray-700 text-gray-900 dark:text-gray-100 transition"
+            disabled={uploading}
+            className="w-full p-2 rounded border-2 border-gray-400 dark:border-gray-600 bg-gray-100 dark:bg-gray-700 text-gray-900 dark:text-gray-100 transition disabled:opacity-50"
           />
+          {form.file && (
+            <p className="text-sm text-gray-600 dark:text-gray-400 mt-2">
+              Archivo seleccionado: {form.file.name} ({(form.file.size / 1024 / 1024).toFixed(2)} MB)
+            </p>
+          )}
         </div>
 
         <button
           onClick={handleUpload}
-          className="mt-6 px-6 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg border-2 flex items-center gap-2 transition"
+          disabled={uploading}
+          className={`mt-6 px-6 py-2 rounded-lg border-2 flex items-center gap-2 transition ${
+            uploading
+              ? 'bg-gray-400 dark:bg-gray-600 cursor-not-allowed text-gray-200'
+              : 'bg-blue-600 hover:bg-blue-700 text-white'
+          }`}
         >
-          <FontAwesomeIcon icon={faUpload} /> Subir Documento
+          <FontAwesomeIcon icon={faUpload} /> 
+          {uploading ? 'Subiendo...' : 'Subir Documento'}
         </button>
       </div>
 
