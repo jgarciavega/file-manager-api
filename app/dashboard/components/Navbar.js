@@ -35,33 +35,6 @@ export default function Navbar({ user, toggleSidebar }) {
           </h1>
         </div>
 
-        {/* 🔹 Buscador */}
-        <div className="flex-grow flex justify-center">
-          <div className="w-[500px] flex items-center px-4 py-2 border border-gray-800 rounded-lg bg-white shadow-sm">
-            <span className="text-gray-800">
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                className="h-5 w-5"
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
-                strokeWidth={1}
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  d="M21 21l-4.35-4.35M16.35 16.35A7.5 7.5 0 101 13a7.5 7.5 0 0015.35 3.35zm0 0L21 21"
-                />
-              </svg>
-            </span>
-            <input
-              type="text"
-              placeholder="Buscar aquí..."
-              className="w-full border-none bg-transparent px-3 text-gray-800 focus:outline-none"
-            />
-          </div>
-        </div>
-
         {/* 🔹 Botón Hamburguesa */}
         <button
           onClick={toggleSidebar}

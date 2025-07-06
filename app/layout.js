@@ -1,6 +1,7 @@
 import { Inter } from "next/font/google";
 import "./globals.css";
 import SessionWrapper from "../components/SessionWrapper";
+import { GlobalSearchProvider } from "./context/GlobalSearchContext";
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -11,10 +12,12 @@ export const metadata = {
 
 export default function RootLayout({ children }) {
   return (
-    <html lang="en">
-      <body className={inter.className}>
-        <SessionWrapper>{children}</SessionWrapper>
-      </body>
-    </html>
+    <GlobalSearchProvider>
+      <html lang="en">
+        <body className={inter.className}>
+          <SessionWrapper>{children}</SessionWrapper>
+        </body>
+      </html>
+    </GlobalSearchProvider>
   );
 }
