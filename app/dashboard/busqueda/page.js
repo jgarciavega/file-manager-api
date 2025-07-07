@@ -34,15 +34,29 @@ export default function BusquedaPage() {
       .finally(() => setLoading(false));
   }, [globalSearch, session]);
 
+  // Función utilitaria para normalizar texto (minúsculas, sin tildes, sin puntuación, sin espacios extra)
+  function normalizeText(text) {
+    if (!text) return '';
+    return text
+      .toLowerCase()
+      .normalize('NFD').replace(/\p{Diacritic}/gu, '') // quita tildes
+      .replace(/[.,;:!?¿¡()\[\]{}"'`´]/g, '') // quita puntuación
+      .replace(/\s+/g, ' ') // espacios múltiples a uno
+      .trim();
+  }
+
   // Filtro avanzado en frontend
   const filteredDocs = docs.filter(doc => {
-    const term = globalSearch.trim().toLowerCase();
-    const matchText =
-      doc.nombre?.toLowerCase().includes(term) ||
-      doc.clasificacion?.toLowerCase().includes(term) ||
-      doc.descripcion?.toLowerCase().includes(term);
-    const matchClas = clasificacion === "Todos" || doc.clasificacion === clasificacion;
-    const matchUser = usuario === "Todos" || doc.usuario === usuario;
+    const nombre = normalizeText(doc.nombre);
+    const descripcion = normalizeText(doc.descripcion);
+    const clasificacionDoc = normalizeText(doc.clasificacion);
+    const usuarioDoc = normalizeText(doc.usuario);
+    const searchNorm = normalizeText(globalSearch);
+    const clasificacionNorm = normalizeText(clasificacion);
+    const usuarioNorm = normalizeText(usuario);
+    const matchText = nombre.includes(searchNorm) || clasificacionDoc.includes(searchNorm) || descripcion.includes(searchNorm);
+    const matchClas = clasificacionNorm === 'todos' || clasificacionDoc === clasificacionNorm;
+    const matchUser = usuarioNorm === 'todos' || usuarioDoc === usuarioNorm;
     return matchText && matchClas && matchUser;
   });
 

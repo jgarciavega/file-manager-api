@@ -18,23 +18,35 @@ export default async function handler(req, res) {
     return res.status(405).end(`Método ${req.method} no permitido`);
   }
 
+  // Log de headers y método
+  console.log("HEADERS:", req.headers);
+  console.log("Método:", req.method);
+
   // Crear directorio si no existe
   const uploadDir = path.join(process.cwd(), 'public', 'uploads');
   await fs.promises.mkdir(uploadDir, { recursive: true });
+
+  // Log de permisos del directorio
+  try {
+    const dirStats = await fs.promises.stat(uploadDir);
+    console.log("Permisos del directorio de subida:", dirStats.mode.toString(8));
+  } catch (permErr) {
+    console.error("No se pudo obtener permisos del directorio:", permErr);
+  }
 
   // Configuración del formulario
   const form = new IncomingForm({
     uploadDir,
     keepExtensions: true,
     multiples: false,
-    maxFileSize: 100 * 1024 * 1024, // 100 MB
+    maxFileSize: 300 * 1024 * 1024, // 300 MB
   });
 
   // Procesar el formulario
   form.parse(req, async (err, fields, files) => {
     if (err) {
       console.error('Error parseando formulario:', err);
-      return res.status(500).json({ error: 'Error al procesar el formulario' });
+      return res.status(500).json({ error: 'Error al procesar el formulario', details: err.message });
     }
 
     // LOG para depuración
@@ -61,12 +73,57 @@ export default async function handler(req, res) {
     let uploadedFile = Array.isArray(files.file) ? files.file[0] : files.file;
     if (!uploadedFile) {
       console.error("No se recibió archivo");
-      return res.status(400).json({ error: 'No se recibió ningún archivo' });
+      return res.status(400).json({ error: 'No se recibió ningún archivo', debug: { files } });
     }
+
+    // Log explícito del tipo MIME recibido
+    console.log("Tipo MIME recibido:", uploadedFile.mimetype);
+
+    // Validar tipo de archivo permitido
+    const allowedMimeTypes = [
+      'application/pdf',
+      'application/vnd.openxmlformats-officedocument.wordprocessingml.document', // .docx
+      'application/msword', // .doc
+      'image/jpeg',
+      'image/png',
+      'image/gif',
+      'image/webp',
+      'application/vnd.ms-excel', // .xls
+      'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', // .xlsx
+      'application/vnd.openxmlformats-officedocument.presentationml.presentation', // .pptx
+    ];
+    if (!allowedMimeTypes.includes(uploadedFile.mimetype)) {
+      console.error("Tipo de archivo no permitido:", uploadedFile.mimetype);
+      return res.status(400).json({
+        error: 'Tipo de archivo no permitido',
+        allowed: allowedMimeTypes,
+        received: uploadedFile.mimetype
+      });
+    }
+
+    // Log de objeto uploadedFile
+    console.log("uploadedFile:", uploadedFile);
 
     // Obtener información del archivo
     const finalFilename = uploadedFile.newFilename || path.basename(uploadedFile.filepath);
     const savedPath = `/uploads/${finalFilename}`;
+    const absolutePath = path.join(uploadDir, finalFilename);
+
+    // Validar existencia física del archivo y permisos
+    try {
+      await fs.promises.access(absolutePath, fs.constants.F_OK);
+      const fileStats = await fs.promises.stat(absolutePath);
+      console.log("Archivo guardado físicamente en:", absolutePath);
+      console.log("Permisos del archivo:", fileStats.mode.toString(8));
+      console.log("Tamaño del archivo:", fileStats.size);
+    } catch (fileErr) {
+      console.error("El archivo no existe físicamente tras la subida:", absolutePath, fileErr);
+      return res.status(500).json({
+        error: 'El archivo no se guardó correctamente en el servidor',
+        details: fileErr.message,
+        debug: { absolutePath, uploadedFile }
+      });
+    }
 
     try {
       // Guardar en la base de datos

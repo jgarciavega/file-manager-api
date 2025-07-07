@@ -2,7 +2,7 @@
 
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import styles from "./Sidebar.module.css";
 import Image from "next/image";
 import Swal from "sweetalert2";
@@ -11,7 +11,7 @@ import { useSession } from "next-auth/react";
 import admMap from "../../../lib/admMap";
 import avatarMap from "../../../lib/avatarMap";
 import profesionMap from "../../../lib/profesionMap";
-import { faSearch } from "@fortawesome/free-solid-svg-icons";
+import { faSearch, faMicrophone } from "@fortawesome/free-solid-svg-icons";
 import { useGlobalSearch } from "../../context/GlobalSearchContext";
 
 import {
@@ -38,18 +38,28 @@ export default function Sidebar({ isSidebarCollapsed }) {
   const [openMenus, setOpenMenus] = useState([]);
   const [isUserInfoOpen, setUserInfoOpen] = useState(false);
   const [search, setSearch] = useState("");
+  const [isListening, setIsListening] = useState(false);
+  const recognitionRef = useRef(null);
 
-  const email = session?.user?.email || "";
-  const fullName = session?.user?.name || "Usuario";
-
-  const user = {
-    name: fullName,
-    email: email,
-    avatar: avatarMap[email] || "/default-avatar.png",
-    position: admMap[email] || "000",
-    title: profesionMap[email] || "",
-    workArea: "Contraloría",
-  };
+  // Inicializa reconocimiento de voz 
+  useEffect(() => {
+    if (typeof window !== "undefined" && 'webkitSpeechRecognition' in window) {
+      const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+      recognitionRef.current = new SpeechRecognition();
+      recognitionRef.current.lang = "es-MX";
+      recognitionRef.current.interimResults = false;
+      recognitionRef.current.maxAlternatives = 1;
+      recognitionRef.current.onresult = (event) => {
+        const transcript = event.results[0][0].transcript;
+        setGlobalSearch(transcript);
+        setIsListening(false);
+        // Ejecuta búsqueda automáticamente
+        router.push(`/dashboard/busqueda?query=${encodeURIComponent(transcript)}`);
+      };
+      recognitionRef.current.onend = () => setIsListening(false);
+      recognitionRef.current.onerror = () => setIsListening(false);
+    }
+  }, [router, setGlobalSearch]);
 
   const toggleMenu = (menu) => {
     setOpenMenus((prev) =>
@@ -76,8 +86,8 @@ export default function Sidebar({ isSidebarCollapsed }) {
       text: "¿Seguro que deseas cerrar sesión?",
       icon: "warning",
       showCancelButton: true,
-      confirmButtonColor: "#3085d6",
-      cancelButtonColor: "#d33",
+      confirmButtonColor: "#0026e9",
+      cancelButtonColor: "#ed1c24",
       confirmButtonText: "Sí, cerrar sesión",
       cancelButtonText: "Cancelar",
     }).then((result) => {
@@ -85,6 +95,19 @@ export default function Sidebar({ isSidebarCollapsed }) {
         router.push("/");
       }
     });
+  };
+
+  const handleMicClick = () => {
+    if (recognitionRef.current) {
+      setIsListening(true);
+      recognitionRef.current.start();
+    } else {
+      Swal.fire({
+        icon: 'info',
+        title: 'Reconocimiento de voz no soportado',
+        text: 'Tu navegador no soporta reconocimiento de voz.',
+      });
+    }
   };
 
   // Opciones de menú y submenú para filtrar
@@ -134,6 +157,18 @@ export default function Sidebar({ isSidebarCollapsed }) {
     const filteredSub = menu.sub.filter(sub => sub.label.toLowerCase().includes(search.toLowerCase()));
     return { ...menu, sub: filteredSub };
   }).filter(menu => menu.label.toLowerCase().includes(search.toLowerCase()) || menu.sub.length > 0);
+
+  const email = session?.user?.email || "";
+  const fullName = session?.user?.name || "Usuario";
+
+  const user = {
+    name: fullName,
+    email: email,
+    avatar: avatarMap[email] || "/default-avatar.png",
+    position: admMap[email] || "000",
+    title: profesionMap[email] || "",
+    workArea: "Contraloría",
+  };
 
   return (
     <div className={styles["sidebar-container"]} style={{ borderLeft: 'none' }}>
@@ -196,7 +231,7 @@ export default function Sidebar({ isSidebarCollapsed }) {
             </div>
             {/* Buscador debajo del logo */}
             <div style={{ marginTop: 48 }} /> {/* Aumenta el margen superior aquí */}
-            <div className="flex items-center justify-center py-4 px-4">
+            <div className="flex items-center justify-center py-4 px-4 gap-2">
               <input
                 type="text"
                 value={globalSearch}
@@ -210,6 +245,15 @@ export default function Sidebar({ isSidebarCollapsed }) {
                 className="w-full rounded-lg bg-gray-100 px-4 py-2 text-gray-800 border-2 border-blue-500 focus:ring-2 focus:ring-blue-400 focus:border-blue-700 hover:border-blue-700 transition-all duration-200 outline-none"
                 style={{ boxShadow: '0 1px 4px 0 rgba(0,0,0,0.04)' }}
               />
+              <button
+                type="button"
+                aria-label="Buscar por voz"
+                onClick={handleMicClick}
+                className={`ml-2 p-2 rounded-full border-2 ${isListening ? 'border-red-500 bg-red-100 animate-pulse' : 'border-blue-400 bg-white'} transition-all`}
+                title="Buscar por voz"
+              >
+                <FontAwesomeIcon icon={faMicrophone} className={isListening ? 'text-red-500' : 'text-blue-500'} size="lg" />
+              </button>
             </div>
             {/* Más separación entre buscador y menú */}
             <div style={{ marginTop: 48 }} />

@@ -9,6 +9,7 @@ import { CircularProgressbar, buildStyles } from 'react-circular-progressbar';
 import 'react-circular-progressbar/dist/styles.css';
 import avatarMap from '../../../lib/avatarMap';
 import Link from 'next/link';
+import { useAutoCorrect } from '../../../lib/useAutoCorrect';
 
 export default function UploadNew() {
   const { data: session, status } = useSession();
@@ -27,7 +28,17 @@ export default function UploadNew() {
     jefatura:       '',
     review:         '',
     file:           null,
+    serie:          '',
+    subserie:       '',
+    expediente:     '',
+    fecha_creacion: '',
+    vigencia:       '',
+    acceso:         '',
+    observaciones:  '',
   });
+
+  // Estado de errores para validación visual
+  const [errors, setErrors] = useState({});
 
   // Tabla de archivos recién subidos (solo local, para que aparezcan al instante)
   const [uploadedFiles, setUploadedFiles] = useState([]);
@@ -47,6 +58,12 @@ export default function UploadNew() {
     logo:   '/api-dark23.png', // la imagen de tu logo
   };
 
+  // Estado para la URL de vista previa
+  const [previewUrl, setPreviewUrl] = useState(null);
+
+  // Hook global de autocorrección
+  const handleAutoCorrect = useAutoCorrect();
+
   if (status === "loading") {
     return <p className="text-center p-10">Cargando sesión...</p>;
   }
@@ -55,24 +72,94 @@ export default function UploadNew() {
     return <p className="text-center p-10">No estás autenticado. Por favor, inicia sesión.</p>;
   }
 
+  // --- AUTOCORRECCIÓN AUTOMÁTICA EN NOMBRE DEL DOCUMENTO ---
+  async function autocorregirTexto(texto) {
+    // LanguageTool API pública (puede tener límites)
+    const res = await fetch('https://api.languagetoolplus.com/v2/check', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+      body: new URLSearchParams({
+        text: texto,
+        language: 'es',
+      })
+    });
+    const data = await res.json();
+    let corregido = texto;
+    if (data.matches && data.matches.length > 0) {
+      // Aplicar sugerencias de derecha a izquierda para no desfasar offsets
+      data.matches.sort((a, b) => b.offset - a.offset).forEach(match => {
+        if (match.replacements && match.replacements.length > 0) {
+          corregido = corregido.slice(0, match.offset) + match.replacements[0].value + corregido.slice(match.offset + match.length);
+        }
+      });
+    }
+    return corregido;
+  }
+
   // Cada vez que cambie un campo (o se elija un archivo), lo guardamos en `form`
   const handleChange = (e) => {
     const { name, value, files } = e.target;
-    setForm(prev => ({
-      ...prev,
-      [name]: files ? files[0] : value
-    }));
+    if (name === 'file' && files && files[0]) {
+      const file = files[0];
+      setForm(prev => ({ ...prev, file }));
+      // Generar vista previa si es imagen o PDF
+      if (file.type.startsWith('image/') || file.type === 'application/pdf') {
+        const url = URL.createObjectURL(file);
+        setPreviewUrl(url);
+      } else {
+        setPreviewUrl(null);
+      }
+    } else {
+      setForm(prev => ({ ...prev, [name]: value }));
+    }
   };
 
-  // Función que dispara la subida con progress bar
-  const handleUpload = async () => {
-    // Validaciones mínimas
-    if (!form.nombre.trim()) {
-      alert('❗ El nombre del documento es obligatorio.');
-      return;
+  // Autocorrección solo al perder el foco en el campo nombre
+  const handleNombreBlur = async (e) => {
+    const value = e.target.value;
+    const corregido = await autocorregirTexto(value);
+    if (corregido !== value) {
+      setForm(prev => ({ ...prev, nombre: corregido }));
     }
-    if (!form.file) {
-      alert('❗ Debes seleccionar un archivo.');
+  };
+
+  // Autocorrección automática al terminar palabra (espacio, punto, enter)
+  const handleNombreKeyUp = async (e) => {
+    const value = e.target.value;
+    // Si la tecla es espacio, punto o enter
+    if ([32, 190, 13].includes(e.keyCode)) {
+      // Solo autocorregir si hay texto
+      if (value.trim().length > 0) {
+        const corregido = await autocorregirTexto(value);
+        if (corregido !== value) {
+          setForm(prev => ({ ...prev, nombre: corregido }));
+        }
+      }
+    }
+  };
+
+  // Validación de todos los campos obligatorios
+  const validateForm = () => {
+    const newErrors = {};
+    if (!form.nombre.trim()) newErrors.nombre = 'El nombre es obligatorio.';
+    if (!form.serie.trim()) newErrors.serie = 'La serie documental es obligatoria.';
+    if (!form.fecha_creacion) newErrors.fecha_creacion = 'La fecha de creación es obligatoria.';
+    if (!form.vigencia) newErrors.vigencia = 'La vigencia documental es obligatoria.';
+    if (!form.acceso) newErrors.acceso = 'El nivel de acceso es obligatorio.';
+    if (!form.file) newErrors.file = 'Debes seleccionar un archivo.';
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
+
+  // Función que dispara la subida with progress bar
+  const handleUpload = async () => {
+    if (!validateForm()) {
+      // Scroll al primer error
+      const firstError = Object.keys(errors)[0];
+      if (firstError) {
+        const el = document.querySelector(`[name="${firstError}"]`);
+        if (el) el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      }
       return;
     }
     if (form.file.size > 100 * 1024 * 1024) {
@@ -114,6 +201,13 @@ export default function UploadNew() {
     fd.append('jefatura', form.jefatura);
     fd.append('review', form.review);
     fd.append('usuarioId', session.user.id);
+    fd.append('serie', form.serie);
+    fd.append('subserie', form.subserie);
+    fd.append('expediente', form.expediente);
+    fd.append('fecha_creacion', form.fecha_creacion);
+    fd.append('vigencia', form.vigencia);
+    fd.append('acceso', form.acceso);
+    fd.append('observaciones', form.observaciones);
 
     try {
       // Usar XMLHttpRequest para monitorear progreso
@@ -208,8 +302,17 @@ export default function UploadNew() {
         classification: '',
         jefatura:       '',
         review:         '',
-        file:           null
+        file:           null,
+        serie:          '',
+        subserie:       '',
+        expediente:     '',
+        fecha_creacion: '',
+        vigencia:       '',
+        acceso:         '',
+        observaciones:  '',
       });
+      setErrors({});
+      setPreviewUrl(null);
       if (fileInputRef.current) {
         fileInputRef.current.value = '';
       }
@@ -226,6 +329,30 @@ export default function UploadNew() {
         setUploading(false);
         setUploadProgress(0);
       }, 500);
+    }
+  };
+
+  // Función para limpiar el formulario manualmente
+  const handleClearForm = () => {
+    setForm({
+      nombre:         '',
+      origin:         '',
+      classification: '',
+      jefatura:       '',
+      review:         '',
+      file:           null,
+      serie:          '',
+      subserie:       '',
+      expediente:     '',
+      fecha_creacion: '',
+      vigencia:       '',
+      acceso:         '',
+      observaciones:  '',
+    });
+    setErrors({});
+    setPreviewUrl(null);
+    if (fileInputRef.current) {
+      fileInputRef.current.value = '';
     }
   };
 
@@ -307,41 +434,156 @@ export default function UploadNew() {
 
       {/* Formulario de carga */}
       <div className="p-6 mb-10 bg-gray-50 dark:bg-gray-800 border-2 border-gray-300 dark:border-gray-600 rounded-lg shadow-lg">
+        {/* Resumen de errores en la parte superior */}
+        {Object.keys(errors).length > 0 && (
+          <div className="mb-6 p-4 bg-red-100 dark:bg-red-900 border border-red-400 dark:border-red-700 rounded">
+            <p className="font-semibold text-red-700 dark:text-red-200 mb-2">Por favor corrige los siguientes errores:</p>
+            <ul className="list-disc pl-6 text-red-700 dark:text-red-200 text-sm">
+              {Object.values(errors).map((err, idx) => (
+                <li key={idx}>{err}</li>
+              ))}
+            </ul>
+          </div>
+        )}
+
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          {[
-            { label: 'Nombre del Documento *', name: 'nombre' },
-            { label: 'Origen',               name: 'origin' }
-          ].map(fld => (
-            <div key={fld.name}>
-              <label className="block mb-1 font-semibold text-gray-700 dark:text-gray-200">
-                {fld.label}
-              </label>
+          {/* Nombre y Origen */}
+          <div>
+            <label className="flex items-center gap-1 mb-1 font-semibold text-gray-700 dark:text-gray-200">
+              Nombre del Documento *
+              <span title="Nombre identificador del documento. Obligatorio.">
+                <span className="text-blue-500 cursor-help">ⓘ</span>
+              </span>
+            </label>
+            <div className="flex items-center gap-2">
               <input
                 type="text"
-                name={fld.name}
-                value={form[fld.name]}
+                name="nombre"
+                value={form.nombre}
                 onChange={handleChange}
+                onBlur={handleNombreBlur}
+                onKeyUp={e => handleAutoCorrect(e, form.nombre, v => setForm(prev => ({ ...prev, nombre: v })))} // Autocorrección en nombre
                 disabled={uploading}
-                className="w-full p-2 rounded border-2 border-gray-400 dark:border-gray-600 bg-gray-100 dark:bg-gray-700 text-gray-900 dark:text-gray-100 placeholder-gray-600 dark:placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 transition disabled:opacity-50"
+                spellCheck={true}
+                autoCorrect="on"
+                className={`w-full p-2 rounded border-2 bg-gray-100 dark:bg-gray-700 text-gray-900 dark:text-gray-100 placeholder-gray-600 dark:placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 transition disabled:opacity-50 ${errors.nombre ? 'border-red-500' : 'border-gray-400 dark:border-gray-600'}`}
               />
             </div>
-          ))}
+            {errors.nombre && <p className="text-red-500 text-xs mt-1">{errors.nombre}</p>}
+          </div>
+          <div>
+            <label className="block mb-1 font-semibold text-gray-700 dark:text-gray-200">
+              Origen
+            </label>
+            <input
+              type="text"
+              name="origin"
+              value={form.origin}
+              onChange={handleChange}
+              onKeyUp={e => handleAutoCorrect(e, form.origin, v => setForm(prev => ({ ...prev, origin: v })))} // Autocorrección en origen
+              disabled={uploading}
+              spellCheck={true}
+              autoCorrect="on"
+              className="w-full p-2 rounded border-2 border-gray-400 dark:border-gray-600 bg-gray-100 dark:bg-gray-700 text-gray-900 dark:text-gray-100 placeholder-gray-600 dark:placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 transition disabled:opacity-50"
+            />
+          </div>
 
-          {[
-            {
-              label:   'Clasificación',
-              name:    'classification',
-              options: ['Oficio', 'Memorándum', 'Circular', 'Cédula de Auditoría', 'Expediente de Investigación']
-            },
-            {
-              label:   'Dirección / Jefatura',
-              name:    'jefatura',
-              options: ['Contraloría e Investigación', 'Contraloría y Resolución', 'Contraloría y Substanciación', 'Control Administrativo']
-            }
-          ].map(fld => (
+          {/* Serie y Subserie */}
+          <div>
+            <label className="flex items-center gap-1 mb-1 font-semibold text-gray-700 dark:text-gray-200">
+              Serie documental *
+              <span title="Serie documental según el catálogo institucional. Obligatorio.">
+                <span className="text-blue-500 cursor-help">ⓘ</span>
+              </span>
+            </label>
+            <input
+              type="text"
+              name="serie"
+              value={form.serie}
+              onChange={handleChange}
+              onKeyUp={e => handleAutoCorrect(e, form.serie, v => setForm(prev => ({ ...prev, serie: v })))} // Autocorrección en serie
+              disabled={uploading}
+              spellCheck={true}
+              autoCorrect="on"
+              placeholder="Ej. Correspondencia, Expedientes, etc."
+              className={`w-full p-2 rounded border-2 bg-gray-100 dark:bg-gray-700 text-gray-900 dark:text-gray-100 placeholder-gray-600 dark:placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 transition disabled:opacity-50 ${errors.serie ? 'border-red-500' : 'border-gray-400 dark:border-gray-600'}`}
+            />
+            {errors.serie && <p className="text-red-500 text-xs mt-1">{errors.serie}</p>}
+          </div>
+          <div>
+            <label className="block mb-1 font-semibold text-gray-700 dark:text-gray-200">
+              Subserie
+            </label>
+            <input
+              type="text"
+              name="subserie"
+              value={form.subserie}
+              onChange={handleChange}
+              onKeyUp={e => handleAutoCorrect(e, form.subserie, v => setForm(prev => ({ ...prev, subserie: v })))} // Autocorrección en subserie
+              disabled={uploading}
+              spellCheck={true}
+              autoCorrect="on"
+              placeholder="Opcional"
+              className="w-full p-2 rounded border-2 border-gray-400 dark:border-gray-600 bg-gray-100 dark:bg-gray-700 text-gray-900 dark:text-gray-100 placeholder-gray-600 dark:placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 transition disabled:opacity-50"
+            />
+          </div>
+
+          {/* Número de expediente y fecha de creación */}
+          <div>
+            <label className="block mb-1 font-semibold text-gray-700 dark:text-gray-200">
+              Número de expediente
+            </label>
+            <input
+              type="text"
+              name="expediente"
+              value={form.expediente}
+              onChange={handleChange}
+              onKeyUp={e => handleAutoCorrect(e, form.expediente, v => setForm(prev => ({ ...prev, expediente: v })))} // Autocorrección en expediente
+              disabled={uploading}
+              spellCheck={true}
+              autoCorrect="on"
+              placeholder="Opcional"
+              className="w-full p-2 rounded border-2 border-gray-400 dark:border-gray-600 bg-gray-100 dark:bg-gray-700 text-gray-900 dark:text-gray-100 placeholder-gray-600 dark:placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 transition disabled:opacity-50"
+            />
+          </div>
+          <div>
+            <label className="flex items-center gap-1 mb-1 font-semibold text-gray-700 dark:text-gray-200">
+              Fecha de creación/emisión *
+              <span title="Fecha en que se creó o emitió el documento. Obligatorio.">
+                <span className="text-blue-500 cursor-help">ⓘ</span>
+              </span>
+            </label>
+            <input
+              type="date"
+              name="fecha_creacion"
+              value={form.fecha_creacion}
+              onChange={handleChange}
+              disabled={uploading}
+              className={`w-full p-2 rounded border-2 bg-gray-100 dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500 transition disabled:opacity-50 ${errors.fecha_creacion ? 'border-red-500' : 'border-gray-400 dark:border-gray-600'}`}
+            />
+            {errors.fecha_creacion && <p className="text-red-500 text-xs mt-1">{errors.fecha_creacion}</p>}
+          </div>
+
+          {/* Clasificación y Jefatura */}
+          {[{
+            label:   'Clasificación',
+            name:    'classification',
+            options: ['Oficio', 'Memorándum', 'Circular', 'Cédula de Auditoría', 'Expediente de Investigación'],
+            tooltip: 'Tipo documental según clasificación institucional.'
+          }, {
+            label:   'Dirección / Jefatura',
+            name:    'jefatura',
+            options: ['Contraloría e Investigación', 'Contraloría y Resolución', 'Contraloría y Substanciación', 'Control Administrativo'],
+            tooltip: 'Área responsable de la gestión documental.'
+          }].map(fld => (
             <div key={fld.name}>
-              <label className="block mb-1 font-semibold text-gray-700 dark:text-gray-200">
+              <label className="flex items-center gap-1 mb-1 font-semibold text-gray-700 dark:text-gray-200">
                 {fld.label}
+                {fld.tooltip && (
+                  <span title={fld.tooltip}>
+                    <span className="text-blue-500 cursor-help">ⓘ</span>
+                  </span>
+                )}
               </label>
               <select
                 name={fld.name}
@@ -358,6 +600,69 @@ export default function UploadNew() {
             </div>
           ))}
 
+          {/* Vigencia y Nivel de acceso */}
+          <div>
+            <label className="flex items-center gap-1 mb-1 font-semibold text-gray-700 dark:text-gray-200">
+              Vigencia documental *
+              <span title="Tiempo que el documento debe conservarse. Obligatorio.">
+                <span className="text-blue-500 cursor-help">ⓘ</span>
+              </span>
+            </label>
+            <select
+              name="vigencia"
+              value={form.vigencia}
+              onChange={handleChange}
+              disabled={uploading}
+              className={`w-full p-2 rounded border-2 bg-gray-100 dark:bg-gray-700 text-gray-900 dark:text-gray-100 hover:ring-2 hover:ring-blue-500 transition disabled:opacity-50 ${errors.vigencia ? 'border-red-500' : 'border-gray-400 dark:border-gray-600'}`}
+            >
+              <option value="">Seleccione una opción</option>
+              <option value="Temporal">Temporal</option>
+              <option value="Permanente">Permanente</option>
+              <option value="5 años">5 años</option>
+              <option value="10 años">10 años</option>
+            </select>
+            {errors.vigencia && <p className="text-red-500 text-xs mt-1">{errors.vigencia}</p>}
+          </div>
+          <div>
+            <label className="flex items-center gap-1 mb-1 font-semibold text-gray-700 dark:text-gray-200">
+              Nivel de acceso *
+              <span title="Quién puede consultar el documento. Obligatorio.">
+                <span className="text-blue-500 cursor-help">ⓘ</span>
+              </span>
+            </label>
+            <select
+              name="acceso"
+              value={form.acceso}
+              onChange={handleChange}
+              disabled={uploading}
+              className={`w-full p-2 rounded border-2 bg-gray-100 dark:bg-gray-700 text-gray-900 dark:text-gray-100 hover:ring-2 hover:ring-blue-500 transition disabled:opacity-50 ${errors.acceso ? 'border-red-500' : 'border-gray-400 dark:border-gray-600'}`}
+            >
+              <option value="">Seleccione una opción</option>
+              <option value="Público">Público</option>
+              <option value="Reservado">Reservado</option>
+              <option value="Confidencial">Confidencial</option>
+            </select>
+            {errors.acceso && <p className="text-red-500 text-xs mt-1">{errors.acceso}</p>}
+          </div>
+
+          {/* Observaciones */}
+          <div className="md:col-span-2">
+            <label className="block mb-1 font-semibold text-gray-700 dark:text-gray-200">
+              Observaciones
+            </label>
+            <textarea
+              name="observaciones"
+              rows={2}
+              value={form.observaciones}
+              onChange={handleChange}
+              onKeyUp={e => handleAutoCorrect(e, form.observaciones, v => setForm(prev => ({ ...prev, observaciones: v })))} // Autocorrección en observaciones
+              disabled={uploading}
+              spellCheck={true}
+              autoCorrect="on"
+              className="w-full p-2 rounded border-2 border-gray-400 dark:border-gray-600 bg-gray-100 dark:bg-gray-700 text-gray-900 dark:text-gray-100 placeholder-gray-600 dark:placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 transition disabled:opacity-50"
+            />
+          </div>
+
           {/* Reseña */}
           <div className="md:col-span-2">
             <label className="block mb-1 font-semibold text-gray-700 dark:text-gray-200">
@@ -368,7 +673,10 @@ export default function UploadNew() {
               rows={3}
               value={form.review}
               onChange={handleChange}
+              onKeyUp={e => handleAutoCorrect(e, form.review, v => setForm(prev => ({ ...prev, review: v })))} // Autocorrección en reseña
               disabled={uploading}
+              spellCheck={true}
+              autoCorrect="on"
               className="w-full p-2 rounded border-2 border-gray-400 dark:border-gray-600 bg-gray-100 dark:bg-gray-700 text-gray-900 dark:text-gray-100 placeholder-gray-600 dark:placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 transition disabled:opacity-50"
             />
           </div>
@@ -376,8 +684,11 @@ export default function UploadNew() {
 
         {/* File input */}
         <div className="mt-6">
-          <label className="block mb-1 font-semibold text-gray-700 dark:text-gray-200">
+          <label className="flex items-center gap-1 mb-1 font-semibold text-gray-700 dark:text-gray-200">
             Seleccionar archivo *
+            <span title="Selecciona el archivo a subir. Obligatorio. Tamaño máximo 100MB.">
+              <span className="text-blue-500 cursor-help">ⓘ</span>
+            </span>
           </label>
           <input
             ref={fileInputRef}
@@ -385,27 +696,64 @@ export default function UploadNew() {
             name="file"
             onChange={handleChange}
             disabled={uploading}
-            className="w-full p-2 rounded border-2 border-gray-400 dark:border-gray-600 bg-gray-100 dark:bg-gray-700 text-gray-900 dark:text-gray-100 transition disabled:opacity-50"
+            spellCheck={true}
+            autoCorrect="on"
+            className={`w-full p-2 rounded border-2 bg-gray-100 dark:bg-gray-700 text-gray-900 dark:text-gray-100 transition disabled:opacity-50 ${errors.file ? 'border-red-500' : 'border-gray-400 dark:border-gray-600'}`}
           />
           {form.file && (
             <p className="text-sm text-gray-600 dark:text-gray-400 mt-2">
               Archivo seleccionado: {form.file.name} ({(form.file.size / 1024 / 1024).toFixed(2)} MB)
             </p>
           )}
+          {errors.file && <p className="text-red-500 text-xs mt-1">{errors.file}</p>}
+          {/* Vista previa de archivo */}
+          {form.file && (
+            <div className="mt-4 flex items-center gap-4">
+              {form.file.type.startsWith('image/') ? (
+                <img src={previewUrl} alt="Vista previa" className="max-h-64 rounded border mx-auto" />
+              ) : form.file.type === 'application/pdf' ? (
+                <object data={previewUrl} type="application/pdf" width="100%" height="400" className="border rounded">
+                  <p className="text-center">No se puede mostrar la vista previa del PDF.</p>
+                </object>
+              ) : form.file.type === 'application/vnd.openxmlformats-officedocument.wordprocessingml.document' || form.file.type === 'application/msword' ? (
+                <div className="flex items-center gap-2">
+                  <span role="img" aria-label="Word" className="text-3xl">📄</span>
+                  <span className="text-gray-700 dark:text-gray-200 font-medium">{form.file.name}</span>
+                  <span className="text-xs text-gray-500 dark:text-gray-400">(Word)</span>
+                </div>
+              ) : (
+                <div className="flex items-center gap-2">
+                  <span role="img" aria-label="Archivo" className="text-3xl">📎</span>
+                  <span className="text-gray-700 dark:text-gray-200 font-medium">{form.file.name}</span>
+                  <span className="text-xs text-gray-500 dark:text-gray-400">(Sin vista previa)</span>
+                </div>
+              )}
+            </div>
+          )}
         </div>
 
-        <button
-          onClick={handleUpload}
-          disabled={uploading}
-          className={`mt-6 px-6 py-2 rounded-lg border-2 flex items-center gap-2 transition ${
-            uploading
-              ? 'bg-gray-400 dark:bg-gray-600 cursor-not-allowed text-gray-200'
-              : 'bg-blue-600 hover:bg-blue-700 text-white'
-          }`}
-        >
-          <FontAwesomeIcon icon={faUpload} /> 
-          {uploading ? 'Subiendo...' : 'Subir Documento'}
-        </button>
+        <div className="flex gap-4 mt-6">
+          <button
+            onClick={handleUpload}
+            disabled={uploading}
+            className={`px-6 py-2 rounded-lg border-2 flex items-center gap-2 transition ${
+              uploading
+                ? 'bg-gray-400 dark:bg-gray-600 cursor-not-allowed text-gray-200'
+                : 'bg-blue-600 hover:bg-blue-700 text-white'
+            }`}
+          >
+            <FontAwesomeIcon icon={faUpload} />
+            {uploading ? 'Subiendo...' : 'Subir Documento'}
+          </button>
+          <button
+            type="button"
+            onClick={handleClearForm}
+            disabled={uploading}
+            className="px-6 py-2 rounded-lg border-2 border-gray-400 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-100 hover:bg-gray-100 dark:hover:bg-gray-600 transition disabled:opacity-50"
+          >
+            Limpiar formulario
+          </button>
+        </div>
       </div>
 
       {/* Tabla de documentos recién subidos */}
