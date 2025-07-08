@@ -398,11 +398,31 @@ export default function UploadNew() {
 
       {/* Header */}
       <div className="flex justify-between items-center mb-6 p-4 bg-white dark:bg-gray-800 rounded-lg shadow">
-        <Image src={currentUser.logo} alt="Logo API" width={300} height={60} priority />
+        <Image
+          src={currentUser.logo}
+          alt="Logo API"
+          width={420}
+          height={90}
+          priority
+          className={[
+            'drop-shadow-2xl',
+            'rounded-xl', // menos redondeado
+            'border-4',
+            'border-blue-200',
+            'bg-white',
+            'p-2',
+            'transition-all',
+            'duration-300',
+            'dark:border-gray-800', // borde sutil en dark
+            'dark:bg-transparent', // sin fondo en dark
+            'dark:p-0' // sin padding en dark
+          ].join(' ')}
+          style={{ boxShadow: '0 8px 32px 0 rgba(30, 64, 175, 0.18), 0 1.5px 8px 0 rgba(59, 130, 246, 0.10)' }}
+        />
         <div className="flex items-center gap-4">
           <button
             onClick={() => setDarkMode(d => !d)}
-            className="text-2xl text-gray-700 dark:text-yellow-300"
+            className="text-2xl text-gray-700 dark:text-yellow-300 hover:scale-110 transition-transform duration-200"
             title="Cambiar modo"
           >
             <FontAwesomeIcon icon={darkMode ? faSun : faMoon} />
@@ -411,11 +431,11 @@ export default function UploadNew() {
             <Image
               src={currentUser.avatar}
               alt="Avatar"
-              width={50}
-              height={50}
-              className="rounded-full border-2 border-gray-300 dark:border-gray-600"
+              width={60}
+              height={60}
+              className="rounded-full border-4 border-blue-200 dark:border-blue-900 shadow-lg"
             />
-            <span className="font-medium text-gray-800 dark:text-gray-100">
+            <span className="font-semibold text-lg text-gray-800 dark:text-gray-100">
               {currentUser.name}
             </span>
           </div>
@@ -425,7 +445,7 @@ export default function UploadNew() {
       {/* Volver al Inicio */}
       <Link
         href="/home"
-        className="inline-flex items-center gap-2 mb-6 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded"
+        className="inline-flex items-center gap-2 mb-6 px-6 py-3 bg-gradient-to-r from-blue-600 to-blue-400 hover:from-blue-700 hover:to-blue-500 text-white rounded-full shadow-lg text-lg font-semibold transition-all duration-200 border-2 border-blue-300 dark:border-blue-800 dark:from-blue-800 dark:to-blue-600 dark:hover:from-blue-900 dark:hover:to-blue-700"
       >
         <FontAwesomeIcon icon={faArrowLeft} /> Volver al Inicio
       </Link>
@@ -698,7 +718,7 @@ export default function UploadNew() {
             disabled={uploading}
             spellCheck={true}
             autoCorrect="on"
-            className={`w-full p-2 rounded border-2 bg-gray-100 dark:bg-gray-700 text-gray-900 dark:text-gray-100 transition disabled:opacity-50 ${errors.file ? 'border-red-500' : 'border-gray-400 dark:border-gray-600'}`}
+            className={`w-full p-3 rounded-lg border-2 bg-gradient-to-r from-blue-100 to-blue-50 dark:from-blue-900 dark:to-gray-800 text-gray-900 dark:text-gray-100 transition disabled:opacity-50 focus:ring-2 focus:ring-blue-400 border-blue-300 dark:border-blue-800 shadow-md file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-base file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100 file:shadow-lg file:transition-all file:duration-200 ${errors.file ? 'border-red-500' : 'border-blue-300 dark:border-blue-800'}`}
           />
           {form.file && (
             <p className="text-sm text-gray-600 dark:text-gray-400 mt-2">
@@ -732,15 +752,18 @@ export default function UploadNew() {
           )}
         </div>
 
-        <div className="flex gap-4 mt-6">
+        <div className="flex flex-wrap gap-4 mt-8 justify-end">
           <button
             onClick={handleUpload}
             disabled={uploading}
-            className={`px-6 py-2 rounded-lg border-2 flex items-center gap-2 transition ${
-              uploading
-                ? 'bg-gray-400 dark:bg-gray-600 cursor-not-allowed text-gray-200'
-                : 'bg-blue-600 hover:bg-blue-700 text-white'
-            }`}
+            className={
+              [
+                'px-8 py-3 rounded-full border-2 flex items-center gap-2 text-lg font-semibold shadow-lg transition-all duration-200',
+                uploading
+                  ? 'bg-gray-400 dark:bg-gray-600 cursor-not-allowed text-gray-200 border-gray-300 dark:border-gray-700'
+                  : 'bg-blue-600 dark:bg-blue-800 hover:bg-blue-700 dark:hover:bg-blue-900 text-white border-blue-300 dark:border-blue-800'
+              ].join(' ')
+            }
           >
             <FontAwesomeIcon icon={faUpload} />
             {uploading ? 'Subiendo...' : 'Subir Documento'}
@@ -749,56 +772,88 @@ export default function UploadNew() {
             type="button"
             onClick={handleClearForm}
             disabled={uploading}
-            className="px-6 py-2 rounded-lg border-2 border-gray-400 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-100 hover:bg-gray-100 dark:hover:bg-gray-600 transition disabled:opacity-50"
+            className="px-8 py-3 rounded-full border-2 border-gray-400 dark:border-gray-600 bg-gradient-to-r from-gray-100 to-gray-300 dark:from-gray-800 dark:to-gray-700 text-gray-700 dark:text-gray-100 hover:bg-gray-200 dark:hover:bg-gray-600 font-semibold shadow-lg transition-all duration-200 disabled:opacity-50 ring-1 ring-gray-300 dark:ring-gray-700 hover:ring-4 hover:ring-blue-200 dark:hover:ring-blue-900"
           >
             Limpiar formulario
           </button>
         </div>
       </div>
 
-      {/* Tabla de documentos recién subidos */}
-      <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow">
-        <table className="w-full text-sm border-collapse">
-          <thead>
-            <tr className="text-center font-semibold bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-gray-100">
-              {['ID', 'Nombre', 'Origen', 'Clasificación', 'Jefatura', 'Reseña', 'Fecha', 'Responsable', 'Descargar'].map(th => (
-                <th key={th} className="p-2 border border-gray-400 dark:border-gray-600">{th}</th>
-              ))}
-            </tr>
-          </thead>
-          <tbody>
-            {filtered.length === 0 ? (
-              <tr>
-                <td colSpan={9} className="p-4 text-center text-gray-500 dark:text-gray-400">
-                  No hay documentos disponibles.
-                </td>
-              </tr>
-            ) : filtered.map(doc => (
-              <tr
-                key={doc.id}
-                className={`text-center odd:bg-white even:bg-gray-50 dark:odd:bg-gray-700 dark:even:bg-gray-600 text-gray-800 dark:text-gray-100`}
-              >
-                <td className="p-2 border border-gray-400 dark:border-gray-600">{doc.id}</td>
-                <td className="p-2 border border-gray-400 dark:border-gray-600">{doc.nombre}</td>
-                <td className="p-2 border border-gray-400 dark:border-gray-600">{doc.origin}</td>
-                <td className="p-2 border border-gray-400 dark:border-gray-600">{doc.classification}</td>
-                <td className="p-2 border border-gray-400 dark:border-gray-600">{doc.jefatura}</td>
-                <td className="p-2 border border-gray-400 dark:border-gray-600">{doc.review}</td>
-                <td className="p-2 border border-gray-400 dark:border-gray-600">{doc.fecha}</td>
-                <td className="p-2 border border-gray-400 dark:border-gray-600">{doc.owner}</td>
-                <td className="p-2 border border-gray-400 dark:border-gray-600">
-                  <a
-                    href={doc.ruta}
-                    download
-                    className="text-blue-600 dark:text-blue-300 hover:underline"
-                  >
-                    📥
-                  </a>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
+      {/* Tabla de archivos subidos */}
+      <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg border-2 border-gray-300 dark:border-gray-600 p-6">
+        <h2 className="text-2xl font-bold mb-4 text-gray-800 dark:text-gray-200">
+          Documentos Subidos
+        </h2>
+
+        {/* Filtros superiores */}
+        <div className="flex flex-col md:flex-row gap-4 mb-6">
+          <div className="flex-1">
+            <label className="block mb-1 font-semibold text-gray-700 dark:text-gray-200">
+              Buscar por nombre, propietario o ID:
+            </label>
+            <input
+              type="text"
+              value={searchQuery}
+              onChange={e => setSearchQuery(e.target.value)}
+              className="w-full p-2 rounded border-2 border-gray-400 dark:border-gray-600 bg-gray-100 dark:bg-gray-700 text-gray-900 dark:text-gray-100 placeholder-gray-600 dark:placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 transition"
+              placeholder="Ej. Documento, Juan, 123"
+            />
+          </div>
+        </div>
+
+        {filtered.length === 0 ? (
+          <p className="text-center text-gray-500 dark:text-gray-400 py-6">
+            No se encontraron documentos que coincidan con tu búsqueda.
+          </p>
+        ) : (
+          <div className="overflow-x-auto rounded-lg">
+            <table className="w-full table-auto rounded-lg bg-white dark:bg-gray-800 border-2 border-gray-300 dark:border-gray-600">
+              <thead className="bg-gray-100 dark:bg-gray-700">
+                <tr>
+                  <th className="px-4 py-2 text-left text-gray-700 dark:text-gray-200 font-semibold text-sm uppercase tracking-wider">
+                    Nombre
+                  </th>
+                  <th className="px-4 py-2 text-left text-gray-700 dark:text-gray-200 font-semibold text-sm uppercase tracking-wider">
+                    Propietario
+                  </th>
+                  <th className="px-4 py-2 text-left text-gray-700 dark:text-gray-200 font-semibold text-sm uppercase tracking-wider">
+                    Fecha de Subida
+                  </th>
+                  <th className="px-4 py-2 text-left text-gray-700 dark:text-gray-200 font-semibold text-sm uppercase tracking-wider">
+                    Acción
+                  </th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-gray-200 dark:divide-gray-700">
+                {filtered.map(doc => (
+                  <tr key={doc.id} className="hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors">
+                    <td className="px-4 py-3 text-gray-800 dark:text-gray-100 font-medium">
+                      {doc.nombre}
+                    </td>
+                    <td className="px-4 py-3 text-gray-800 dark:text-gray-100">
+                      {doc.owner}
+                    </td>
+                    <td className="px-4 py-3 text-gray-800 dark:text-gray-100">
+                      {doc.fecha}
+                    </td>
+                    <td className="px-4 py-3">
+                      <Link
+                        href={doc.ruta}
+                        target="_blank"
+                        className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-blue-600 dark:bg-blue-800 text-white font-semibold shadow-md hover:bg-blue-700 dark:hover:bg-blue-900 transition-all duration-200"
+                        download
+                        title="Descargar documento"
+                      >
+                        <FontAwesomeIcon icon={faDownload} />
+                        Descargar
+                      </Link>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
       </div>
     </div>
   );
