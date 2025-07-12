@@ -1,4 +1,3 @@
-
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -91,4 +90,365 @@ body {
 
 .light-logo {
   filter: brightness(1) contrast(1); /* Modo normal */
+}
+
+/* Animación de onda para el título */
+@keyframes wave-bounce {
+  0%, 60%, 100% {
+    transform: translateY(0) scale(1);
+  }
+  30% {
+    transform: translateY(-15px) scale(1.15);
+  }
+}
+
+.wave-container span {
+  display: inline-block;
+  animation: wave-bounce 3s ease-in-out infinite;
+  background: linear-gradient(to right, #2563eb, #7c3aed, #1e40af);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  color: transparent;
+  font-weight: 700;
+}
+
+/* Para modo oscuro, usar color sólido */
+.dark .wave-container span {
+  background: none;
+  -webkit-text-fill-color: #ffffff;
+  color: #ffffff;
+  text-shadow: 0 0 10px rgba(255, 255, 255, 0.5);
+}
+
+/* Estilos para el subtítulo del header */
+.header-subtitle {
+  color: #6b7280;
+  font-weight: 500;
+  font-size: 0.875rem;
+  margin-top: 0.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+}
+
+.dark .header-subtitle {
+  color: #d1d5db;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
+}
+
+.dark .header-subtitle .text-green-500 {
+  color: #10b981 !important;
+}
+
+/* Estilos profesionales para botones */
+.btn-professional {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.75rem;
+  padding: 0.875rem 1.5rem;
+  font-weight: 600;
+  font-size: 0.875rem;
+  border-radius: 0.75rem;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  transform: translateY(0);
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+  border: 1px solid transparent;
+  overflow: hidden;
+  text-decoration: none; /* Para quitar subrayado en enlaces */
+}
+
+.btn-professional::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.1), transparent);
+  transition: left 0.5s;
+}
+
+.btn-professional:hover::before {
+  left: 100%;
+}
+
+.btn-professional:hover {
+  transform: translateY(-2px) scale(1.02);
+  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+}
+
+.btn-professional:active {
+  transform: translateY(0) scale(0.98);
+  transition: all 0.1s;
+}
+
+/* Variantes de botones profesionales */
+.btn-primary-pro {
+  background: linear-gradient(135deg, #3b82f6, #1d4ed8, #1e40af);
+  color: white;
+  border-color: rgba(59, 130, 246, 0.3);
+}
+
+.btn-primary-pro:hover {
+  background: linear-gradient(135deg, #2563eb, #1d4ed8, #1e3a8a);
+  box-shadow: 0 10px 25px -5px rgba(59, 130, 246, 0.4), 0 10px 10px -5px rgba(59, 130, 246, 0.1);
+}
+
+/* Modo oscuro para botones */
+.dark .btn-primary-pro {
+  background: linear-gradient(135deg, #1e40af, #1e3a8a, #1d4ed8);
+  border-color: rgba(30, 64, 175, 0.4);
+  color: #e5e7eb;
+}
+
+.dark .btn-primary-pro:hover {
+  background: linear-gradient(135deg, #1e3a8a, #312e81, #1e40af);
+  box-shadow: 0 10px 25px -5px rgba(30, 64, 175, 0.6), 0 10px 10px -5px rgba(30, 64, 175, 0.2);
+  color: #f9fafb;
+}
+
+.dark .btn-primary-pro::before {
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.05), transparent);
+}
+
+/* Estilos para botones del header en modo oscuro */
+.dark .bg-gray-100 {
+  background-color: #374151 !important;
+}
+
+.dark .hover\:bg-gray-200:hover {
+  background-color: #4b5563 !important;
+}
+
+.dark .text-gray-600 {
+  color: #d1d5db !important;
+}
+
+/* Estilos específicos para el toggle de modo oscuro */
+.dark .text-yellow-400 {
+  color: #fbbf24 !important;
+}
+
+/* Mejoras para el avatar en modo oscuro */
+.dark .from-blue-50 {
+  background: linear-gradient(to right, rgba(55, 65, 81, 0.5), rgba(75, 85, 99, 0.5)) !important;
+}
+
+.dark .to-purple-50 {
+  background: linear-gradient(to right, rgba(55, 65, 81, 0.5), rgba(75, 85, 99, 0.5)) !important;
+}
+
+.dark .border-blue-200 {
+  border-color: #4b5563 !important;
+}
+
+.btn-secondary-pro {
+  background: linear-gradient(135deg, #6b7280, #4b5563, #374151);
+  color: white;
+  border-color: rgba(107, 114, 128, 0.3);
+}
+
+.btn-secondary-pro:hover {
+  background: linear-gradient(135deg, #4b5563, #374151, #1f2937);
+  box-shadow: 0 10px 25px -5px rgba(107, 114, 128, 0.4), 0 10px 10px -5px rgba(107, 114, 128, 0.1);
+}
+
+.btn-success-pro {
+  background: linear-gradient(135deg, #10b981, #059669, #047857);
+  color: white;
+  border-color: rgba(16, 185, 129, 0.3);
+}
+
+.btn-success-pro:hover {
+  background: linear-gradient(135deg, #059669, #047857, #065f46);
+  box-shadow: 0 10px 25px -5px rgba(16, 185, 129, 0.4), 0 10px 10px -5px rgba(16, 185, 129, 0.1);
+}
+
+.btn-warning-pro {
+  background: linear-gradient(135deg, #f59e0b, #d97706, #b45309);
+  color: white;
+  border-color: rgba(245, 158, 11, 0.3);
+}
+
+.btn-warning-pro:hover {
+  background: linear-gradient(135deg, #d97706, #b45309, #92400e);
+  box-shadow: 0 10px 25px -5px rgba(245, 158, 11, 0.4), 0 10px 10px -5px rgba(245, 158, 11, 0.1);
+}
+
+.btn-danger-pro {
+  background: linear-gradient(135deg, #ef4444, #dc2626, #b91c1c);
+  color: white;
+  border-color: rgba(239, 68, 68, 0.3);
+}
+
+.btn-danger-pro:hover {
+  background: linear-gradient(135deg, #dc2626, #b91c1c, #991b1b);
+  box-shadow: 0 10px 25px -5px rgba(239, 68, 68, 0.4), 0 10px 10px -5px rgba(239, 68, 68, 0.1);
+}
+
+/* Iconos en botones */
+.btn-professional .btn-icon {
+  font-size: 1rem;
+  transition: transform 0.3s ease;
+}
+
+.btn-professional:hover .btn-icon {
+  transform: scale(1.1);
+}
+
+/* Animaciones personalizadas para estado de documentos */
+@keyframes blob {
+  0% {
+    transform: translate(0px, 0px) scale(1);
+  }
+  33% {
+    transform: translate(30px, -50px) scale(1.1);
+  }
+  66% {
+    transform: translate(-20px, 20px) scale(0.9);
+  }
+  100% {
+    transform: translate(0px, 0px) scale(1);
+  }
+}
+
+@keyframes gradient-x {
+  0%, 100% {
+    background-size: 200% 200%;
+    background-position: left center;
+  }
+  50% {
+    background-size: 200% 200%;
+    background-position: right center;
+  }
+}
+
+@keyframes fade-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes scale-in {
+  from {
+    opacity: 0;
+    transform: scale(0.9);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@keyframes slide-in-left {
+  from {
+    opacity: 0;
+    transform: translateX(-50px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes slide-in-right {
+  from {
+    opacity: 0;
+    transform: translateX(50px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+/* Clases de animación */
+.animate-blob {
+  animation: blob 7s infinite;
+}
+
+.animation-delay-2000 {
+  animation-delay: 2s;
+}
+
+.animation-delay-4000 {
+  animation-delay: 4s;
+}
+
+.animate-gradient-x {
+  animation: gradient-x 3s ease infinite;
+}
+
+.animate-fade-in {
+  animation: fade-in 0.5s ease-out;
+}
+
+.animate-scale-in {
+  animation: scale-in 0.3s ease-out;
+}
+
+.animate-slide-in-left {
+  animation: slide-in-left 0.6s ease-out;
+}
+
+.animate-slide-in-right {
+  animation: slide-in-right 0.6s ease-out;
+}
+
+/* Estilos adicionales para el avatar y controles del header */
+.user-avatar-container {
+  position: relative;
+  overflow: hidden;
+}
+
+.user-avatar-container::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(45deg, transparent 30%, rgba(255, 255, 255, 0.1) 50%, transparent 70%);
+  transform: translateX(-100%);
+  transition: transform 0.6s ease;
+}
+
+.user-avatar-container:hover::before {
+  transform: translateX(100%);
+}
+
+/* Ocultar cualquier texto no deseado en el avatar */
+.user-info-clean p:not(:first-child) {
+  display: none;
+}
+
+/* Mejoras para el toggle de modo oscuro */
+.theme-toggle {
+  position: relative;
+  overflow: hidden;
+}
+
+.theme-toggle::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 0;
+  height: 0;
+  background: rgba(255, 255, 255, 0.2);
+  border-radius: 50%;
+  transform: translate(-50%, -50%);
+  transition: width 0.3s ease, height 0.3s ease;
+}
+
+.theme-toggle:hover::after {
+  width: 100%;
+  height: 100%;
 }

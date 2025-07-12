@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { useSession } from "next-auth/react";
@@ -15,41 +15,79 @@ import {
   faArrowLeft,
 } from "@fortawesome/free-solid-svg-icons";
 
-export default function FavoritesPage() {
-  const { data: session } = useSession();
-  const user = {
-    name: session?.user?.name || "Usuario",
-    email: session?.user?.email,
-    avatar: avatarMap[session?.user?.email] || "/default-avatar.png",
-  };
 
+// Toast simple
+function Toast({ message, onClose, duration = 3000 }) {
+  // Cierra el toast automáticamente
+  useEffect(() => {
+    if (!message) return;
+    const timer = setTimeout(onClose, duration);
+    return () => clearTimeout(timer);
+  }, [message, onClose, duration]);
+  if (!message) return null;
+  return (
+    <div className="fixed bottom-6 left-1/2 z-50 -translate-x-1/2 bg-blue-600 text-white px-6 py-3 rounded-xl shadow-lg flex items-center gap-2 animate-fade-in">
+      <span>{message}</span>
+      <button onClick={onClose} className="ml-2 text-white/80 hover:text-white font-bold">×</button>
+    </div>
+  );
+}
+
+// Modal de historial/bitácora
+function HistoryModal({ open, onClose, history }) {
+  if (!open) return null;
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
+      <div className="bg-white dark:bg-slate-900 rounded-xl shadow-xl max-w-lg w-full p-6 relative">
+        <button className="absolute top-2 right-3 text-2xl font-bold text-gray-500 hover:text-red-500" onClick={onClose} aria-label="Cerrar">×</button>
+        <h2 className="text-xl font-bold mb-4 text-blue-700 dark:text-blue-300">Historial / Bitácora</h2>
+        {history && history.length > 0 ? (
+          <ul className="space-y-2 max-h-72 overflow-y-auto">
+            {history.map((item, idx) => (
+              <li key={idx} className="border-b pb-2 text-sm">
+                <span className="font-semibold">{item.fecha}:</span> {item.accion}
+              </li>
+            ))}
+          </ul>
+        ) : (
+          <div className="text-gray-500 dark:text-gray-300">No hay historial disponible.</div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+export default FavoritosPage;
+function FavoritosPage() {
+  const { data: session, status } = useSession();
+  const [toast, setToast] = useState("");
+  const [historyModal, setHistoryModal] = useState({ open: false, history: [] });
+  const csvLink = useRef(null);
   const [darkMode, setDarkMode] = useState(false);
   const [search, setSearch] = useState("");
   const [favoritos, setFavoritos] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [page, setPage] = useState(1);
+  const pageSize = 10;
   const userId = session?.user?.id;
 
   // Cargar favoritos desde la base de datos
   useEffect(() => {
     if (!userId) return;
-    
     const cargarFavoritos = async () => {
       try {
         setLoading(true);
-        const response = await fetch(`/api/favoritos-documentos?usuario_id=${userId}`);
+        const response = await fetch(`/api/favoritos-documentos?usuarioId=${userId}`);
         if (response.ok) {
           const data = await response.json();
           setFavoritos(data);
-        } else {
-          console.error('Error al cargar favoritos:', response.statusText);
         }
       } catch (error) {
-        console.error('Error al cargar favoritos:', error);
+        console.error('❌ Error al cargar favoritos:', error);
       } finally {
         setLoading(false);
       }
     };
-
     cargarFavoritos();
   }, [userId]);
 
@@ -70,14 +108,12 @@ export default function FavoritesPage() {
   const handleDelete = async (id) => {
     if (confirm("¿Eliminar este archivo de favoritos?")) {
       try {
-        const response = await fetch('/api/favoritos', {
+        const response = await fetch('/api/favoritos-documentos', {
           method: 'DELETE',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ usuario_id: userId, documentos_id: id })
+          body: JSON.stringify({ usuarioId: userId, documentoId: id })
         });
-
         if (response.ok) {
-          // Remover de la lista local
           setFavoritos(prev => prev.filter(file => file.id !== id));
         } else {
           alert('Error al eliminar de favoritos');
@@ -95,11 +131,16 @@ export default function FavoritesPage() {
     return date.toLocaleDateString('es-ES');
   };
 
+
   const filteredFiles = favoritos.filter(
     (file) =>
       file.nombre?.toLowerCase().includes(search.toLowerCase()) ||
       file.responsable?.toLowerCase().includes(search.toLowerCase())
   );
+
+  // Paginación
+  const totalPages = Math.max(1, Math.ceil(filteredFiles.length / pageSize));
+  const paginatedFiles = filteredFiles.slice((page - 1) * pageSize, page * pageSize);
 
   const statusColor = (status) => {
     switch (status) {
@@ -114,161 +155,265 @@ export default function FavoritesPage() {
     }
   };
 
+  const handleExport = () => {
+    if (!filteredFiles.length) {
+      setToast("No hay documentos para exportar.");
+      return;
+    }
+    const headers = [
+      "Documento", "Fecha", "Responsable", "Tipo", "Clasificación", "Vigencia", "Área", "Expediente", "Estado", "Hash/Folio"
+    ];
+    const rows = filteredFiles.map(f => [
+      f.nombre,
+      formatDate(f.fecha_subida),
+      f.responsable,
+      f.tipo,
+      f.clasificacion,
+      f.vigencia,
+      f.area,
+      f.expediente,
+      f.estado,
+      f.hash || f.folio
+    ]);
+    let csv = headers.join(",") + "\n" + rows.map(r => r.map(x => '"'+(x||"").replace(/"/g,'""')+'"').join(",")).join("\n");
+    const blob = new Blob([csv], { type: 'text/csv' });
+    const url = URL.createObjectURL(blob);
+    if (csvLink.current) {
+      csvLink.current.href = url;
+      csvLink.current.download = `favoritos_${new Date().toISOString().slice(0,10)}.csv`;
+      csvLink.current.click();
+      setTimeout(() => URL.revokeObjectURL(url), 1000);
+      setToast("Exportación exitosa");
+    }
+  };
+
+  const handleShowHistory = (file) => {
+    // Simulación: historial dummy
+    const dummy = [
+      { fecha: "2025-07-10", accion: "Descargado por el usuario" },
+      { fecha: "2025-07-09", accion: "Marcado como favorito" },
+      { fecha: "2025-07-08", accion: "Validado por el área legal" },
+    ];
+    setHistoryModal({ open: true, history: dummy });
+  };
+
+  // Validar sesión
+  if (status === "loading") {
+    return (
+      <div className={`min-h-screen flex items-center justify-center transition-all duration-300 ${darkMode ? "bg-gradient-to-br from-slate-900 via-blue-900 to-slate-900 text-white" : "bg-gradient-to-br from-blue-50 via-white to-purple-50 text-gray-900"}`}>
+        <div className="text-xl font-semibold">Cargando sesión...</div>
+      </div>
+    );
+  }
+  if (!session || !session.user) {
+    return (
+      <div className={`min-h-screen flex items-center justify-center transition-all duration-300 ${darkMode ? "bg-gradient-to-br from-slate-900 via-blue-900 to-slate-900 text-white" : "bg-gradient-to-br from-blue-50 via-white to-purple-50 text-gray-900"}`}>
+        <div className="text-xl font-semibold">Debes iniciar sesión para ver tus favoritos.</div>
+      </div>
+    );
+  }
   if (loading) {
     return (
-      <div className={`p-6 min-h-screen transition-all ${
-        darkMode ? "bg-[#0d1b2a] text-white" : "bg-gray-50 text-gray-900"
-      }`}>
-        <div className="flex justify-center items-center h-64">
-          <div className="text-xl">Cargando favoritos...</div>
+      <div className={`min-h-screen flex items-center justify-center transition-all duration-300 ${darkMode ? "bg-gradient-to-br from-slate-900 via-blue-900 to-slate-900 text-white" : "bg-gradient-to-br from-blue-50 via-white to-purple-50 text-gray-900"}`}>
+        <div className="flex flex-col items-center gap-4">
+          <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-blue-600"></div>
+          <div className="text-xl font-semibold">Cargando favoritos...</div>
         </div>
       </div>
     );
   }
 
   return (
-    <div
-      className={`p-6 min-h-screen transition-all ${
-        darkMode ? "bg-[#0d1b2a] text-white" : "bg-gray-50 text-gray-900"
-      }`}
-    >
-      {/* Encabezado superior */}
-      <div className="flex justify-between items-start mb-6">
+    <div className={`min-h-screen transition-all duration-300 ${darkMode ? "bg-gradient-to-br from-slate-900 via-blue-900 to-slate-900 text-white" : "bg-gradient-to-br from-blue-50 via-white to-purple-50 text-gray-900"}`}>
+      {/* Header premium */}
+      <div className={`sticky top-0 z-40 border-b transition-all duration-300 flex items-center justify-between px-6 py-4 ${darkMode ? "bg-slate-900/95 border-slate-700 backdrop-blur-sm" : "bg-white/95 border-blue-200 backdrop-blur-sm"}`}>
+        {/* Logo premium */}
         <Image
-          src={darkMode ? "/api-dark23.png" : "/api.jpg"}
-          alt="Logo API"
-          width={320}
-          height={50}
+          src="/api-dark23.png"
+          alt="API Logo"
+          width={300}
+          height={100}
+          className="transition-all duration-300 hover:scale-105 object-contain"
+          priority
         />
-        <div className="flex flex-col items-center gap-2">
-          <button
-            onClick={() => setDarkMode(!darkMode)}
-            className="text-xl text-gray-700 dark:text-yellow-300 hover:text-black dark:hover:text-white transition"
-            title="Cambiar modo"
+        {/* Título premium */}
+        <div className="flex-1 text-center px-4">
+          <h1
+            className={`relative text-4xl font-bold bg-gradient-to-r from-blue-600 via-purple-600 to-blue-600 bg-clip-text text-transparent transition-all duration-500 transform hover:scale-105 hover:-translate-y-1 cursor-default overflow-hidden select-none ${darkMode ? "from-blue-400 via-purple-400 to-blue-400" : ""}`}
+            style={{ WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}
           >
-            <FontAwesomeIcon icon={darkMode ? faSun : faMoon} />
-          </button>
-          <div className="flex items-center gap-2">
-            <Image
-              src={user.avatar}
-              alt="Avatar"
-              width={45}
-              height={45}
-              className="rounded-full border border-gray-300"
-            />
-            <span className="font-medium text-gray-600 dark:text-white">
-              {user.name}
+            <span className="relative z-10">Mis Favoritos</span>
+            <span
+              className="absolute left-0 top-0 h-full w-full pointer-events-none animate-shine"
+              style={{
+                background:
+                  'linear-gradient(120deg, transparent 0%, rgba(255,255,255,0.6) 50%, transparent 100%)',
+                WebkitBackgroundClip: 'text',
+                WebkitTextFillColor: 'transparent',
+                mixBlendMode: 'lighten',
+              }}
+            >
+              Mis Favoritos
             </span>
+          </h1>
+
+
+          <div className={`text-sm font-medium mt-2 flex items-center justify-center gap-1 transition-all duration-300 hover:scale-105 ${darkMode ? "text-gray-300 hover:text-green-300" : "text-gray-600 hover:text-green-600"}`}>
+            <FontAwesomeIcon icon={faStar} className="text-yellow-400 text-sm animate-bounce" />
+            <span className="hover:tracking-wider transition-all duration-300">Tus documentos favoritos siempre a la mano</span>
           </div>
         </div>
-      </div>
 
-      {/* Botón regreso */}
-      <div className="mb-6">
+        {/* Avatar y toggle */}
+        <div className="flex items-center gap-3">
+          <Image
+            src={
+              session?.user?.avatar
+                ? session.user.avatar
+                : avatarMap[session?.user?.rol] || "/blanca.jpeg"
+            }
+            alt="Avatar"
+            width={90}
+            height={90}
+            className="rounded-full border-3 border-blue-400 shadow-lg hover:scale-105 transition-all duration-300"
+          />
+          <button
+            onClick={() => setDarkMode(!darkMode)}
+            className={`p-3 rounded-lg transition-all duration-300 transform hover:scale-110 hover:rotate-12 hover:-translate-y-1 shadow-lg hover:shadow-xl ${darkMode ? "bg-slate-800 text-yellow-400 hover:bg-slate-700 hover:text-yellow-300 hover:shadow-yellow-400/30" : "bg-gray-100 text-gray-600 hover:bg-gray-200 hover:text-blue-600 hover:shadow-blue-400/30"}`}
+            title="Cambiar modo"
+          >
+            <FontAwesomeIcon icon={darkMode ? faSun : faMoon} className="text-lg transition-all duration-300 hover:scale-125" />
+          </button>
+        </div>
+      </div>
+      {/* Botón Volver al Inicio y Exportar */}
+      <div className="px-6 pt-4 flex flex-wrap gap-4 items-center justify-between">
         <Link
           href="/home"
-          className="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-md"
+          className={`group inline-flex items-center gap-3 px-5 py-2.5 rounded-xl transition-all duration-300 shadow-lg hover:shadow-xl transform hover:-translate-y-1 hover:scale-105 ${darkMode ? "bg-gradient-to-r from-emerald-600 to-teal-600 border border-emerald-500 text-white hover:from-emerald-500 hover:to-teal-500 hover:shadow-emerald-500/30" : "bg-gradient-to-r from-indigo-600 to-purple-600 border border-indigo-500 text-white hover:from-indigo-500 hover:to-purple-500 hover:shadow-indigo-500/30"}`}
         >
-          <FontAwesomeIcon icon={faArrowLeft} /> Volver al Inicio
+          <FontAwesomeIcon icon={faArrowLeft} className="text-sm transition-all duration-300 group-hover:-translate-x-1 group-hover:scale-110" />
+          <span className="font-semibold text-sm tracking-wide group-hover:tracking-wider transition-all duration-300">Volver al Inicio</span>
         </Link>
+        {/* Botón exportar */}
+        <button
+          className={`inline-flex items-center gap-2 px-5 py-2.5 rounded-xl font-semibold transition-all duration-300 shadow-lg hover:shadow-xl transform hover:-translate-y-1 hover:scale-105 ${darkMode ? "bg-gradient-to-r from-blue-700 to-purple-700 text-white hover:from-blue-600 hover:to-purple-600" : "bg-gradient-to-r from-blue-200 to-purple-200 text-blue-900 hover:from-blue-300 hover:to-purple-300"}`}
+          title="Exportar lista de favoritos a Excel/CSV"
+          onClick={handleExport}
+        >
+          <FontAwesomeIcon icon={faDownload} /> Exportar lista
+        </button>
+        <a ref={csvLink} style={{ display: 'none' }}>Descargar</a>
       </div>
-
-      {/* Título */}
-      <h1 className="text-4xl font-bold text-center mb-6 text-blue-600 dark:text-blue-400">
-        Mis Favoritos
-      </h1>
-
-      {/* Buscador */}
-      <div className="flex justify-end mb-4">
-        <input
-          type="text"
-          placeholder="🔍 Buscar por nombre o responsable"
-          className={`px-4 py-2 rounded-md border text-sm w-full max-w-sm focus:outline-none focus:ring-2 focus:ring-blue-500 ${
-            darkMode
-              ? "bg-gray-800 text-white border-gray-600 placeholder-gray-400"
-              : "bg-white text-gray-900 border-gray-400 placeholder-gray-600"
-          }`}
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-        />
+      {/* Advertencia confidencialidad */}
+      <div className={`max-w-7xl mx-auto px-4 mt-4 mb-2`}> 
+        <div className={`rounded-lg p-3 flex items-center gap-3 text-sm font-medium ${darkMode ? "bg-yellow-900/30 text-yellow-200 border border-yellow-700" : "bg-yellow-100 text-yellow-800 border border-yellow-300"}`}>
+          <FontAwesomeIcon icon={faStar} className="text-yellow-400" />
+          Algunos documentos pueden ser confidenciales o restringidos. El acceso y descarga están sujetos a la Ley Estatal de Archivos y políticas internas.
+        </div>
       </div>
-
-      {/* Tabla */}
-      <div
-        className={`shadow-md rounded-lg p-6 border ${
-          darkMode ? "bg-[#1a2b3c] border-gray-800" : "bg-white border-gray-400"
-        }`}
-      >
-        <table className="w-full table-auto text-sm border-collapse">
-          <thead className={darkMode ? "bg-gray-700 text-white" : "bg-gray-200"}>
-            <tr>
-              {["Documento", "Fecha", "Responsable", "Tipo", "Acciones"].map(
-                (header) => (
-                  <th
-                    key={header}
-                    className={`p-3 border font-semibold text-sm ${
-                      darkMode ? "border-gray-600" : "border-gray-400"
-                    }`}
-                  >
-                    {header}
-                  </th>
-                )
-              )}
-            </tr>
-          </thead>
-          <tbody>
-            {filteredFiles.length > 0 ? (
-              filteredFiles.map((file) => (
-                <tr
-                  key={file.id}
-                  className={`text-center ${
-                    darkMode
-                      ? "even:bg-[#2c3e50] odd:bg-[#1a2634]"
-                      : "even:bg-gray-50 odd:bg-white"
-                  }`}
-                >
-                  <td className="p-3 border dark:border-gray-600 border-gray-400">
-                    {file.nombre}
-                  </td>
-                  <td className="p-3 border dark:border-gray-600 border-gray-400">
-                    {formatDate(file.fecha_subida)}
-                  </td>
-                  <td className="p-3 border dark:border-gray-600 border-gray-400">
-                    {file.responsable || 'N/A'}
-                  </td>
-                  <td className="p-3 border dark:border-gray-600 border-gray-400">
-                    {file.tipo}
-                  </td>
-                  <td className="p-3 border flex justify-center gap-4 dark:border-gray-600 border-gray-400">
-                    <button
-                      className="text-blue-600 dark:text-blue-400"
-                      onClick={() => handleDownload(file)}
-                      title="Descargar"
-                    >
-                      <FontAwesomeIcon icon={faDownload} />
-                    </button>
-                    <button
-                      className="text-red-600 dark:text-red-400"
-                      onClick={() => handleDelete(file.id)}
-                      title="Eliminar de favoritos"
-                    >
-                      <FontAwesomeIcon icon={faTrash} />
-                    </button>
-                  </td>
-                </tr>
-              ))
-            ) : (
+      {/* Buscador premium */}
+      <div className="max-w-7xl mx-auto px-4 py-6">
+        <div className="flex justify-end mb-6">
+          <input
+            type="text"
+            placeholder="🔍 Buscar por nombre, responsable, expediente..."
+            className={`px-4 py-2 rounded-lg border text-sm w-full max-w-sm focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all duration-300 ${darkMode ? "bg-slate-700 border-slate-600 text-white placeholder-gray-400" : "bg-white border-gray-300 text-gray-900 placeholder-gray-600"}`}
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+          />
+        </div>
+        {/* Tabla premium con nuevas columnas */}
+        <div className={`rounded-xl border overflow-x-auto transition-all duration-300 ${darkMode ? "bg-slate-800/50 border-slate-700" : "bg-white/80 border-gray-200 backdrop-blur-sm"}`}>
+          <table className="w-full min-w-[1200px] table-auto text-sm border-collapse">
+            <thead className={darkMode ? "bg-slate-700 text-white" : "bg-gray-50 text-gray-700"}>
               <tr>
-                <td
-                  colSpan="5"
-                  className="text-center p-4 text-gray-500 dark:text-gray-300"
-                >
-                  No hay documentos marcados como favoritos.
-                </td>
+                <th className="px-4 py-3 border-b font-semibold text-xs">Documento</th>
+                <th className="px-4 py-3 border-b font-semibold text-xs">Fecha</th>
+                <th className="px-4 py-3 border-b font-semibold text-xs">Responsable</th>
+                <th className="px-4 py-3 border-b font-semibold text-xs">Tipo</th>
+                <th className="px-4 py-3 border-b font-semibold text-xs">Clasificación</th>
+                <th className="px-4 py-3 border-b font-semibold text-xs">Vigencia</th>
+                <th className="px-4 py-3 border-b font-semibold text-xs">Área</th>
+                <th className="px-4 py-3 border-b font-semibold text-xs">Expediente</th>
+                <th className="px-4 py-3 border-b font-semibold text-xs">Estado</th>
+                <th className="px-4 py-3 border-b font-semibold text-xs">Hash/Folio</th>
+                <th className="px-4 py-3 border-b font-semibold text-xs">Historial</th>
+                <th className="px-4 py-3 border-b font-semibold text-xs">Acciones</th>
               </tr>
-            )}
-          </tbody>
-        </table>
+            </thead>
+            <tbody>
+              {paginatedFiles.length > 0 ? (
+                paginatedFiles.map((file) => (
+                  <tr key={file.id} className={`text-center transition-all duration-200 ${darkMode ? "hover:bg-slate-700/50" : "hover:bg-gray-50"}`}>
+                    <td className="px-4 py-3">{file.nombre}</td>
+                    <td className="px-4 py-3">{formatDate(file.fecha_subida)}</td>
+                    <td className="px-4 py-3">{file.responsable || 'N/A'}</td>
+                    <td className="px-4 py-3">{file.tipo}</td>
+                    <td className="px-4 py-3">{file.clasificacion || <span className="italic text-gray-400">No especificada</span>}</td>
+                    <td className="px-4 py-3">{file.vigencia || <span className="italic text-gray-400">N/A</span>}</td>
+                    <td className="px-4 py-3">{file.area || <span className="italic text-gray-400">N/A</span>}</td>
+                    <td className="px-4 py-3">{file.expediente || <span className="italic text-gray-400">N/A</span>}</td>
+                    <td className={`px-4 py-3 font-semibold ${statusColor(file.estado)}`}>{file.estado || <span className="italic text-gray-400">N/A</span>}</td>
+                    <td className="px-4 py-3">{file.hash || file.folio || <span className="italic text-gray-400">N/A</span>}</td>
+                    <td className="px-4 py-3">
+                      <button
+                        className={`underline text-blue-500 hover:text-blue-700 dark:text-blue-300 dark:hover:text-blue-400 transition-all duration-200`}
+                        title="Ver historial/bitácora"
+                        onClick={() => handleShowHistory(file)}
+                        aria-label={`Ver historial de ${file.nombre}`}
+                      >
+                        Ver
+                      </button>
+                    </td>
+      <Toast message={toast} onClose={() => setToast("")} />
+      <HistoryModal open={historyModal.open} onClose={() => setHistoryModal({ open: false, history: [] })} history={historyModal.history} />
+                    <td className="px-4 py-3 flex justify-center gap-2">
+                      <button
+                        className={`p-2 rounded-lg transition-all duration-300 transform hover:scale-125 hover:-translate-y-1 hover:rotate-12 shadow-md hover:shadow-lg ${darkMode ? "text-blue-400 hover:bg-blue-900/50 hover:text-blue-300 hover:shadow-blue-400/30" : "text-blue-600 hover:bg-blue-50 hover:text-blue-700 hover:shadow-blue-400/30"}`}
+                        onClick={() => handleDownload(file)}
+                        title="Descargar"
+                        aria-label={`Descargar ${file.nombre}`}
+                      >
+                        <FontAwesomeIcon icon={faDownload} className="transition-all duration-300" />
+                      </button>
+                      <button
+                        className={`p-2 rounded-lg transition-all duration-300 transform hover:scale-125 hover:-translate-y-1 hover:rotate-12 shadow-md hover:shadow-lg ${darkMode ? "text-red-400 hover:bg-red-900/50 hover:text-red-300 hover:shadow-red-400/30" : "text-red-600 hover:bg-red-50 hover:text-red-700 hover:shadow-red-400/30"}`}
+                        onClick={() => handleDelete(file.id)}
+                        title="Eliminar de favoritos"
+                        aria-label={`Eliminar ${file.nombre} de favoritos`}
+                      >
+                        <FontAwesomeIcon icon={faTrash} className="transition-all duration-300" />
+                      </button>
+                    </td>
+                  </tr>
+                ))
+              ) : (
+                <tr>
+                  <td colSpan="12" className="text-center p-8 text-gray-500 dark:text-gray-300">No hay documentos marcados como favoritos.</td>
+                </tr>
+              )}
+            </tbody>
+          </table>
+          {/* Paginación */}
+          <div className="flex justify-center items-center gap-2 py-6">
+            <button
+              className="px-3 py-1 rounded bg-gray-200 dark:bg-slate-700 text-gray-700 dark:text-gray-200 font-semibold disabled:opacity-50"
+              onClick={() => setPage((p) => Math.max(1, p - 1))}
+              disabled={page === 1}
+            >
+              Anterior
+            </button>
+            <span className="mx-2 text-sm">Página {page} de {totalPages}</span>
+            <button
+              className="px-3 py-1 rounded bg-gray-200 dark:bg-slate-700 text-gray-700 dark:text-gray-200 font-semibold disabled:opacity-50"
+              onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
+              disabled={page === totalPages}
+            >
+              Siguiente
+            </button>
+          </div>
+        </div>
       </div>
     </div>
   );

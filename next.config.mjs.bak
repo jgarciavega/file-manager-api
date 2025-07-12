@@ -1,7 +1,0 @@
-/** @type {import('next').NextConfig} */
-const nextConfig = {
-  // Modo standalone sólo si lo necesitas para despliegue; puedes quitarlo para dev.
-  output: "standalone",
-};
-
-export default nextConfig;

@@ -1,288 +1,734 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { useSession } from "next-auth/react";
-import { useRouter } from "next/navigation";
 import Image from "next/image";
+import Link from "next/link";
+import { useSession } from "next-auth/react";
+import avatarMap from "../../../lib/avatarMap";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
   faDownload,
-  faStar as faStarSolid,
-  faStar as faStarRegular,
-  faArrowLeft,
-  faChevronLeft,
-  faChevronRight,
-  faSearch,
+  faEdit,
+  faTrash,
   faMoon,
   faSun,
+  faFileAlt,
+  faArrowLeft,
+  faSearch,
+  faFilter,
+  faChartLine,
+  faShieldAlt,
+  faCalendarAlt,
+  faArchive,
+  faExclamationTriangle,
+  faCheckCircle,
+  faClock,
+  faGavel,
+  faFileContract,
+  faHistory,
+  faBarcode,
+
+  faStar,
 } from "@fortawesome/free-solid-svg-icons";
-import avatarMap from "../../../lib/avatarMap";
-
-const CLASIFICACIONES = [
-  "Todos",
-  "Informe",
-  "Cédula",
-  "Factura",
-  "Oficio",
-];
-
-const ESTADOS = [
-  "Todos",
-  "Subido",
-  "En revisión",
-  "Revisado",
-  "Aprobado",
-  "Rechazado",
-];
 
 export default function MisDocumentosPage() {
   const { data: session } = useSession();
-  const router = useRouter();
-  const [docs, setDocs] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [search, setSearch] = useState("");
-  const [clasificacion, setClasificacion] = useState("Todos");
-  const [estado, setEstado] = useState("Todos");
-  const [page, setPage] = useState(1);
-  const perPage = 10;
-  const [favoritos, setFavoritos] = useState([]);
-  const [darkMode, setDarkMode] = useState(false);
-  const [favMsg, setFavMsg] = useState("");
+  const user = {
+    name: session?.user?.name || "Usuario",
+    email: session?.user?.email,
+    avatar: avatarMap[session?.user?.email] || "/default-avatar.png",
+  };
 
-  // Datos de usuario
-  const email = session?.user?.email || "";
-  const avatar = avatarMap[email] || "/default-avatar.png";
-  const userName = session?.user?.name || "Usuario";
+  const [darkMode, setDarkMode] = useState(false);
+  const [search, setSearch] = useState("");
+  const [documentos, setDocumentos] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [filterType, setFilterType] = useState("Todos");
+  const [filterVigencia, setFilterVigencia] = useState("Todos");
+  const [filterClasificacion, setFilterClasificacion] = useState("Todos");
+  const [tiposDocumentos, setTiposDocumentos] = useState([]);
+  const [showCompliance, setShowCompliance] = useState(true);
   const userId = session?.user?.id;
 
-  // Carga inicial de documentos
-  useEffect(() => {
-    if (!userId) return;
-    setLoading(true);
-    fetch(`/api/documentos?usuarioId=${userId}`)
-      .then((res) => res.json())
-      .then((data) => setDocs(data))
-      .finally(() => setLoading(false));
-  }, [userId]);
+  // Estado para favoritos
+  const [favoritos, setFavoritos] = useState([]); // array de strings
 
-  // Carga inicial de favoritos desde la BD
-  useEffect(() => {
+  // Cargar favoritos del usuario
+  const cargarFavoritos = async () => {
     if (!userId) return;
-    fetch(`/api/favoritos?usuario_id=${userId}`)
-      .then((res) => res.json())
-      .then((data) => setFavoritos(Array.isArray(data) ? data.map(Number) : []));
-  }, [userId]);
-
-  // Descargar documento
-  const handleDownload = (doc) => {
-    alert(`Descargando: ${doc.nombre}`);
-    // Aquí puedes implementar la lógica real de descarga si tienes la ruta del archivo
-  };
-
-  // Toggle favoritos sincronizado con la BD
-  const toggleFavorito = async (id) => {
-    if (!userId) return;
-    let response;
-    if (favoritos.includes(id)) {
-      response = await fetch('/api/favoritos', {
-        method: 'DELETE',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ usuario_id: userId, documentos_id: id })
-      });
-    } else {
-      response = await fetch('/api/favoritos', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ usuario_id: userId, documentos_id: id })
-      });
+    try {
+      const response = await fetch(`/api/favoritos-documentos?usuarioId=${userId}`);
+      if (response.ok) {
+        const data = await response.json();
+        setFavoritos(Array.isArray(data) ? data.map(fav => String(fav.documentoId)) : []);
+      }
+    } catch (error) {
+      console.error('Error al cargar favoritos:', error);
     }
-    const data = await response.json();
-    console.log("Respuesta del backend favoritos:", data);
-    // Refresca favoritos después de la acción
-    fetch(`/api/favoritos?usuario_id=${userId}`)
-      .then((res) => res.json())
-      .then((data) => setFavoritos(Array.isArray(data) ? data.map(Number) : []));
-    setTimeout(() => setFavMsg(""), 1200);
   };
 
-  // Filtrado
-  const filteredDocs = docs
-    .filter((doc) =>
-      doc.nombre?.toLowerCase().includes(search.toLowerCase())
-    )
-    .filter((doc) =>
-      clasificacion === "Todos" ? true : doc.clasificacion === clasificacion
-    )
-    .filter((doc) =>
-      estado === "Todos" ? true : doc.status === estado
-    );
+  useEffect(() => {
+    cargarFavoritos();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [userId]);
 
-  // Paginación
-  const totalPages = Math.ceil(filteredDocs.length / perPage);
-  const paginatedDocs = filteredDocs.slice(
-    (page - 1) * perPage,
-    page * perPage
-  );
+  // Estado para saber si se está procesando el favorito
+  const [favoritoLoading, setFavoritoLoading] = useState(null); // documentoId o null
+
+  // Alternar favorito
+  const toggleFavorito = async (documentoId) => {
+    if (!userId) return;
+    setFavoritoLoading(documentoId);
+    const esFavorito = favoritos.includes(String(documentoId));
+    try {
+      let ok = false;
+      if (esFavorito) {
+        // Quitar de favoritos
+        const response = await fetch('/api/favoritos-documentos', {
+          method: 'DELETE',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ usuarioId: userId, documentoId })
+        });
+        ok = response.ok;
+      } else {
+        // Agregar a favoritos
+        const response = await fetch('/api/favoritos-documentos', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ usuarioId: userId, documentoId })
+        });
+        ok = response.ok;
+      }
+      if (ok) {
+        await cargarFavoritos();
+      }
+    } catch (error) {
+      console.error('Error al alternar favorito:', error);
+    } finally {
+      setFavoritoLoading(null);
+    }
+  };
+
+  // Cargar documentos del usuario desde la base de datos
+  useEffect(() => {
+    if (!userId) {
+      console.log('❌ No hay userId disponible para mis documentos');
+      return;
+    }
+    
+    const cargarDocumentos = async () => {
+      try {
+        console.log('=== DEBUG MIS DOCUMENTOS ===');
+        console.log('userId:', userId);
+        console.log('session completa:', session);
+        console.log('===========================');
+        
+        setLoading(true);
+        const response = await fetch(`/api/documentos?usuarioId=${userId}`);
+        console.log('📡 Response status:', response.status);
+        
+        if (response.ok) {
+          const data = await response.json();
+          console.log('📄 Documentos recibidos:', data);
+          setDocumentos(data);
+        } else {
+          console.error('❌ Error al cargar documentos:', response.statusText);
+        }
+      } catch (error) {
+        console.error('❌ Error al cargar documentos:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    cargarDocumentos();
+  }, [userId]);
+
+  // Cargar tipos de documentos para el filtro
+  useEffect(() => {
+    const cargarTipos = async () => {
+      try {
+        const response = await fetch('/api/tipos-documentos');
+        if (response.ok) {
+          const tipos = await response.json();
+          setTiposDocumentos(tipos);
+        }
+      } catch (error) {
+        console.error('Error al cargar tipos de documentos:', error);
+      }
+    };
+
+    cargarTipos();
+  }, []);
+
+  const handleDownload = (documento) => {
+    if (documento.ruta) {
+      // Crear un enlace temporal para descargar
+      const link = document.createElement('a');
+      link.href = documento.ruta;
+      link.download = documento.nombre;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    } else {
+      alert(`Descargando: ${documento.nombre}`);
+    }
+  };
+
+  const handleEdit = (documento) => {
+    // Aquí podrías implementar la funcionalidad de edición
+    alert(`Editando: ${documento.nombre}`);
+  };
+
+  const handleDelete = async (id) => {
+    if (confirm("¿Está seguro de que desea eliminar este documento?")) {
+      try {
+        const response = await fetch(`/api/documentos/${id}`, {
+          method: 'DELETE',
+        });
+
+        if (response.ok) {
+          // Remover de la lista local
+          setDocumentos(prev => prev.filter(doc => doc.id !== id));
+          alert('Documento eliminado exitosamente');
+        } else {
+          alert('Error al eliminar el documento');
+        }
+      } catch (error) {
+        console.error('Error al eliminar documento:', error);
+        alert('Error al eliminar el documento');
+      }
+    }
+  };
+
+  const toggleTheme = () => setDarkMode(!darkMode);
+
+  // Filtrar documentos con criterios archivísticos
+  const filteredDocuments = documentos.filter((doc) => {
+    const matchesSearch = doc.nombre.toLowerCase().includes(search.toLowerCase()) ||
+                         doc.descripcion?.toLowerCase().includes(search.toLowerCase());
+    const matchesType = filterType === "Todos" || doc.tipos_documentos?.tipo === filterType;
+    
+    // Simulación de vigencia basada en fecha de subida (en producción vendría de BD)
+    const fechaSubida = new Date(doc.fecha_subida);
+    const hoy = new Date();
+    const diasTranscurridos = Math.floor((hoy - fechaSubida) / (1000 * 60 * 60 * 24));
+    const vigencia = diasTranscurridos < 30 ? "Vigente" : 
+                    diasTranscurridos < 365 ? "Próximo a vencer" : "Histórico";
+    
+    const matchesVigencia = filterVigencia === "Todos" || vigencia === filterVigencia;
+    
+    return matchesSearch && matchesType && matchesVigencia;
+  });
+
+  // Funciones de análisis archivístico
+  const getDocumentStatus = (documento) => {
+    const fechaSubida = new Date(documento.fecha_subida);
+    const hoy = new Date();
+    const diasTranscurridos = Math.floor((hoy - fechaSubida) / (1000 * 60 * 60 * 24));
+    
+    if (diasTranscurridos < 30) return { status: "Vigente", color: "green", icon: faCheckCircle };
+    if (diasTranscurridos < 365) return { status: "Próximo a vencer", color: "yellow", icon: faExclamationTriangle };
+    return { status: "Histórico", color: "blue", icon: faArchive };
+  };
+
+  const getComplianceMetrics = () => {
+    const vigentes = documentos.filter(d => {
+      const dias = Math.floor((new Date() - new Date(d.fecha_subida)) / (1000 * 60 * 60 * 24));
+      return dias < 30;
+    }).length;
+    
+    const proximosVencer = documentos.filter(d => {
+      const dias = Math.floor((new Date() - new Date(d.fecha_subida)) / (1000 * 60 * 60 * 24));
+      return dias >= 30 && dias < 365;
+    }).length;
+    
+    const historicos = documentos.filter(d => {
+      const dias = Math.floor((new Date() - new Date(d.fecha_subida)) / (1000 * 60 * 60 * 24));
+      return dias >= 365;
+    }).length;
+    
+    return { vigentes, proximosVencer, historicos };
+  };
+
+  const formatDate = (dateString) => {
+    if (!dateString) return 'N/A';
+    return new Date(dateString).toLocaleDateString('es-ES');
+  };
+
+  const getFileIcon = (mime) => {
+    if (mime?.includes('pdf')) return '📄';
+    if (mime?.includes('word') || mime?.includes('document')) return '📝';
+    if (mime?.includes('excel') || mime?.includes('spreadsheet')) return '📊';
+    if (mime?.includes('powerpoint') || mime?.includes('presentation')) return '📽️';
+    if (mime?.includes('image')) return '🖼️';
+    return '📁';
+  };
 
   return (
-    <div className={`${darkMode ? "bg-[#0d1b2a] text-white" : "bg-gray-50 text-gray-900"} min-h-screen flex flex-col`}>  
-      {/* Navbar superior */}
-      <header className={`${darkMode ? "bg-[#16213e] border-b border-[#222f43]" : "bg-white border-b border-gray-200"} flex justify-between items-center px-8 py-5 shadow`}>  
-        <div className="flex items-center gap-4">
+    <div className={`min-h-screen transition-all duration-300 ${
+      darkMode ? "bg-gradient-to-br from-slate-900 via-blue-900 to-slate-900" : "bg-gradient-to-br from-blue-50 via-white to-purple-50"
+    }`}>
+      {/* Header directo y simplificado */}
+      <div className={`sticky top-0 z-40 border-b transition-all duration-300 flex items-center justify-between px-6 py-4 ${
+        darkMode 
+          ? "bg-slate-900/95 border-slate-700 backdrop-blur-sm" 
+          : "bg-white/95 border-blue-200 backdrop-blur-sm"
+      }`}>
+        {/* Logo a la izquierda, fondo transparente, sin caja */}
+        <Image
+          src="/api-dark23.png"
+          alt="API Logo"
+          width={300}
+          height={100}
+          className="transition-all duration-300 hover:scale-105 object-contain"
+          priority
+        />
+
+        {/* Título centrado - más grande con efectos */}
+        <div className="flex-1 text-center px-4">
+          <h1 className={`text-4xl font-bold bg-gradient-to-r from-blue-600 via-purple-600 to-blue-600 bg-clip-text text-transparent hover:from-cyan-500 hover:via-pink-500 hover:to-purple-500 transition-all duration-500 transform hover:scale-105 hover:-translate-y-1 cursor-default animate-pulse ${
+            darkMode ? "from-blue-400 via-purple-400 to-blue-400 hover:from-cyan-400 hover:via-pink-400 hover:to-purple-400" : ""
+          }`}>
+            Mis Documentos
+          </h1>
+          <div className={`text-sm font-medium mt-2 flex items-center justify-center gap-1 transition-all duration-300 hover:scale-105 ${
+            darkMode ? "text-gray-300 hover:text-green-300" : "text-gray-600 hover:text-green-600"
+          }`}>
+            <FontAwesomeIcon icon={faGavel} className="text-green-500 text-sm animate-bounce" />
+            <span className="hover:tracking-wider transition-all duration-300">Gestión Archivística Conforme a Ley Estatal de BCS</span>
+          </div>
+        </div>
+
+        {/* Avatar y toggle a la derecha - más grande */}
+        <div className="flex items-center gap-3">
           <Image
-            src="/api-dark23.png"
-            alt="BCS nos UNE"
-            width={380}
+            src={user.avatar}
+            alt="Avatar"
+            width={90}
             height={90}
-            className="object-contain"
-            priority
-            style={{ filter: darkMode ? "invert(1) brightness(2)" : "none" }}
+            className="rounded-full border-3 border-blue-400 shadow-lg hover:scale-105 transition-all duration-300"
           />
-        </div>
-        <div className="flex items-center gap-6">
+          
           <button
-            onClick={() => setDarkMode(!darkMode)}
-            className="text-2xl focus:outline-none"
-            title="Cambiar modo"
+            onClick={toggleTheme}
+            className={`p-3 rounded-lg transition-all duration-300 transform hover:scale-110 hover:rotate-12 hover:-translate-y-1 shadow-lg hover:shadow-xl ${
+              darkMode 
+                ? "bg-slate-800 text-yellow-400 hover:bg-slate-700 hover:text-yellow-300 hover:shadow-yellow-400/30" 
+                : "bg-gray-100 text-gray-600 hover:bg-gray-200 hover:text-blue-600 hover:shadow-blue-400/30"
+            }`}
           >
-            <FontAwesomeIcon icon={darkMode ? faSun : faMoon} className={darkMode ? "text-yellow-300" : "text-gray-700"} />
+            <FontAwesomeIcon icon={darkMode ? faSun : faMoon} className="text-lg transition-all duration-300 hover:scale-125" />
           </button>
-          <div className="flex items-center gap-2">
-            <Image
-              src={avatar}
-              alt={userName}
-              width={48}
-              height={48}
-              className="rounded-full border-2 border-blue-200"
-            />
-            <span className="font-semibold">{userName}</span>
-          </div>
         </div>
-      </header>
+      </div>
 
-      {/* Contenido */}
-      <main className="flex-1 overflow-auto">
-        {/* Volver y título */}
-        <div className="flex items-center px-8 mt-8 mb-4">
-          <button
-            onClick={() => router.push("/home")}
-            className="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-md transition"
-          >
-            <FontAwesomeIcon icon={faArrowLeft} /> Volver
-          </button>
-          <h1 className={`${darkMode ? "text-blue-300" : "text-blue-600"} text-3xl font-bold ml-8`}>Mis Documentos</h1>
+      {/* Botón Volver al Inicio - Fuera del header, alineado debajo del logo */}
+      <div className="px-6 pt-4">
+        <Link 
+          href="/home"
+          className={`group inline-flex items-center gap-3 px-5 py-2.5 rounded-xl transition-all duration-300 shadow-lg hover:shadow-xl transform hover:-translate-y-1 hover:scale-105 ${
+            darkMode 
+              ? "bg-gradient-to-r from-emerald-600 to-teal-600 border border-emerald-500 text-white hover:from-emerald-500 hover:to-teal-500 hover:shadow-emerald-500/30" 
+              : "bg-gradient-to-r from-indigo-600 to-purple-600 border border-indigo-500 text-white hover:from-indigo-500 hover:to-purple-500 hover:shadow-indigo-500/30"
+          }`}
+        >
+          <FontAwesomeIcon 
+            icon={faArrowLeft} 
+            className="text-sm transition-all duration-300 group-hover:-translate-x-1 group-hover:scale-110"
+          />
+          <span className="font-semibold text-sm tracking-wide group-hover:tracking-wider transition-all duration-300">
+            Volver al Inicio
+          </span>
+        </Link>
+      </div>
+
+      {/* Contenido principal */}
+      <div className="max-w-7xl mx-auto px-4 py-6">
+        {/* Panel de Cumplimiento Legal */}
+        {showCompliance && (
+          <div className={`p-6 rounded-xl border mb-8 transition-all duration-300 ${
+            darkMode 
+              ? "bg-gradient-to-r from-blue-900/30 to-purple-900/30 border-blue-700" 
+              : "bg-gradient-to-r from-blue-50 to-purple-50 border-blue-200"
+          }`}>
+            <div className="flex items-center justify-between mb-4">
+              <div className="flex items-center gap-3">
+                <FontAwesomeIcon icon={faShieldAlt} className="text-blue-600 text-xl" />
+                <h2 className={`text-lg font-bold ${darkMode ? "text-white" : "text-gray-900"}`}>
+                  Panel de Cumplimiento Archivístico
+                </h2>
+              </div>
+              <button
+                onClick={() => setShowCompliance(false)}
+                className={`text-sm px-3 py-1 rounded-lg transition-all duration-300 transform hover:scale-110 hover:-translate-y-0.5 ${darkMode ? "text-gray-400 hover:text-gray-200 hover:bg-slate-700/50" : "text-gray-500 hover:text-gray-700 hover:bg-gray-100/50"}`}
+              >
+                Ocultar
+              </button>
+            </div>
+            
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              {[
+                { 
+                  label: "Documentos Vigentes", 
+                  value: getComplianceMetrics().vigentes, 
+                  icon: faCheckCircle, 
+                  color: "green",
+                  description: "Cumplimiento de retención activa"
+                },
+                { 
+                  label: "Próximos a Transferir", 
+                  value: getComplianceMetrics().proximosVencer, 
+                  icon: faExclamationTriangle, 
+                  color: "yellow",
+                  description: "Requieren evaluación de disposición"
+                },
+                { 
+                  label: "Archivo Histórico", 
+                  value: getComplianceMetrics().historicos, 
+                  icon: faArchive, 
+                  color: "blue",
+                  description: "Conservación permanente o transferidos"
+                }
+              ].map((metric, index) => (
+                <div key={index} className={`p-4 rounded-lg border transition-all duration-300 ${
+                  darkMode 
+                    ? "bg-slate-800/50 border-slate-600 hover:bg-slate-700/50" 
+                    : "bg-white/80 border-gray-200 hover:shadow-md"
+                }`}>
+                  <div className="flex items-center gap-3 mb-2">
+                    <FontAwesomeIcon 
+                      icon={metric.icon} 
+                      className={`text-lg ${
+                        metric.color === "green" ? "text-green-500" :
+                        metric.color === "yellow" ? "text-yellow-500" : "text-blue-500"
+                      }`} 
+                    />
+                    <span className={`font-semibold text-lg ${
+                      metric.color === "green" ? "text-green-600" :
+                      metric.color === "yellow" ? "text-yellow-600" : "text-blue-600"
+                    }`}>
+                      {metric.value}
+                    </span>
+                  </div>
+                  <p className={`text-sm font-medium ${darkMode ? "text-gray-200" : "text-gray-800"}`}>
+                    {metric.label}
+                  </p>
+                  <p className={`text-xs ${darkMode ? "text-gray-400" : "text-gray-500"}`}>
+                    {metric.description}
+                  </p>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* Estadísticas expandidas */}
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+          {[
+            { label: "Total Documentos", value: documentos.length, icon: faFileAlt, color: "blue" },
+            { label: "Subidos Hoy", value: documentos.filter(d => 
+              new Date(d.fecha_subida).toDateString() === new Date().toDateString()
+            ).length, icon: faChartLine, color: "green" },
+            { label: "Tipos de Serie", value: new Set(documentos.map(d => d.tipos_documentos?.tipo)).size, icon: faFilter, color: "purple" },
+            { label: "Retención Legal", value: `${Math.round((getComplianceMetrics().vigentes / (documentos.length || 1)) * 100)}%`, icon: faGavel, color: "orange" }
+          ].map((stat, index) => (
+            <div key={index} className={`animate-scale-in p-6 rounded-xl border transition-all duration-300 ${
+              darkMode 
+                ? "bg-slate-800/50 border-slate-700 hover:bg-slate-700/50" 
+                : "bg-white/80 border-gray-200 hover:shadow-lg backdrop-blur-sm"
+            }`}>
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className={`text-sm font-medium ${darkMode ? "text-gray-300" : "text-gray-600"}`}>
+                    {stat.label}
+                  </p>
+                  <p className={`text-2xl font-bold ${
+                    stat.color === "blue" ? "text-blue-600" :
+                    stat.color === "green" ? "text-green-600" : 
+                    stat.color === "purple" ? "text-purple-600" : "text-orange-600"
+                  }`}>
+                    {stat.value}
+                  </p>
+                </div>
+                <div className={`p-3 rounded-lg ${
+                  stat.color === "blue" ? "bg-blue-100 text-blue-600" :
+                  stat.color === "green" ? "bg-green-100 text-green-600" : 
+                  stat.color === "purple" ? "bg-purple-100 text-purple-600" : "bg-orange-100 text-orange-600"
+                }`}>
+                  <FontAwesomeIcon icon={stat.icon} className="text-xl" />
+                </div>
+              </div>
+            </div>
+          ))}
         </div>
 
-        {/* Filtros */}
-        <form className={`${darkMode ? "bg-[#1a2b3c] border-[#222f43] text-white" : "bg-white border-gray-200 text-gray-900"} flex flex-wrap gap-4 px-8 mb-6 items-center rounded-lg shadow border`}>  
-          <div className="relative">
-            <input
-              type="text"
-              placeholder="Buscar por nombre…"
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              className={`${darkMode ? "bg-[#16213e] text-white border-[#222f43] placeholder-gray-400" : "bg-white text-gray-800 border-gray-400"} w-64 px-4 py-2 pr-10 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500`}
-            />
-            <span className="absolute inset-y-0 right-3 flex items-center pointer-events-none text-gray-400">
-              <FontAwesomeIcon icon={faSearch} />
-            </span>
+        {/* Filtros archivísticos avanzados */}
+        <div className={`p-6 rounded-xl border mb-8 transition-all duration-300 ${
+          darkMode 
+            ? "bg-slate-800/50 border-slate-700" 
+            : "bg-white/80 border-gray-200 backdrop-blur-sm"
+        }`}>
+          <div className="flex items-center gap-3 mb-4">
+            <FontAwesomeIcon icon={faFileContract} className="text-blue-600" />
+            <h3 className={`font-semibold ${darkMode ? "text-white" : "text-gray-900"}`}>
+              Filtros de Gestión Archivística
+            </h3>
           </div>
-          <select
-            value={clasificacion}
-            onChange={(e) => { setClasificacion(e.target.value); setPage(1); }}
-            className={`${darkMode ? "bg-[#16213e] text-white border-[#222f43]" : "bg-white text-gray-800 border-gray-400"} px-4 py-2 border rounded-md`}
-          >
-            {CLASIFICACIONES.map((c) => (
-              <option key={c} value={c} className={darkMode ? "bg-[#16213e] text-white" : ""}>
-                {c === "Todos" ? "Clasificación" : c}
-              </option>
-            ))}
-          </select>
-          <select
-            value={estado}
-            onChange={(e) => { setEstado(e.target.value); setPage(1); }}
-            className={`${darkMode ? "bg-[#16213e] text-white border-[#222f43]" : "bg-white text-gray-800 border-gray-400"} px-4 py-2 border rounded-md`}
-          >
-            {ESTADOS.map((e) => (
-              <option key={e} value={e} className={darkMode ? "bg-[#16213e] text-white" : ""}>
-                {e === "Todos" ? "Estado" : e}
-              </option>
-            ))}
-          </select>
-          {favMsg && <span className="ml-4 text-green-400 font-semibold">{favMsg}</span>}
-        </form>
+          
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+            {/* Búsqueda */}
+            <div className="relative">
+              <FontAwesomeIcon 
+                icon={faSearch} 
+                className={`absolute left-3 top-3 ${darkMode ? "text-gray-400" : "text-gray-500"}`} 
+              />
+              <input
+                type="text"
+                placeholder="Buscar por folio, nombre, contenido..."
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                className={`w-full pl-10 pr-4 py-2 rounded-lg border transition-all duration-300 ${
+                  darkMode 
+                    ? "bg-slate-700 border-slate-600 text-white placeholder-gray-400 focus:border-blue-500" 
+                    : "bg-white border-gray-300 text-gray-900 placeholder-gray-500 focus:border-blue-500"
+                } focus:ring-2 focus:ring-blue-500/20 focus:outline-none`}
+              />
+            </div>
 
-        <div className={`${darkMode ? "bg-[#16213e] border-[#222f43]" : "bg-white border-gray-200"} mx-8 shadow-lg rounded-lg border overflow-x-auto`}>  
-          {loading ? (
-            <div className="text-center py-10">Cargando...</div>
-          ) : paginatedDocs.length === 0 ? (
-            <div className="text-center py-10 text-gray-400">No tienes documentos.</div>
-          ) : (
-            <table className="w-full table-auto text-base border-collapse">
-              <thead className={darkMode ? "bg-[#1a2b3c] text-white" : "bg-gray-100"}>
-                <tr>
-                  <th className="p-3 border">#</th>
-                  <th className="p-3 border">Nombre</th>
-                  <th className="p-3 border">Clasificación</th>
-                  <th className="p-3 border">Fecha</th>
-                  <th className="p-3 border">Fav</th>
-                  <th className="p-3 border">Acciones</th>
-                </tr>
-              </thead>
-              <tbody>
-                {paginatedDocs.map((doc, idx) => (
-                  <tr key={doc.id} className={darkMode ? "hover:bg-[#24304a] text-white" : "hover:bg-blue-50"}>
-                    <td className="p-3 border text-center">{(page - 1) * perPage + idx + 1}</td>
-                    <td className="p-3 border">{doc.nombre || <span className="text-gray-400">Sin nombre</span>}</td>
-                    <td className="p-3 border">{doc.clasificacion || <span className="text-gray-400">Sin clasificación</span>}</td>
-                    <td className="p-3 border">{doc.fecha_subida ? new Date(doc.fecha_subida).toLocaleDateString() : <span className="text-gray-400">Sin fecha</span>}</td>
-                    <td className="p-3 border text-center">
-                      <button
-                        onClick={() => toggleFavorito(doc.id)}
-                        title={favoritos.includes(doc.id) ? "Quitar de favoritos" : "Agregar a favoritos"}
-                        className="text-xl"
-                      >
-                        <FontAwesomeIcon
-                          icon={favoritos.includes(doc.id) ? faStarSolid : faStarRegular}
-                          className={favoritos.includes(doc.id) ? "text-yellow-400" : "text-gray-500"}
-                        />
-                      </button>
-                    </td>
-                    <td className="p-3 border flex justify-center gap-4">
-                      <button
-                        onClick={() => handleDownload(doc)}
-                        title="Descargar"
-                        className="text-2xl"
-                      >
-                        <FontAwesomeIcon icon={faDownload} className={darkMode ? "text-blue-300" : "text-blue-600"} />
-                      </button>
-                    </td>
-                  </tr>
+            {/* Filtro por Serie Documental */}
+            <div>
+              <select
+                value={filterType}
+                onChange={(e) => setFilterType(e.target.value)}
+                className={`w-full px-4 py-2 rounded-lg border transition-all duration-300 ${
+                  darkMode 
+                    ? "bg-slate-700 border-slate-600 text-white focus:border-blue-500" 
+                    : "bg-white border-gray-300 text-gray-900 focus:border-blue-500"
+                } focus:ring-2 focus:ring-blue-500/20 focus:outline-none`}
+              >
+                <option value="Todos">📁 Todas las Series</option>
+                {tiposDocumentos.map((tipo) => (
+                  <option key={tipo.id} value={tipo.tipo}>
+                    📋 {tipo.tipo}
+                  </option>
                 ))}
-              </tbody>
-            </table>
+              </select>
+            </div>
+
+            {/* Filtro por Vigencia */}
+            <div>
+              <select
+                value={filterVigencia}
+                onChange={(e) => setFilterVigencia(e.target.value)}
+                className={`w-full px-4 py-2 rounded-lg border transition-all duration-300 ${
+                  darkMode 
+                    ? "bg-slate-700 border-slate-600 text-white focus:border-blue-500" 
+                    : "bg-white border-gray-300 text-gray-900 focus:border-blue-500"
+                } focus:ring-2 focus:ring-blue-500/20 focus:outline-none`}
+              >
+                <option value="Todos">⏱️ Toda Vigencia</option>
+                <option value="Vigente">✅ Vigente (Archivo de Trámite)</option>
+                <option value="Próximo a vencer">⚠️ Próximo a Transferir</option>
+                <option value="Histórico">🏛️ Archivo Histórico</option>
+              </select>
+            </div>
+
+            <div>
+              <button
+                onClick={() => alert("Generando reporte de inventario conforme a la Ley...")}
+                className={`w-full px-4 py-2 rounded-lg transition-all duration-300 transform hover:scale-105 hover:-translate-y-1 shadow-lg hover:shadow-xl font-semibold ${
+                  darkMode
+                    ? "bg-gradient-to-r from-green-600 to-emerald-600 text-white hover:from-green-500 hover:to-emerald-500 hover:shadow-green-500/30"
+                    : "bg-gradient-to-r from-green-500 to-emerald-500 text-white hover:from-green-400 hover:to-emerald-400 hover:shadow-green-400/30"
+                }`}
+              >
+                <FontAwesomeIcon icon={faBarcode} className="mr-2 transition-all duration-300 hover:scale-125" />
+                Inventario Legal
+              </button>
+            </div>
+          </div>
+        </div>
+
+        {/* Lista de documentos */}
+        <div className={`rounded-xl border overflow-hidden transition-all duration-300 ${
+          darkMode 
+            ? "bg-slate-800/50 border-slate-700" 
+            : "bg-white/80 border-gray-200 backdrop-blur-sm"
+        }`}>
+          {loading ? (
+            <div className="p-8 text-center">
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-4"></div>
+              <p className={darkMode ? "text-gray-300" : "text-gray-600"}>Cargando documentos...</p>
+            </div>
+          ) : filteredDocuments.length === 0 ? (
+            <div className="p-8 text-center">
+              <FontAwesomeIcon icon={faFileAlt} className={`text-4xl mb-4 ${darkMode ? "text-gray-500" : "text-gray-400"}`} />
+              <p className={`text-lg font-medium ${darkMode ? "text-gray-300" : "text-gray-600"}`}>
+                {documentos.length === 0 ? "No tienes documentos subidos" : "No se encontraron documentos"}
+              </p>
+              <p className={`text-sm ${darkMode ? "text-gray-400" : "text-gray-500"}`}>
+                {documentos.length === 0 ? "Sube tu primer documento desde el dashboard" : "Intenta con otros términos de búsqueda"}
+              </p>
+            </div>
+          ) : (
+            <div className="overflow-x-auto">
+              <table className="w-full">
+                <thead className={`${darkMode ? "bg-slate-700" : "bg-gray-50"}`}>
+                  <tr>
+                    <th className={`px-6 py-4 text-left text-sm font-semibold ${darkMode ? "text-gray-200" : "text-gray-700"}`}>
+                      📄 Documento / Serie
+                    </th>
+                    <th className={`px-6 py-4 text-left text-sm font-semibold ${darkMode ? "text-gray-200" : "text-gray-700"}`}>
+                      📂 Clasificación
+                    </th>
+                    <th className={`px-6 py-4 text-left text-sm font-semibold ${darkMode ? "text-gray-200" : "text-gray-700"}`}>
+                      📅 Fechas Archivísticas
+                    </th>
+                    <th className={`px-6 py-4 text-left text-sm font-semibold ${darkMode ? "text-gray-200" : "text-gray-700"}`}>
+                      ⚖️ Estado Legal
+                    </th>
+                    <th className={`px-6 py-4 text-center text-sm font-semibold ${darkMode ? "text-gray-200" : "text-gray-700"}`}>
+                      🛠️ Acciones
+                    </th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-gray-200 dark:divide-slate-700">
+                  {filteredDocuments.map((documento, index) => {
+                    const status = getDocumentStatus(documento);
+                    return (
+                      <tr key={documento.id} className={`hover:${darkMode ? "bg-slate-700/50" : "bg-gray-50"} transition-all duration-200`}>
+                        <td className="px-6 py-4">
+                          <div className="flex items-center gap-3">
+                            <span className="text-2xl">{getFileIcon(documento.mime)}</span>
+                            <div>
+                              <p className={`font-medium ${darkMode ? "text-white" : "text-gray-900"}`}>
+                                {documento.nombre}
+                              </p>
+                              {documento.descripcion && (
+                                <p className={`text-sm ${darkMode ? "text-gray-400" : "text-gray-500"}`}>
+                                  📋 {documento.descripcion}
+                                </p>
+                              )}
+                              <p className={`text-xs ${darkMode ? "text-blue-400" : "text-blue-600"}`}>
+                                🔗 ID: {documento.id} | 📊 MIME: {documento.mime}
+                              </p>
+                            </div>
+                          </div>
+                        </td>
+                        <td className="px-6 py-4">
+                          <div className="space-y-1">
+                            <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
+                              darkMode 
+                                ? "bg-blue-900/50 text-blue-300" 
+                                : "bg-blue-100 text-blue-800"
+                            }`}>
+                              📁 {documento.tipos_documentos?.tipo || 'Sin clasificar'}
+                            </span>
+                            <p className={`text-xs ${darkMode ? "text-gray-400" : "text-gray-500"}`}>
+                              Serie Documental
+                            </p>
+                          </div>
+                        </td>
+                        <td className="px-6 py-4">
+                          <div className="space-y-1">
+                            <p className={`text-sm font-medium ${darkMode ? "text-gray-300" : "text-gray-600"}`}>
+                              📥 Ingreso: {formatDate(documento.fecha_subida)}
+                            </p>
+                            <p className={`text-xs ${darkMode ? "text-gray-400" : "text-gray-500"}`}>
+                              ⏰ {Math.floor((new Date() - new Date(documento.fecha_subida)) / (1000 * 60 * 60 * 24))} días en archivo
+                            </p>
+                          </div>
+                        </td>
+                        <td className="px-6 py-4">
+                          <div className="flex items-center gap-2">
+                            <FontAwesomeIcon 
+                              icon={status.icon} 
+                              className={`text-${status.color}-500`} 
+                            />
+                            <span className={`text-sm font-medium text-${status.color}-600`}>
+                              {status.status}
+                            </span>
+                          </div>
+                          <p className={`text-xs ${darkMode ? "text-gray-400" : "text-gray-500"}`}>
+                            Conforme a Ley Estatal
+                          </p>
+                        </td>
+                        <td className="px-6 py-4 text-center">
+                          <div className="flex justify-center gap-2">
+                            {/* Botón Favorito */}
+                            <button
+                              onClick={() => toggleFavorito(documento.id)}
+                              disabled={favoritoLoading === documento.id}
+                              className={`p-2 rounded-lg transition-all duration-300 transform hover:scale-125 hover:-translate-y-1 hover:rotate-12 shadow-md hover:shadow-lg ${
+                                favoritos.includes(String(documento.id))
+                                  ? (darkMode ? "text-yellow-300 bg-yellow-900/50 hover:bg-yellow-800/70 hover:shadow-yellow-400/30" : "text-yellow-500 bg-yellow-100 hover:bg-yellow-200 hover:shadow-yellow-400/30")
+                                  : (darkMode ? "text-gray-400 hover:text-yellow-300 hover:bg-yellow-900/30" : "text-gray-400 hover:text-yellow-500 hover:bg-yellow-100/70")
+                              } ${favoritoLoading === documento.id ? 'opacity-60 pointer-events-none' : ''}`}
+                              title={favoritos.includes(String(documento.id)) ? "Quitar de favoritos" : "Agregar a favoritos"}
+                            >
+                              <FontAwesomeIcon icon={faStar} className="transition-all duration-300" />
+                            </button>
+                            {/* Botón Descargar */}
+                            <button
+                              onClick={() => handleDownload(documento)}
+                              className={`p-2 rounded-lg transition-all duration-300 transform hover:scale-125 hover:-translate-y-1 hover:rotate-12 shadow-md hover:shadow-lg ${
+                                darkMode 
+                                  ? "text-blue-400 hover:bg-blue-900/50 hover:text-blue-300 hover:shadow-blue-400/30" 
+                                  : "text-blue-600 hover:bg-blue-50 hover:text-blue-700 hover:shadow-blue-400/30"
+                              }`}
+                              title="Descargar documento"
+                            >
+                              <FontAwesomeIcon icon={faDownload} className="transition-all duration-300" />
+                            </button>
+                            <button
+                              onClick={() => alert(`Visualizando metadatos archivísticos de: ${documento.nombre}`)}
+                              className={`p-2 rounded-lg transition-all duration-300 transform hover:scale-125 hover:-translate-y-1 hover:rotate-12 shadow-md hover:shadow-lg ${
+                                darkMode 
+                                  ? "text-green-400 hover:bg-green-900/50 hover:text-green-300 hover:shadow-green-400/30" 
+                                  : "text-green-600 hover:bg-green-50 hover:text-green-700 hover:shadow-green-400/30"
+                              }`}
+                              title="Ver metadatos legales"
+                            >
+                              <FontAwesomeIcon icon={faHistory} className="transition-all duration-300" />
+                            </button>
+                            <button
+                              onClick={() => handleEdit(documento)}
+                              className={`p-2 rounded-lg transition-all duration-300 transform hover:scale-125 hover:-translate-y-1 hover:rotate-12 shadow-md hover:shadow-lg ${
+                                darkMode 
+                                  ? "text-yellow-400 hover:bg-yellow-900/50 hover:text-yellow-300 hover:shadow-yellow-400/30" 
+                                  : "text-yellow-600 hover:bg-yellow-50 hover:text-yellow-700 hover:shadow-yellow-400/30"
+                              }`}
+                              title="Editar metadatos"
+                            >
+                              <FontAwesomeIcon icon={faEdit} className="transition-all duration-300" />
+                            </button>
+                            <button
+                              onClick={() => {
+                                if (confirm("⚠️ ATENCIÓN: Esta acción debe cumplir con los plazos de retención establecidos en la Ley Estatal de Archivos de BCS.\n\n¿Confirma la eliminación del documento?")) {
+                                  handleDelete(documento.id);
+                                }
+                              }}
+                              className={`p-2 rounded-lg transition-all duration-300 transform hover:scale-125 hover:-translate-y-1 hover:rotate-12 shadow-md hover:shadow-lg ${
+                                darkMode 
+                                  ? "text-red-400 hover:bg-red-900/50 hover:text-red-300 hover:shadow-red-400/30" 
+                                  : "text-red-600 hover:bg-red-50 hover:text-red-700 hover:shadow-red-400/30"
+                              }`}
+                              title="Eliminar (cumplir normativa)"
+                            >
+                              <FontAwesomeIcon icon={faTrash} className="transition-all duration-300" />
+                            </button>
+                          </div>
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
           )}
         </div>
-
-        {/* Paginación */}
-        <div className={`${darkMode ? "bg-[#1a2b3c] border-t border-[#222f43] text-white" : "bg-white border-t border-gray-200 text-gray-900"} flex justify-between items-center px-8 py-6 rounded-b-lg mt-4`}>  
-          <button
-            onClick={() => setPage((p) => Math.max(1, p - 1))}
-            disabled={page === 1}
-            className="flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded transition disabled:opacity-50"
-          >
-            <FontAwesomeIcon icon={faChevronLeft} /> Anterior
-          </button>
-          <span>Página {page} de {totalPages}</span>
-          <button
-            onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
-            disabled={page === totalPages || totalPages === 0}
-            className="flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded transition disabled:opacity-50"
-          >
-            Siguiente <FontAwesomeIcon icon={faChevronRight} />
-          </button>
-        </div>
-      </main>
+      </div>
     </div>
   );
 }
