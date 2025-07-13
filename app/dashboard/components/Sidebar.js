@@ -137,8 +137,8 @@ export default function Sidebar({ isSidebarCollapsed }) {
       label: "Consultas & Reportes",
       icon: faChartBar,
       sub: [
-        { label: "Historial de Consultas", href: "#", icon: faHistory },
-        { label: "Informes", href: "#", icon: faChartBar },
+        { label: "Bitácora", href: "/dashboard/bitacora", icon: faHistory },
+        { label: "Informes", href: "/dashboard/informes", icon: faChartBar },
       ],
     },
     {
@@ -146,8 +146,8 @@ export default function Sidebar({ isSidebarCollapsed }) {
       label: "Configuración & Ayuda",
       icon: faCog,
       sub: [
-        { label: "Ajustes", href: "#", icon: faCog },
-        { label: "Ayuda", href: "#", icon: faArrowLeft },
+        { label: "Ajustes", href: "/dashboard/ajustes", icon: faCog },
+        { label: "Ayuda", href: "/dashboard/ayuda", icon: faArrowLeft },
       ],
     },
   ];
@@ -193,30 +193,30 @@ export default function Sidebar({ isSidebarCollapsed }) {
                   >
                     <FontAwesomeIcon icon={menu.icon} size="xl" className="text-blue-500 group-hover:text-blue-700 transition-all duration-200" />
                   </button>
-                  {openMenus.includes(menu.key) && menu.sub.length > 0 && (
-                    <ul className="flex flex-col items-center space-y-4 mt-2">
-                      {menu.sub.map(sub => (
-                        <li key={sub.label}>
-                          <a href={sub.href} title={sub.label}
-                            className="group flex items-center justify-center w-12 h-12 rounded-full bg-white hover:bg-blue-100 shadow-lg transition-all duration-200 border border-blue-200"
-                          >
-                            <FontAwesomeIcon icon={sub.icon} style={{color:'#2563eb', fontSize:'2rem'}} className="group-hover:text-blue-700 transition-all duration-200" />
-                          </a>
-                        </li>
-                      ))}
-                    </ul>
-                  )}
-                </li>
-              ))}
-              {/* Cerrar sesión */}
-              <li>
-                <span title="Cerrar sesión" onClick={handleLogoutClick}
-                  className="group flex items-center justify-center w-14 h-14 rounded-full bg-white hover:bg-red-100 shadow transition-all duration-200 cursor-pointer"
+        {openMenus.includes(menu.key) && menu.sub.length > 0 && (
+          <ul className="flex flex-col items-center space-y-4 mt-2">
+            {menu.sub.map(sub => (
+              <li key={sub.label}>
+                <a href={sub.href} title={sub.label}
+                  className="group flex items-center justify-center w-12 h-12 rounded-full bg-white hover:bg-blue-100 shadow-lg transition-all duration-200 border border-blue-200"
                 >
-                  <FontAwesomeIcon icon={faSignOutAlt} size="lg" className="text-red-500 group-hover:text-red-700" />
-                </span>
+                  <FontAwesomeIcon icon={sub.icon} style={{color:'#2563eb', fontSize:'2rem'}} className="group-hover:text-blue-700 transition-all duration-200" />
+                </a>
               </li>
-            </ul>
+            ))}
+          </ul>
+        )}
+      </li>
+    ))}
+    {/* Cerrar sesión */}
+    <li>
+      <span title="Cerrar sesión" onClick={handleLogoutClick}
+        className="group flex items-center justify-center w-14 h-14 rounded-full bg-white hover:bg-red-100 shadow transition-all duration-200 cursor-pointer"
+      >
+        <FontAwesomeIcon icon={faSignOutAlt} size="lg" className="text-red-500 group-hover:text-red-700" />
+      </span>
+    </li>
+  </ul>
           </>
         ) : (
           <>

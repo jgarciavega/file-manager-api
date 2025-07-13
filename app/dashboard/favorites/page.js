@@ -239,18 +239,18 @@ function FavoritosPage() {
         {/* Título premium */}
         <div className="flex-1 text-center px-4">
           <h1
-            className={`relative text-4xl font-bold bg-gradient-to-r from-blue-600 via-purple-600 to-blue-600 bg-clip-text text-transparent transition-all duration-500 transform hover:scale-105 hover:-translate-y-1 cursor-default overflow-hidden select-none ${darkMode ? "from-blue-400 via-purple-400 to-blue-400" : ""}`}
-            style={{ WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}
+            className={`relative text-4xl md:text-5xl font-extrabold tracking-tight text-center transition-all duration-500 transform hover:scale-105 hover:-translate-y-1 cursor-default overflow-hidden select-none`}
+            style={{ letterSpacing: '0.04em' }}
           >
-            <span className="relative z-10">Mis Favoritos</span>
+            <span className={`relative z-10 ${darkMode ? "text-white drop-shadow-[0_2px_12px_rgba(0,0,0,0.7)]" : "text-blue-900 drop-shadow-[0_2px_8px_rgba(96,165,250,0.25)]"}`}>Mis Favoritos</span>
             <span
               className="absolute left-0 top-0 h-full w-full pointer-events-none animate-shine"
               style={{
-                background:
-                  'linear-gradient(120deg, transparent 0%, rgba(255,255,255,0.6) 50%, transparent 100%)',
+                background: 'linear-gradient(120deg, transparent 0%, rgba(255,255,255,0.7) 50%, transparent 100%)',
                 WebkitBackgroundClip: 'text',
                 WebkitTextFillColor: 'transparent',
                 mixBlendMode: 'lighten',
+                opacity: 0.7,
               }}
             >
               Mis Favoritos
@@ -259,8 +259,8 @@ function FavoritosPage() {
 
 
           <div className={`text-sm font-medium mt-2 flex items-center justify-center gap-1 transition-all duration-300 hover:scale-105 ${darkMode ? "text-gray-300 hover:text-green-300" : "text-gray-600 hover:text-green-600"}`}>
-            <FontAwesomeIcon icon={faStar} className="text-yellow-400 text-sm animate-bounce" />
-            <span className="hover:tracking-wider transition-all duration-300">Tus documentos favoritos siempre a la mano</span>
+            <FontAwesomeIcon icon={faStar} className="text-yellow-400 text-base animate-bounce drop-shadow" />
+            <span className="hover:tracking-wider transition-all duration-300 font-semibold">Tus documentos favoritos siempre a la mano</span>
           </div>
         </div>
 
@@ -306,10 +306,10 @@ function FavoritosPage() {
         <a ref={csvLink} style={{ display: 'none' }}>Descargar</a>
       </div>
       {/* Advertencia confidencialidad */}
-      <div className={`max-w-7xl mx-auto px-4 mt-4 mb-2`}> 
-        <div className={`rounded-lg p-3 flex items-center gap-3 text-sm font-medium ${darkMode ? "bg-yellow-900/30 text-yellow-200 border border-yellow-700" : "bg-yellow-100 text-yellow-800 border border-yellow-300"}`}>
-          <FontAwesomeIcon icon={faStar} className="text-yellow-400" />
-          Algunos documentos pueden ser confidenciales o restringidos. El acceso y descarga están sujetos a la Ley Estatal de Archivos y políticas internas.
+      <div className={`max-w-7xl mx-auto px-4 mt-4 mb-2`}>
+        <div className={`rounded-lg p-3 flex items-center gap-3 text-sm font-semibold shadow-md border-2 ${darkMode ? "bg-yellow-900/30 text-yellow-100 border-yellow-700/60" : "bg-yellow-50 text-yellow-900 border-yellow-300/80"}`}>
+          <FontAwesomeIcon icon={faStar} className="text-yellow-400 animate-pulse" />
+          <span className="tracking-wide">Algunos documentos pueden ser confidenciales o restringidos. El acceso y descarga están sujetos a la Ley Estatal de Archivos y políticas internas.</span>
         </div>
       </div>
       {/* Buscador premium */}
@@ -318,15 +318,40 @@ function FavoritosPage() {
           <input
             type="text"
             placeholder="🔍 Buscar por nombre, responsable, expediente..."
-            className={`px-4 py-2 rounded-lg border text-sm w-full max-w-sm focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all duration-300 ${darkMode ? "bg-slate-700 border-slate-600 text-white placeholder-gray-400" : "bg-white border-gray-300 text-gray-900 placeholder-gray-600"}`}
+            className={`px-4 py-2 rounded-lg border text-base w-full max-w-sm focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all duration-300 shadow-md font-semibold ${darkMode ? "bg-slate-800 border-slate-600 text-white placeholder-gray-400" : "bg-white border-blue-200 text-blue-900 placeholder-blue-400"}`}
             value={search}
             onChange={(e) => setSearch(e.target.value)}
+            style={{ letterSpacing: '0.01em' }}
           />
         </div>
         {/* Tabla premium con nuevas columnas */}
-        <div className={`rounded-xl border overflow-x-auto transition-all duration-300 ${darkMode ? "bg-slate-800/50 border-slate-700" : "bg-white/80 border-gray-200 backdrop-blur-sm"}`}>
+        <div className={`rounded-xl border overflow-x-auto transition-all duration-300 shadow-xl ring-1 ring-blue-100/40 ${darkMode ? "bg-slate-900/90 border-slate-800 ring-0" : "bg-white/95 border-blue-100"}`}>
+      <style jsx global>{`
+        .premium-title-gradient-fav {
+          background: linear-gradient(90deg, #1e3a8a 0%, #60a5fa 40%, #a78bfa 60%, #fff 100%);
+          background-size: 200% auto;
+          background-clip: text;
+          -webkit-background-clip: text;
+          color: transparent;
+          -webkit-text-fill-color: transparent;
+          animation: premium-gradient-move 3.5s linear infinite;
+        }
+        .dark-premium-title-gradient-fav {
+          background: linear-gradient(90deg, #60a5fa 0%, #a78bfa 40%, #facc15 60%, #fff 100%);
+          background-size: 200% auto;
+          background-clip: text;
+          -webkit-background-clip: text;
+          color: transparent;
+          -webkit-text-fill-color: transparent;
+          animation: premium-gradient-move 3.5s linear infinite;
+        }
+        @keyframes premium-gradient-move {
+          0% { background-position: 0% 50%; }
+          100% { background-position: 200% 50%; }
+        }
+      `}</style>
           <table className="w-full min-w-[1200px] table-auto text-sm border-collapse">
-            <thead className={darkMode ? "bg-slate-700 text-white" : "bg-gray-50 text-gray-700"}>
+            <thead className={darkMode ? "bg-gradient-to-r from-blue-900 via-slate-800 to-blue-900 text-blue-100" : "bg-gradient-to-r from-blue-100 via-white to-blue-100 text-blue-900"}>
               <tr>
                 <th className="px-4 py-3 border-b font-semibold text-xs">Documento</th>
                 <th className="px-4 py-3 border-b font-semibold text-xs">Fecha</th>
@@ -345,7 +370,7 @@ function FavoritosPage() {
             <tbody>
               {paginatedFiles.length > 0 ? (
                 paginatedFiles.map((file) => (
-                  <tr key={file.id} className={`text-center transition-all duration-200 ${darkMode ? "hover:bg-slate-700/50" : "hover:bg-gray-50"}`}>
+                  <tr key={file.id} className={`text-center transition-all duration-200 ${darkMode ? "hover:bg-blue-900/30" : "hover:bg-blue-50/60"}`} style={{ borderBottom: darkMode ? '1px solid #223' : '1px solid #e0e7ef' }}>
                     <td className="px-4 py-3">{file.nombre}</td>
                     <td className="px-4 py-3">{formatDate(file.fecha_subida)}</td>
                     <td className="px-4 py-3">{file.responsable || 'N/A'}</td>
@@ -398,21 +423,41 @@ function FavoritosPage() {
           {/* Paginación */}
           <div className="flex justify-center items-center gap-2 py-6">
             <button
-              className="px-3 py-1 rounded bg-gray-200 dark:bg-slate-700 text-gray-700 dark:text-gray-200 font-semibold disabled:opacity-50"
+              className="px-3 py-1 rounded bg-blue-100 text-blue-900 font-semibold shadow disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 hover:bg-blue-200 hover:text-blue-800 dark:bg-slate-800 dark:text-blue-100 dark:hover:bg-blue-900 dark:hover:text-yellow-200"
               onClick={() => setPage((p) => Math.max(1, p - 1))}
               disabled={page === 1}
             >
               Anterior
             </button>
-            <span className="mx-2 text-sm">Página {page} de {totalPages}</span>
+            <span className="mx-2 text-base font-bold tracking-wide text-blue-900 dark:text-blue-100">Página {page} de {totalPages}</span>
             <button
-              className="px-3 py-1 rounded bg-gray-200 dark:bg-slate-700 text-gray-700 dark:text-gray-200 font-semibold disabled:opacity-50"
+              className="px-3 py-1 rounded bg-blue-100 text-blue-900 font-semibold shadow disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 hover:bg-blue-200 hover:text-blue-800 dark:bg-slate-800 dark:text-blue-100 dark:hover:bg-blue-900 dark:hover:text-yellow-200"
               onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
               disabled={page === totalPages}
             >
               Siguiente
             </button>
           </div>
+      <style jsx global>{`
+        @keyframes shine {
+          0% { left: -100%; }
+          100% { left: 100%; }
+        }
+        .animate-shine {
+          position: absolute;
+          top: 0;
+          left: -100%;
+          width: 100%;
+          height: 100%;
+          animation: shine 2.5s linear infinite;
+          background: linear-gradient(120deg, transparent 0%, rgba(255,255,255,0.7) 50%, transparent 100%);
+          background-clip: text;
+          -webkit-background-clip: text;
+          color: transparent;
+          pointer-events: none;
+          z-index: 20;
+        }
+      `}</style>
         </div>
       </div>
     </div>
