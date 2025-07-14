@@ -31,7 +31,7 @@ export default function BackToHomeButton({
     "relative overflow-hidden inline-flex items-center rounded-full font-bold border transition-all duration-200 ml-0 focus:outline-none focus:ring-2 focus:ring-blue-300/40 cursor-pointer select-none active:scale-95",
     sizeStyles,
     darkMode
-      ? "bg-white/10 text-white border-blue-400/40 hover:bg-blue-800/80 hover:text-blue-100 hover:shadow-blue-400/40"
+      ? "bg-slate-900/90 text-white border-blue-400/50 hover:bg-blue-800/80 hover:text-blue-100 hover:shadow-blue-400/40"
       : "bg-white text-blue-900 border-blue-400/60 hover:bg-gradient-to-r hover:from-blue-400 hover:via-blue-600 hover:to-cyan-400 hover:text-white hover:border-blue-700 hover:shadow-blue-400/60",
     "hover:shadow-2xl shadow-md",
     "backdrop-blur-sm",
@@ -45,13 +45,13 @@ export default function BackToHomeButton({
           className="absolute left-0 top-0 w-full h-full pointer-events-none z-10 animate-shine-btn"
           style={{
             background: darkMode
-              ? 'linear-gradient(120deg, rgba(96,165,250,0.18) 0%, rgba(255,255,255,0.22) 60%, rgba(34,211,238,0.13) 100%)'
+              ? 'linear-gradient(120deg, rgba(59,130,246,0.13) 0%, rgba(30,58,138,0.18) 60%, rgba(14,165,233,0.10) 100%)'
               : 'linear-gradient(120deg, rgba(30,58,138,0.32) 0%, rgba(59,130,246,0.38) 60%, rgba(255,255,255,0.55) 100%)',
-            opacity: darkMode ? 0.85 : 0.98,
-            mixBlendMode: darkMode ? 'screen' : 'color-dodge',
+            opacity: darkMode ? 0.55 : 0.98,
+            mixBlendMode: darkMode ? 'lighten' : 'color-dodge',
             borderRadius: 'inherit',
             filter: darkMode ? 'blur(2.5px)' : 'blur(3.5px)',
-            border: darkMode ? 'none' : '1.5px solid rgba(30,58,138,0.18)',
+            border: darkMode ? '1.5px solid rgba(59,130,246,0.18)' : '1.5px solid rgba(30,58,138,0.18)',
             transition: 'background 0.3s, opacity 0.3s',
           }}
         />
