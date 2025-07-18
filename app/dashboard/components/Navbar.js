@@ -45,7 +45,7 @@ export default function Navbar({ user, toggleSidebar }) {
         {/* 🔹 Botón Hamburguesa */}
         <button
           onClick={toggleSidebar}
-          className="text-blue-800 ml-auto text-3xl p-4 hover:bg-gray-400 rounded-md transition"
+          className="text-blue-900 ml-auto text-3xl p-4 hover:bg-gray-400 rounded-md transition"
         >
           <FontAwesomeIcon size="2xl" icon={faBars} />
         </button>
@@ -77,7 +77,7 @@ export default function Navbar({ user, toggleSidebar }) {
             Se han enviado a tu cuenta nuevos archivos, puedes revisarlos
             directamente mediante esta sección.
           </p>
-          <button className="mt-6 px-6 py-3 bg-transparent text-white border border-white rounded-md hover:bg-white hover:text-black hover:shadow-lg transition-all duration-300 flex items-center">
+          <button className="mt-6 px-6 py-3 bg-transparent text-white border border-white rounded-md hover:bg-slate-200 hover:text-gray-950 hover:shadow-lg transition-all duration-300 flex items-center">
             Consultar
             <FontAwesomeIcon icon={faChevronRight} className="ml-2" />
           </button>

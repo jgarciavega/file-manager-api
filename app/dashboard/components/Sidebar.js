@@ -27,11 +27,12 @@ import {
   faChartBar,
   faThumbtack,
   faBoxes,
-  faArrowLeft,
-  faFolderOpen, // <-- Importa el icono de carpeta abierta
+  faCircleInfo,
+  faFolderOpen,
 } from "@fortawesome/free-solid-svg-icons";
 
 export default function Sidebar({ isSidebarCollapsed }) {
+  const darkMode = true; // Modo oscuro experimental para Home
   const { data: session } = useSession();
   const router = useRouter();
   const { globalSearch, setGlobalSearch } = useGlobalSearch();
@@ -138,7 +139,7 @@ export default function Sidebar({ isSidebarCollapsed }) {
       icon: faChartBar,
       sub: [
         { label: "Bitácora", href: "/dashboard/bitacora", icon: faHistory },
-        { label: "Informes", href: "/dashboard/informes", icon: faChartBar },
+        { label: "Informes", href: "/dashboard/informes", icon: faFileAlt },
       ],
     },
     {
@@ -147,7 +148,7 @@ export default function Sidebar({ isSidebarCollapsed }) {
       icon: faCog,
       sub: [
         { label: "Ajustes", href: "/dashboard/ajustes", icon: faCog },
-        { label: "Ayuda", href: "/dashboard/ayuda", icon: faArrowLeft },
+        { label: "Ayuda", href: "/dashboard/ayuda", icon: faCircleInfo },
       ],
     },
   ];
@@ -171,9 +172,9 @@ export default function Sidebar({ isSidebarCollapsed }) {
   };
 
   return (
-    <div className={styles["sidebar-container"]} style={{ borderLeft: 'none' }}>
+    <div className={styles["sidebar-container"] + (darkMode ? " border-none" : "")} style={{ borderLeft: 'none', background: darkMode ? 'linear-gradient(135deg, #0a1120 60%, #1e293b 100%)' : undefined }}>
       <aside
-        className={`${styles.sidebar} ${isSidebarCollapsed ? styles["sidebar-collapsed"] : ""} bg-blue-50 border-r border-blue-200 shadow-lg transition-all duration-300`}
+        className={`${styles.sidebar} ${isSidebarCollapsed ? styles["sidebar-collapsed"] : ""} ${darkMode ? 'bg-gradient-to-br from-[#0a1120] via-[#1e293b] to-[#23395d] border-r border-blue-900 text-blue-100 shadow-2xl rounded-2xl' : 'bg-blue-50 border-r border-blue-200 text-blue-900 shadow-lg'} transition-all duration-300`}
         role="navigation"
         aria-label="Menú principal"
       >
@@ -224,11 +225,11 @@ export default function Sidebar({ isSidebarCollapsed }) {
           <>
             <div className="sidebar-logo mt-16 mb-2 flex flex-col items-center justify-center w-full">
               <Image
-                src="/api.jpg"
-                alt="Logo institucional"
+                src="/api-dark23.png"F
+                alt="Logo institucional modo oscuro"
                 width={260}
                 height={80}
-                className="object-contain"
+                className="object-contain drop-shadow-lg"
                 priority
               />
             </div>
@@ -237,36 +238,38 @@ export default function Sidebar({ isSidebarCollapsed }) {
             {/* Buscador eliminado: ahora solo en el Navbar */}
             {/* Más separación entre buscador y menú */}
             <div style={{ marginTop: 48 }} />
-            <ul className="space-y-6 mt-4 overflow-y-auto max-h-[calc(100vh-350px)] pr-2 custom-scrollbar bg-white/90 rounded-2xl shadow-lg px-2 py-4 border border-blue-100">
+            <ul className={`space-y-6 mt-4 overflow-y-auto max-h-[calc(100vh-350px)] pr-2 custom-scrollbar rounded-2xl shadow-xl px-2 py-4 border ${darkMode ? 'bg-gradient-to-br from-[#181f2a] via-[#23395d] to-[#1e293b] border-blue-900' : 'bg-white/90 border-blue-100'}`}>
               {filteredMenus.map(menu => (
                 <li key={menu.key} className="flex flex-col">
                   <div
-                    className={`flex items-center group rounded-lg px-2 py-2 transition-all duration-300 cursor-pointer relative ${openMenus.includes(menu.key) ? "bg-blue-100/80" : "hover:bg-blue-50/80"}`}
+                    className={`flex items-center group rounded-xl px-3 py-3 transition-all duration-300 cursor-pointer relative shadow-md ${openMenus.includes(menu.key)
+                      ? (darkMode ? 'bg-blue-900/90 border border-blue-400' : 'bg-blue-100/80 border border-blue-700')
+                      : (darkMode ? 'hover:bg-blue-900/60 border border-transparent' : 'hover:bg-blue-50/80 border border-transparent')}`}
                     onClick={() => toggleMenu(menu.key)}
                     tabIndex={0}
                     aria-expanded={openMenus.includes(menu.key)}
                     role="button"
                   >
                     {/* Barra azul institucional para menú activo */}
-                    <span className={`absolute left-0 top-0 h-full w-2 rounded-l-xl transition-all duration-300 ${openMenus.includes(menu.key) ? "bg-blue-700" : "bg-transparent"}`}></span>
+                    <span className={`absolute left-0 top-0 h-full w-2 rounded-l-xl transition-all duration-300 ${openMenus.includes(menu.key) ? (darkMode ? 'bg-gradient-to-b from-blue-400 to-blue-700' : 'bg-blue-700') : 'bg-transparent'}`}></span>
                     <FontAwesomeIcon
                       icon={menu.icon}
-                      className="mr-3 text-blue-700 group-hover:text-blue-900 transition-all duration-200 text-3xl"
+                      className={darkMode ? "mr-3 text-blue-200 group-hover:text-blue-400 transition-all duration-200 text-3xl drop-shadow-lg" : "mr-3 text-blue-700 group-hover:text-blue-900 transition-all duration-200 text-3xl"}
                     />
-                    <span className="flex-grow text-xl font-bold text-blue-900 group-hover:text-blue-800 select-none" style={{ letterSpacing: '0.5px' }}>
+                    <span className={`flex-grow text-xl font-bold select-none ${darkMode ? 'text-blue-100 group-hover:text-blue-300 drop-shadow-sm' : 'text-blue-900 group-hover:text-blue-800'}`} style={{ letterSpacing: '0.5px' }}>
                       {menu.label}
                     </span>
-                    <span className="ml-2 text-2xl text-blue-400 select-none">{openMenus.includes(menu.key) ? "−" : "+"}</span>
+                    <span className={`ml-2 text-2xl select-none ${darkMode ? 'text-blue-400' : 'text-blue-400'}`}>{openMenus.includes(menu.key) ? "−" : "+"}</span>
                   </div>
                   {/* Submenú: animación suave y estilos claros */}
                   <div className={`transition-all duration-300 ease-in-out ${openMenus.includes(menu.key) ? 'max-h-96 opacity-100' : 'max-h-0 opacity-0 overflow-hidden'}`}>
                     {openMenus.includes(menu.key) && menu.sub.length > 0 && (
-                      <ul className="pl-8 mt-2 space-y-1 border-l-2 border-blue-100 bg-blue-50 rounded-lg py-2 shadow-sm">
+                      <ul className={`pl-8 mt-2 space-y-1 border-l-2 rounded-lg py-2 shadow-sm ${darkMode ? 'border-blue-900 bg-[#232b3b]' : 'border-blue-100 bg-blue-50'}`}>
                         {menu.sub.map(sub => (
-                          <li key={sub.label} className={`flex items-center font-medium text-base px-2 py-1 rounded-lg transition-all duration-200 ${window.location.pathname === sub.href ? "bg-blue-300/60 text-blue-900 font-bold" : "text-blue-700 hover:text-blue-900 hover:bg-blue-100"}`}>
+                          <li key={sub.label} className={`flex items-center font-medium text-base px-2 py-1 rounded-lg transition-all duration-200 ${window.location.pathname === sub.href ? (darkMode ? 'bg-blue-900/80 text-blue-100 font-bold' : 'bg-blue-300/60 text-blue-900 font-bold') : (darkMode ? 'text-blue-300 hover:text-blue-100 hover:bg-blue-900/60' : 'text-blue-700 hover:text-blue-900 hover:bg-blue-100')}`}>
                             <FontAwesomeIcon
                               icon={sub.icon}
-                              className="mr-2 text-blue-500 bg-white rounded-full p-1 border border-blue-200 shadow-sm text-xl"
+                              className={darkMode ? "mr-2 text-blue-400 bg-[#181f2a] rounded-full p-1 border border-blue-900 shadow-sm text-xl" : "mr-2 text-blue-500 bg-white rounded-full p-1 border border-blue-200 shadow-sm text-xl"}
                             />
                             <a href={sub.href} className="flex items-center">
                               <span className="ml-1">{sub.label}</span>
@@ -277,13 +280,13 @@ export default function Sidebar({ isSidebarCollapsed }) {
                     )}
                   </div>
                   {/* Separador visual entre grupos de menú */}
-                  <div className="w-full border-t border-blue-100 my-2"></div>
+                  <div className={darkMode ? "w-full border-t border-blue-800 my-2" : "w-full border-t border-blue-100 my-2"}></div>
                 </li>
               ))}
               {/* Cerrar sesión */}
-              <li className="w-full border-t border-blue-200 my-4"></li>
+              <li className={darkMode ? "w-full border-t border-blue-800 my-4" : "w-full border-t border-blue-200 my-4"}></li>
               <li
-                className="font-bold cursor-pointer text-gray-500 flex items-center hover:text-red-700 transition-all duration-200"
+                className={`font-bold cursor-pointer flex items-center transition-all duration-200 rounded-xl px-3 py-3 shadow-md ${darkMode ? 'text-blue-200 hover:text-red-400 bg-[#1e293b] hover:bg-red-900 border border-blue-900' : 'text-gray-500 hover:text-red-700'}`}
                 onClick={handleLogoutClick}
                 tabIndex={0}
                 role="button"
@@ -291,16 +294,16 @@ export default function Sidebar({ isSidebarCollapsed }) {
               >
                 <FontAwesomeIcon
                   icon={faSignOutAlt}
-                  className="mr-2 text-red-500"
+                  className={darkMode ? "mr-2 text-red-400 drop-shadow-lg" : "mr-2 text-red-500"}
                   size="2x"
                 />
                 Cerrar sesión
               </li>
             </ul>
             {/* Información institucional en la parte inferior */}
-            <div className="mt-12 flex flex-col items-center gap-1 select-none">
-              <span className="text-xs text-blue-900 font-semibold tracking-widest">Sistema de Gestión Documental</span>
-              <span className="text-xs text-blue-700 font-medium">LEA-BCS © 2025</span>
+            <div className={`mt-12 flex flex-col items-center gap-1 select-none ${darkMode ? 'bg-gradient-to-r from-[#181f2a] to-[#23395d] rounded-xl py-3 shadow-xl border border-blue-900' : ''}`}>
+              <span className={darkMode ? "text-xs text-blue-200 font-semibold tracking-widest drop-shadow-sm" : "text-xs text-blue-900 font-semibold tracking-widest"}>Sistema de Gestión Documental</span>
+              <span className={darkMode ? "text-xs text-blue-400 font-medium drop-shadow-sm" : "text-xs text-blue-700 font-medium"}>LEA-BCS © 2025</span>
             </div>
           </>
         )}

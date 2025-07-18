@@ -1,6 +1,6 @@
 .sidebar-container {
   position: relative;
-  min-height: 100vh;
+  min-height: 147vh;
   display: flex;
   flex-direction: column;
   margin-top: 0;
@@ -12,8 +12,8 @@
   margin-left: 1px;
   display: flex;
   width: 400px;
-  height: 100%;
-  padding: 25px;
+  height: 150%;
+  padding: 30px;
   flex-direction: column;
   background-color: #ffff;
   overflow-y: auto;
