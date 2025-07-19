@@ -69,53 +69,7 @@ export default function Home() {
       <Sidebar isSidebarCollapsed={isSidebarCollapsed} />
       <div className="flex flex-col w-full">
         <Navbar user={user} toggleSidebar={toggleSidebar} />
-        <div className="p-4">
-          <input
-            type="text"
-            name="search"
-            placeholder="Buscar documentos..."
-            value={search}
-            onChange={e => setSearch(e.target.value)}
-            onKeyUp={e => handleAutoCorrect(e, e.target.value, v => setSearch(v))}
-            spellCheck={true}
-            autoCorrect="on"
-            className="w-full p-2 rounded border-2 bg-gray-100 dark:bg-gray-700 text-gray-900 dark:text-gray-100 placeholder-gray-600 dark:placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 transition"
-          />
-        </div>
-        <div className="p-4">
-          {loading ? (
-            <p className="text-center text-gray-500">Cargando documentos...</p>
-          ) : filteredDocs.length === 0 ? (
-            <p className="text-center text-gray-500">No se encontraron documentos.</p>
-          ) : (
-            <table className="w-full border mt-4 text-sm">
-              <thead>
-                <tr className="bg-gray-100 dark:bg-gray-700">
-                  <th className="p-2 border">Nombre</th>
-                  <th className="p-2 border">Descripción</th>
-                  <th className="p-2 border">Tipo</th>
-                  <th className="p-2 border">Fecha</th>
-                  <th className="p-2 border">Descargar</th>
-                </tr>
-              </thead>
-              <tbody>
-                {filteredDocs.map(doc => (
-                  <tr key={doc.id} className="text-center">
-                    <td className="p-2 border">{doc.nombre}</td>
-                    <td className="p-2 border">{doc.descripcion || '-'}</td>
-                    <td className="p-2 border">{doc.tipos_documentos?.tipo || '-'}</td>
-                    <td className="p-2 border">{doc.fecha_subida ? new Date(doc.fecha_subida).toLocaleDateString() : '-'}</td>
-                    <td className="p-2 border">
-                      {doc.ruta && (
-                        <a href={doc.ruta} download className="text-blue-600 hover:underline">📥</a>
-                      )}
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          )}
-        </div>
+        {/* Aquí puedes agregar el contenido principal de la Home si lo necesitas, sin el buscador ni la tabla */}
       </div>
     </div>
   );

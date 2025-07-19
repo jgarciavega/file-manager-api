@@ -1,10 +1,10 @@
 /* module.css de Navbar*/
 .navbar body{
-  width: 100%;
+  width: 105%;
   height: 11%;
  margin: 10px;
  padding:10px;
- background-color: #ffffff;
+ background-color: #e0dce7;
 }
 
 /* 🔹 Mueve el logo completamente a la izquierda */
@@ -112,7 +112,7 @@
 
 
 .customBox {
-  border: 2px solid #1f30e7;
+  border: 3px solid #1f30e7;
   border-radius: 20px;
   padding: 1rem;
   background-color: rgb(37, 158, 158);

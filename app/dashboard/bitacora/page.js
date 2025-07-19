@@ -9,13 +9,75 @@ export default function BitacoraPage() {
   const [dateFilter, setDateFilter] = useState("");
   const [userFilter, setUserFilter] = useState("");
   const [typeFilter, setTypeFilter] = useState("");
+  // Estado para mostrar/ocultar el aviso legal
+  const [showLegal, setShowLegal] = useState(false);
 
   const [bitacora, setBitacora] = useState([
-    { fecha: "2025-07-12", usuario: "Jorge Vega", accion: "Descargó un documento", tipo: "Descarga", confidencial: false },
-    { fecha: "2025-07-11", usuario: "Lupita Pérez", accion: "Eliminó un archivo", tipo: "Eliminación", confidencial: true },
-    { fecha: "2025-07-10", usuario: "Julio Rubio", accion: "Validó expediente", tipo: "Validación", confidencial: false },
-    { fecha: "2025-07-09", usuario: "Jorge Vega", accion: "Subió documento", tipo: "Carga", confidencial: false },
-    { fecha: "2025-07-08", usuario: "Lupita Pérez", accion: "Editó metadatos", tipo: "Edición", confidencial: true },
+    {
+      id: 'EVT-001',
+      fecha: "2025-07-12",
+      hora: "09:15:23",
+      usuario: "Jorge Vega",
+      accion: "Descargó un documento",
+      tipo: "Descarga",
+      confidencial: false,
+      ip: "192.168.1.10",
+      estado: "Éxito",
+      documento: "Contrato_2025.pdf",
+      observaciones: "Descarga autorizada"
+    },
+    {
+      id: 'EVT-002',
+      fecha: "2025-07-11",
+      hora: "13:42:10",
+      usuario: "Lupita Pérez",
+      accion: "Eliminó un archivo",
+      tipo: "Eliminación",
+      confidencial: true,
+      ip: "192.168.1.22",
+      estado: "Éxito",
+      documento: "Acta_Confidencial.docx",
+      observaciones: "Archivo confidencial eliminado"
+    },
+    {
+      id: 'EVT-003',
+      fecha: "2025-07-10",
+      hora: "16:05:44",
+      usuario: "Julio Rubio",
+      accion: "Validó expediente",
+      tipo: "Validación",
+      confidencial: false,
+      ip: "192.168.1.33",
+      estado: "Éxito",
+      documento: "Expediente_2025.zip",
+      observaciones: "Validación completa"
+    },
+    {
+      id: 'EVT-004',
+      fecha: "2025-07-09",
+      hora: "11:22:01",
+      usuario: "Jorge Vega",
+      accion: "Subió documento",
+      tipo: "Carga",
+      confidencial: false,
+      ip: "192.168.1.10",
+      estado: "Éxito",
+      documento: "Factura_1234.pdf",
+      observaciones: "Carga exitosa"
+    },
+    {
+      id: 'EVT-005',
+      fecha: "2025-07-08",
+      hora: "08:55:12",
+      usuario: "Lupita Pérez",
+      accion: "Editó metadatos",
+      tipo: "Edición",
+      confidencial: true,
+      ip: "192.168.1.22",
+      estado: "Error",
+      documento: "Acta_Confidencial.docx",
+      observaciones: "Error de permisos"
+    },
   ]);
 
   const filtered = bitacora.filter(ev =>
@@ -99,7 +161,7 @@ export default function BitacoraPage() {
       </div>
 
       {/* Contenedor principal */}
-      <div className={`max-w-5xl mx-auto mt-10 p-6 rounded-xl shadow-lg border border-blue-100 dark:border-slate-800 ${darkMode ? 'bg-slate-900' : 'bg-white/80'}`}> 
+      <div className={`max-w-full mx-auto mt-10 p-10 rounded-2xl shadow-2xl border border-blue-100 dark:border-slate-800 ${darkMode ? 'bg-slate-900' : 'bg-white/80'} min-h-[700px]`}> 
 
         {/* Filtros */}
         <div className="flex flex-wrap gap-4 mb-6 items-center justify-between">
@@ -123,33 +185,41 @@ export default function BitacoraPage() {
       
 
         {/* Tabla */}
-        <div className="overflow-x-auto rounded-lg">
-          <table className="w-full min-w-[700px] text-sm border-separate border-spacing-0">
+        <div className="overflow-x-auto rounded-2xl">
+          <table className="w-full min-w-[2000px] text-lg border-separate border-spacing-0">
             <thead className={darkMode ? "bg-gradient-to-r from-blue-950 via-slate-900 to-blue-900 text-blue-100" : "bg-gradient-to-r from-blue-100 via-white to-blue-100 text-blue-900"}>
               <tr>
-                <th className="px-4 py-3 border-b border-blue-800/60 dark:border-blue-900/80 font-semibold text-xs uppercase tracking-wider">Fecha</th>
-                <th className="px-4 py-3 border-b border-blue-800/60 dark:border-blue-900/80 font-semibold text-xs uppercase tracking-wider">Usuario</th>
-                <th className="px-4 py-3 border-b border-blue-800/60 dark:border-blue-900/80 font-semibold text-xs uppercase tracking-wider">Acción</th>
-                <th className="px-4 py-3 border-b border-blue-800/60 dark:border-blue-900/80 font-semibold text-xs uppercase tracking-wider">Tipo</th>
-                <th className="px-4 py-3 border-b border-blue-800/60 dark:border-blue-900/80 font-semibold text-xs uppercase tracking-wider">Confidencial</th>
+                <th className="px-8 py-6 border-b border-blue-800/60 dark:border-blue-900/80 font-semibold text-base uppercase tracking-wider">ID</th>
+                <th className="px-8 py-6 border-b border-blue-800/60 dark:border-blue-900/80 font-semibold text-base uppercase tracking-wider">Fecha</th>
+                <th className="px-8 py-6 border-b border-blue-800/60 dark:border-blue-900/80 font-semibold text-base uppercase tracking-wider">Hora</th>
+                <th className="px-8 py-6 border-b border-blue-800/60 dark:border-blue-900/80 font-semibold text-base uppercase tracking-wider">Usuario</th>
+                <th className="px-8 py-6 border-b border-blue-800/60 dark:border-blue-900/80 font-semibold text-base uppercase tracking-wider">Acción</th>
+                <th className="px-8 py-6 border-b border-blue-800/60 dark:border-blue-900/80 font-semibold text-base uppercase tracking-wider">Tipo</th>
+                <th className="px-8 py-6 border-b border-blue-800/60 dark:border-blue-900/80 font-semibold text-base uppercase tracking-wider">Confidencial</th>
+                <th className="px-8 py-6 border-b border-blue-800/60 dark:border-blue-900/80 font-semibold text-base uppercase tracking-wider">IP</th>
+                <th className="px-8 py-6 border-b border-blue-800/60 dark:border-blue-900/80 font-semibold text-base uppercase tracking-wider">Estado</th>
+                <th className="px-8 py-6 border-b border-blue-800/60 dark:border-blue-900/80 font-semibold text-base uppercase tracking-wider">Documento</th>
+                <th className="px-8 py-6 border-b border-blue-800/60 dark:border-blue-900/80 font-semibold text-base uppercase tracking-wider">Observaciones</th>
               </tr>
             </thead>
             <tbody>
               {filtered.length > 0 ? (
                 filtered.map((ev, idx) => (
                   <tr
-                    key={idx}
+                    key={ev.id}
                     className={`transition-all duration-200
                       ${darkMode
                         ? `${idx % 2 === 0 ? 'bg-slate-900' : 'bg-blue-900'} hover:bg-blue-800`
                         : `${idx % 2 === 0 ? 'bg-white' : 'bg-blue-50/60'} hover:bg-blue-100/80`}
                       ${ev.confidencial ? ' font-bold text-red-600 dark:text-red-300' : ''}`}
                   >
-                    <td className="px-4 py-3 border-b border-blue-900/30 dark:border-blue-900/60">{ev.fecha}</td>
-                    <td className="px-4 py-3 border-b border-blue-900/30 dark:border-blue-900/60">{ev.usuario}</td>
-                    <td className="px-4 py-3 border-b border-blue-900/30 dark:border-blue-900/60">{ev.accion}</td>
-                    <td className="px-4 py-3 border-b border-blue-900/30 dark:border-blue-900/60">{ev.tipo}</td>
-                    <td className="px-4 py-3 border-b border-blue-900/30 dark:border-blue-900/60">
+                    <td className="px-8 py-6 border-b border-blue-900/30 dark:border-blue-900/60">{ev.id}</td>
+                    <td className="px-8 py-6 border-b border-blue-900/30 dark:border-blue-900/60">{ev.fecha}</td>
+                    <td className="px-8 py-6 border-b border-blue-900/30 dark:border-blue-900/60">{ev.hora}</td>
+                    <td className="px-8 py-6 border-b border-blue-900/30 dark:border-blue-900/60">{ev.usuario}</td>
+                    <td className="px-8 py-6 border-b border-blue-900/30 dark:border-blue-900/60">{ev.accion}</td>
+                    <td className="px-8 py-6 border-b border-blue-900/30 dark:border-blue-900/60">{ev.tipo}</td>
+                    <td className="px-8 py-6 border-b border-blue-900/30 dark:border-blue-900/60">
                       {ev.confidencial ? (
                         <span title="Acción sobre documento confidencial" className={`px-2 py-1 rounded-full font-semibold shadow-sm ${darkMode ? 'bg-red-900/80 text-red-200 border border-red-700/60' : 'bg-red-100 text-red-700'}`}>
                           Sí
@@ -160,11 +230,18 @@ export default function BitacoraPage() {
                         </span>
                       )}
                     </td>
+                    <td className="px-8 py-6 border-b border-blue-900/30 dark:border-blue-900/60">{ev.ip}</td>
+                    <td className="px-8 py-6 border-b border-blue-900/30 dark:border-blue-900/60">
+                      <span className={`px-2 py-1 rounded-full font-semibold shadow-sm 
+                        ${ev.estado === 'Éxito' ? (darkMode ? 'bg-green-900/80 text-green-200 border border-green-700/60' : 'bg-green-100 text-green-700') : 'bg-red-100 text-red-700 dark:bg-red-900/80 dark:text-red-200 border border-red-700/60'}`}>{ev.estado}</span>
+                    </td>
+                    <td className="px-8 py-6 border-b border-blue-900/30 dark:border-blue-900/60 truncate max-w-[320px]" title={ev.documento}>{ev.documento}</td>
+                    <td className="px-8 py-6 border-b border-blue-900/30 dark:border-blue-900/60 truncate max-w-[400px]" title={ev.observaciones}>{ev.observaciones}</td>
                   </tr>
                 ))
               ) : (
                 <tr>
-                  <td colSpan="5" className="text-center py-6 text-gray-400 dark:text-gray-500 font-semibold">
+                  <td colSpan="11" className="text-center py-6 text-gray-400 dark:text-gray-500 font-semibold">
                     No se encontraron resultados.
                   </td>
                 </tr>
@@ -176,26 +253,33 @@ export default function BitacoraPage() {
 
 
 
-      <footer className="w-full flex justify-center mt-10 mb-4">
-        <div
-          className={`max-w-3xl w-full mx-auto px-6 py-5 rounded-xl shadow border transition-colors duration-300 text-center flex flex-col items-center gap-2
-            ${darkMode
-              ? 'bg-slate-800/90 text-blue-100 border-blue-900/60'
-              : 'bg-blue-50 text-blue-900 border-blue-200'}
-          `}
-        >
-          <div className="flex items-center gap-2 mb-1">
-            <svg width="22" height="22" fill="none" viewBox="0 0 24 24" className="inline-block text-blue-700 dark:text-blue-300"><path fill="currentColor" d="M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20Zm0 18.2A8.2 8.2 0 1 1 12 3.8a8.2 8.2 0 0 1 0 16.4Zm0-12.2a1 1 0 0 1 1 1v3.5a1 1 0 0 1-2 0V9a1 1 0 0 1 1-1Zm0 7.2a1.2 1.2 0 1 1 0-2.4 1.2 1.2 0 0 1 0 2.4Z"/></svg>
-            <span className="font-extrabold text-base tracking-wide uppercase text-blue-700 dark:text-blue-200">Aviso de Bitácora y Protección de Datos</span>
+      {/* Aviso legal discreto como banner colapsable */}
+      <div className="fixed bottom-0 left-0 w-full flex justify-center z-50 pointer-events-none">
+        <div className={`pointer-events-auto transition-all duration-300 max-w-2xl w-full mx-auto mb-4 px-4`}>
+          <div className={`flex items-center justify-between rounded-xl shadow-lg border border-blue-200 dark:border-blue-800 bg-white/90 dark:bg-slate-900/90 px-4 py-2`}>  
+            <div className="flex items-center gap-2">
+              <svg width="22" height="22" fill="none" viewBox="0 0 24 24" className="inline-block text-red-600 dark:text-red-400"><path fill="currentColor" d="M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20Zm0 18.2A8.2 8.2 0 1 1 12 3.8a8.2 8.2 0 0 1 0 16.4Zm0-12.2a1 1 0 0 1 1 1v3.5a1 1 0 0 1-2 0V9a1 1 0 0 1 1-1Zm0 7.2a1.2 1.2 0 1 1 0-2.4 1.2 1.2 0 0 1 0 2.4Z"/></svg>
+              <span className="font-semibold text-xs text-blue-800 dark:text-blue-200 tracking-wide">Aviso legal de Bitácora</span>
+            </div>
+            <button
+              onClick={() => setShowLegal(prev => !prev)}
+              className="ml-2 px-3 py-1 rounded-lg text-xs font-bold bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200 hover:bg-blue-200 dark:hover:bg-blue-800 transition-all"
+              aria-expanded={showLegal ? 'true' : 'false'}
+              aria-controls="bitacora-legal-banner"
+            >
+              {showLegal ? 'Ocultar' : 'Aviso legal'}
+            </button>
           </div>
-          <p className="text-sm leading-relaxed font-medium max-w-2xl mx-auto">
-            Esta bitácora registra y almacena todas las acciones realizadas sobre los documentos conforme a la <b className="font-semibold text-blue-800 dark:text-blue-200">Ley Estatal de Archivos de Baja California Sur (LES-BCS)</b> y la <b className="font-semibold text-blue-800 dark:text-blue-200">Ley General de Archivos</b>.<br />
-            La información aquí contenida es <span className="font-bold text-red-700 dark:text-red-300">confidencial</span> y su acceso está restringido a personal autorizado.<br />
-            Toda acción queda registrada con fecha, usuario y tipo de operación para fines de <span className="font-semibold text-blue-700 dark:text-blue-200">auditoría, transparencia y rendición de cuentas</span>.<br />
-            El uso indebido de esta información puede ser sancionado conforme a la legislación aplicable.
-          </p>
+          {showLegal && (
+            <div id="bitacora-legal-banner" className={`mt-2 rounded-xl shadow border border-blue-100 dark:border-blue-800 bg-white/95 dark:bg-slate-900/95 px-6 py-4 text-xs text-gray-700 dark:text-gray-200 leading-relaxed font-medium`}> 
+              Esta bitácora registra y almacena todas las acciones realizadas sobre los documentos conforme a la <b className="font-semibold text-blue-800 dark:text-blue-200">Ley Estatal de Archivos de Baja California Sur (LES-BCS)</b> y la <b className="font-semibold text-blue-800 dark:text-blue-200">Ley General de Archivos</b>.<br />
+              La información aquí contenida es <span className="font-bold text-red-700 dark:text-red-300">confidencial</span> y su acceso está restringido a personal autorizado.<br />
+              Toda acción queda registrada con fecha, usuario y tipo de operación para fines de <span className="font-semibold text-blue-700 dark:text-blue-200">auditoría, transparencia y rendición de cuentas</span>.<br />
+              El uso indebido de esta información puede ser sancionado conforme a la legislación aplicable.
+            </div>
+          )}
         </div>
-      </footer>
+      </div>
 
 
                   </div>
