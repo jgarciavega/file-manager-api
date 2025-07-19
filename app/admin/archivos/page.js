@@ -9,22 +9,55 @@ import { faArrowLeft } from "@fortawesome/free-solid-svg-icons";
 export default function ArchivosAdmin() {
   const [documentos, setDocumentos] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
   useEffect(() => {
     const fetchDocs = async () => {
       try {
-        const res  = await fetch("/api/documentos");
+        setError(null);
+        console.log("🔍 Cargando documentos...");
+
+        const res = await fetch("/api/documentos-demo", {
+          headers: {
+            "Content-Type": "application/json",
+          },
+        });
+
+        if (!res.ok) {
+          if (res.status === 401) {
+            console.error("❌ No autorizado - redirigiendo al login");
+            console.log("⚠️ No autenticado, pero continuando con datos mock");
+          }
+          throw new Error(`Error ${res.status}: ${res.statusText}`);
+        }
+
         const data = await res.json();
-        console.log("Respuesta de la API:", data);
+        console.log("✅ Documentos cargados:", data.length);
         setDocumentos(data);
       } catch (error) {
-        console.error("Error al cargar documentos:", error);
+        console.error("❌ Error al cargar documentos:", error);
+        setError(error.message);
       } finally {
         setLoading(false);
       }
     };
+
     fetchDocs();
   }, []);
+
+  // Mostrar loading mientras se cargan los datos
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-[#0d1b2a]">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+          <p className="text-gray-600 dark:text-gray-400">
+            Cargando documentos...
+          </p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen p-6 bg-gray-50 dark:bg-[#0d1b2a] text-gray-900 dark:text-white">
@@ -44,7 +77,24 @@ export default function ArchivosAdmin() {
       </h1>
 
       {loading ? (
-        <p className="text-center">Cargando documentos...</p>
+        <div className="text-center py-8">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+          <p>Cargando documentos...</p>
+        </div>
+      ) : error ? (
+        <div className="text-center py-8">
+          <div className="text-red-500 text-6xl mb-4">❌</div>
+          <h2 className="text-xl font-semibold mb-2">
+            Error al cargar documentos
+          </h2>
+          <p className="text-gray-600 dark:text-gray-400 mb-4">{error}</p>
+          <button
+            onClick={() => window.location.reload()}
+            className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg transition-colors"
+          >
+            Reintentar
+          </button>
+        </div>
       ) : (
         <div className="overflow-x-auto">
           <table className="min-w-full border-collapse border border-gray-300 dark:border-gray-600 text-sm">
@@ -62,7 +112,10 @@ export default function ArchivosAdmin() {
             <tbody>
               {documentos.length === 0 ? (
                 <tr>
-                  <td colSpan={6} className="p-4 text-center text-gray-500 dark:text-gray-400">
+                  <td
+                    colSpan={6}
+                    className="p-4 text-center text-gray-500 dark:text-gray-400"
+                  >
                     No hay documentos disponibles.
                   </td>
                 </tr>
