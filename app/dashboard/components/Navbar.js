@@ -30,7 +30,7 @@ export default function Navbar({ user, toggleSidebar }) {
       <nav className="relative flex items-center justify-between mr-auto px-4 py-12 bg-white shadow-md w-full h-64 gap-6">
         <div className="flex flex-col items-start ml-8">
           <h1 className="!text-2xl font-extrabold text-red-800 mt-12 tracking-wide">
-            <p>GESTOR DE ARCHIVOS</p>
+            <p>Sistema de Gestión Documental</p>
           </h1>
           <h1 className="!text-3xl font-extrabold text-blue-950 mt-2 tracking-wide">
             <p>Puerto de Pichilingue</p>
@@ -42,13 +42,17 @@ export default function Navbar({ user, toggleSidebar }) {
           <NavbarGlobalSearch />
         </div>
 
-        {/* 🔹 Botón Hamburguesa */}
-        <button
-          onClick={toggleSidebar}
-          className="text-blue-900 ml-auto text-3xl p-4 hover:bg-gray-400 rounded-md transition"
-        >
-          <FontAwesomeIcon size="2xl" icon={faBars} />
-        </button>
+        {/* 🔹 Logo API en lugar del botón hamburguesa */}
+        <div className="ml-auto flex items-center">
+          <Image
+            src="/api_logo.png"
+            alt="Logo API"
+            width={270}
+            height={64}
+            className="object-contain rounded-lg shadow"
+            priority
+          />
+        </div>
       </nav>
 
       {/* 🔹 Sección de Bienvenida SOBRE la imagen y tarjetas integradas */}
