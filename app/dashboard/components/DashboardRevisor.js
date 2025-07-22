@@ -138,31 +138,43 @@ const DashboardRevisor = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-indigo-50 via-purple-50 to-pink-50 dark:from-gray-900 dark:via-indigo-900/20 dark:to-purple-900/20 p-6">
+    <div className="min-h-screen bg-gradient-to-br from-orange-50 via-yellow-50 to-rose-100 dark:from-yellow-900 dark:via-orange-900/20 dark:to-rose-900/20 p-6">
       <div className="max-w-7xl mx-auto">
-        {/* Header */}
+        {/* Header institucional premium con avatar y BackToHomeButton */}
         <div className="mb-8">
           <div className="flex items-center justify-between mb-4">
-            <div>
-              <h1 className="text-4xl font-bold text-gray-800 dark:text-white">
-                Dashboard de Revisión
-              </h1>
-              <p className="text-lg text-gray-600 dark:text-gray-300 mt-2">
-                Hola {session?.user?.name || "Revisor"}, aquí tienes tu centro
-                de control
-              </p>
+            <div className="flex items-center gap-6">
+              <img src="/api_logo.png" alt="Logo" className="w-20 h-20 object-contain rounded-xl shadow-lg border-2 border-orange-200 dark:border-yellow-700" />
+              <div className="flex flex-col justify-center">
+                <div className="flex items-center gap-4 mb-2">
+                  {/* Avatar junto al icono de luna/sol */}
+                  <img src="/blanca.jpeg" alt="Avatar institucional" className="w-14 h-14 rounded-full border-4 border-orange-300 dark:border-yellow-400 shadow-lg object-cover" />
+                  {/* Icono de modo oscuro/claro */}
+                  <button
+                    className="p-2 rounded-full bg-gradient-to-r from-yellow-200 to-orange-300 text-orange-900 dark:bg-slate-800 dark:text-yellow-200 shadow"
+                    aria-label="Cambiar modo oscuro/claro"
+                    onClick={() => setDarkMode((prev) => !prev)}
+                  >
+                    <FontAwesomeIcon icon={darkMode ? faSun : faMoon} className="text-xl" />
+                  </button>
+                </div>
+                <h1 className="text-5xl font-extrabold text-orange-700 dark:text-yellow-200 tracking-tight drop-shadow-2xl mb-1" style={{textShadow:'0 2px 12px #fbbf24,0 1px 0 #fff'}}>Dashboard de Revisión</h1>
+                <p className="text-lg text-orange-900 dark:text-yellow-100 mt-2 font-semibold">Hola {session?.user?.name || "Revisor"}, aquí tienes tu centro de control</p>
+              </div>
             </div>
-            <div className="flex gap-3">
-              <button className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors">
+            <div className="flex items-center gap-6">
+              <BackToHomeButton label="Volver al Inicio" size="lg" color="blue" darkMode={darkMode} />
+              <button className="px-4 py-2 bg-gradient-to-r from-orange-400 to-yellow-400 text-white rounded-xl font-bold shadow hover:from-orange-500 hover:to-yellow-500 transition-all">
                 <FontAwesomeIcon icon={faDownload} className="mr-2" />
                 Exportar Reporte
               </button>
-              <button className="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors">
+              <button className="px-4 py-2 bg-gradient-to-r from-yellow-400 to-orange-400 text-white rounded-xl font-bold shadow hover:from-yellow-500 hover:to-orange-500 transition-all">
                 <FontAwesomeIcon icon={faFilter} className="mr-2" />
                 Filtros Avanzados
               </button>
             </div>
           </div>
+
         </div>
 
         {/* Alertas de Sistema */}
@@ -173,11 +185,11 @@ const DashboardRevisor = () => {
                 key={idx}
                 className={`p-4 rounded-xl border-l-4 ${
                   alerta.tipo === "warning"
-                    ? "bg-yellow-50 border-yellow-400 text-yellow-800"
+                    ? "bg-yellow-100 border-yellow-500 text-yellow-900"
                     : alerta.tipo === "info"
-                    ? "bg-blue-50 border-blue-400 text-blue-800"
-                    : "bg-red-50 border-red-400 text-red-800"
-                }`}
+                    ? "bg-orange-100 border-orange-400 text-orange-900"
+                    : "bg-red-100 border-red-500 text-red-900"
+                } shadow-md`}
               >
                 <div className="flex items-center gap-3">
                   <FontAwesomeIcon
@@ -189,7 +201,7 @@ const DashboardRevisor = () => {
                         : faTimes
                     }
                   />
-                  <span className="font-medium">{alerta.mensaje}</span>
+                  <span className="font-semibold">{alerta.mensaje}</span>
                 </div>
               </div>
             ))}
@@ -199,7 +211,7 @@ const DashboardRevisor = () => {
         {/* Métricas Principales */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
           {/* Documentos Pendientes */}
-          <div className="bg-white dark:bg-gray-800 rounded-2xl p-6 shadow-lg border border-gray-200 dark:border-gray-700">
+          <div className="bg-gradient-to-br from-orange-100 via-yellow-50 to-rose-100 dark:from-yellow-900 dark:via-orange-900/20 dark:to-rose-900/20 rounded-2xl p-6 shadow-lg border border-orange-200 dark:border-yellow-700">
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm font-medium text-gray-600 dark:text-gray-400">
@@ -220,7 +232,7 @@ const DashboardRevisor = () => {
           </div>
 
           {/* Revisados Hoy */}
-          <div className="bg-white dark:bg-gray-800 rounded-2xl p-6 shadow-lg border border-gray-200 dark:border-gray-700">
+          <div className="bg-gradient-to-br from-orange-100 via-yellow-50 to-rose-100 dark:from-yellow-900 dark:via-orange-900/20 dark:to-rose-900/20 rounded-2xl p-6 shadow-lg border border-orange-200 dark:border-yellow-700">
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm font-medium text-gray-600 dark:text-gray-400">
@@ -241,7 +253,7 @@ const DashboardRevisor = () => {
           </div>
 
           {/* Tasa de Aprobación */}
-          <div className="bg-white dark:bg-gray-800 rounded-2xl p-6 shadow-lg border border-gray-200 dark:border-gray-700">
+          <div className="bg-gradient-to-br from-orange-100 via-yellow-50 to-rose-100 dark:from-yellow-900 dark:via-orange-900/20 dark:to-rose-900/20 rounded-2xl p-6 shadow-lg border border-orange-200 dark:border-yellow-700">
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm font-medium text-gray-600 dark:text-gray-400">
@@ -262,7 +274,7 @@ const DashboardRevisor = () => {
           </div>
 
           {/* Tiempo Promedio */}
-          <div className="bg-white dark:bg-gray-800 rounded-2xl p-6 shadow-lg border border-gray-200 dark:border-gray-700">
+          <div className="bg-gradient-to-br from-orange-100 via-yellow-50 to-rose-100 dark:from-yellow-900 dark:via-orange-900/20 dark:to-rose-900/20 rounded-2xl p-6 shadow-lg border border-orange-200 dark:border-yellow-700">
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm font-medium text-gray-600 dark:text-gray-400">
@@ -287,7 +299,7 @@ const DashboardRevisor = () => {
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           {/* Lista de Documentos Pendientes */}
           <div className="lg:col-span-2">
-            <div className="bg-white dark:bg-gray-800 rounded-2xl p-6 shadow-lg border border-gray-200 dark:border-gray-700">
+            <div className="bg-gradient-to-br from-orange-50 via-yellow-50 to-rose-100 dark:from-yellow-900 dark:via-orange-900/20 dark:to-rose-900/20 rounded-2xl p-6 shadow-lg border border-orange-200 dark:border-yellow-700">
               <div className="flex items-center justify-between mb-6">
                 <h3 className="text-xl font-bold text-gray-800 dark:text-white">
                   Documentos Pendientes de Revisión
@@ -312,23 +324,23 @@ const DashboardRevisor = () => {
                 {documentosPendientes.map((doc) => (
                   <div
                     key={doc.id}
-                    className="border border-gray-200 dark:border-gray-600 rounded-xl p-4 hover:shadow-md transition-shadow"
+                    className="border border-orange-200 dark:border-yellow-700 rounded-xl p-4 hover:shadow-lg transition-shadow bg-white/80 dark:bg-yellow-900/30"
                   >
                     <div className="flex items-start justify-between">
                       <div className="flex-1">
                         <div className="flex items-center gap-3 mb-2">
-                          <h4 className="font-semibold text-gray-800 dark:text-white text-sm">
+                          <h4 className="font-semibold text-orange-900 dark:text-yellow-100 text-base">
                             {doc.titulo}
                           </h4>
                           <span
-                            className={`px-2 py-1 rounded-full text-xs font-medium ${obtenerPrioridadColor(
+                            className={`px-2 py-1 rounded-full text-xs font-bold shadow ${obtenerPrioridadColor(
                               doc.prioridad
                             )}`}
                           >
                             {doc.prioridad}
                           </span>
                         </div>
-                        <div className="flex items-center gap-4 text-sm text-gray-600 dark:text-gray-400">
+                        <div className="flex items-center gap-4 text-sm text-orange-700 dark:text-yellow-200">
                           <span>
                             <FontAwesomeIcon icon={faUsers} className="mr-1" />
                             {doc.capturista}
@@ -353,7 +365,7 @@ const DashboardRevisor = () => {
                       <div className="flex gap-2 ml-4">
                         <Link
                           href={`/dashboard/verification?id=${doc.id}`}
-                          className="px-3 py-1 bg-blue-600 text-white text-sm rounded-lg hover:bg-blue-700 transition-colors"
+                          className="px-3 py-1 bg-gradient-to-r from-orange-400 to-yellow-400 text-white text-sm rounded-lg font-bold shadow hover:from-orange-500 hover:to-yellow-500 transition-all"
                         >
                           <FontAwesomeIcon icon={faEye} className="mr-1" />
                           Revisar
@@ -368,9 +380,9 @@ const DashboardRevisor = () => {
                 <div className="text-center py-8">
                   <FontAwesomeIcon
                     icon={faCheck}
-                    className="text-4xl text-green-500 mb-4"
+                    className="text-4xl text-orange-400 mb-4"
                   />
-                  <p className="text-gray-600 dark:text-gray-400">
+                  <p className="text-orange-700 dark:text-yellow-200 font-bold">
                     ¡Excelente! No hay documentos pendientes por revisar.
                   </p>
                 </div>
@@ -381,7 +393,7 @@ const DashboardRevisor = () => {
           {/* Panel Lateral: Estadísticas y Acciones */}
           <div className="space-y-6">
             {/* Progreso Semanal */}
-            <div className="bg-white dark:bg-gray-800 rounded-2xl p-6 shadow-lg border border-gray-200 dark:border-gray-700">
+            <div className="bg-gradient-to-br from-orange-100 via-yellow-50 to-rose-100 dark:from-yellow-900 dark:via-orange-900/20 dark:to-rose-900/20 rounded-2xl p-6 shadow-lg border border-orange-200 dark:border-yellow-700">
               <h3 className="text-lg font-bold text-gray-800 dark:text-white mb-4">
                 Progreso Semanal
               </h3>
@@ -409,7 +421,7 @@ const DashboardRevisor = () => {
             </div>
 
             {/* Acciones Rápidas */}
-            <div className="bg-white dark:bg-gray-800 rounded-2xl p-6 shadow-lg border border-gray-200 dark:border-gray-700">
+            <div className="bg-gradient-to-br from-orange-100 via-yellow-50 to-rose-100 dark:from-yellow-900 dark:via-orange-900/20 dark:to-rose-900/20 rounded-2xl p-6 shadow-lg border border-orange-200 dark:border-yellow-700">
               <h3 className="text-lg font-bold text-gray-800 dark:text-white mb-4">
                 Acciones Rápidas
               </h3>
