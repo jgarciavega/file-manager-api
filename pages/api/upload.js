@@ -1,8 +1,7 @@
-import { IncomingForm } from "formidable";
-import fs from "fs";
-import path from "path";
-import { PrismaClient } from "@prisma/client";
-import { requireAuth } from "../../lib/auth-utils";
+import { IncomingForm } from 'formidable';
+import fs from 'fs';
+import path from 'path';
+import { PrismaClient } from '@prisma/client';
 
 // Importante: deshabilitar el bodyParser de Next.js para multipart/form-data
 export const config = {
@@ -14,23 +13,8 @@ export const config = {
 const prisma = new PrismaClient();
 
 export default async function handler(req, res) {
-  // Verificar autenticación antes de procesar cualquier archivo
-  const authResult = await requireAuth(req, res);
-  if (authResult.error) {
-    return res.status(authResult.status).json({ error: authResult.error });
-  }
-
-  const { user: currentUser } = authResult;
-
-  // Verificar permisos de subida
-  if (!["admin", "capturista"].includes(currentUser.role)) {
-    return res
-      .status(403)
-      .json({ error: "No tienes permisos para subir documentos" });
-  }
-
-  if (req.method !== "POST") {
-    res.setHeader("Allow", ["POST"]);
+  if (req.method !== 'POST') {
+    res.setHeader('Allow', ['POST']);
     return res.status(405).end(`Método ${req.method} no permitido`);
   }
 
@@ -39,16 +23,13 @@ export default async function handler(req, res) {
   console.log("Método:", req.method);
 
   // Crear directorio si no existe
-  const uploadDir = path.join(process.cwd(), "public", "uploads");
+  const uploadDir = path.join(process.cwd(), 'public', 'uploads');
   await fs.promises.mkdir(uploadDir, { recursive: true });
 
   // Log de permisos del directorio
   try {
     const dirStats = await fs.promises.stat(uploadDir);
-    console.log(
-      "Permisos del directorio de subida:",
-      dirStats.mode.toString(8)
-    );
+    console.log("Permisos del directorio de subida:", dirStats.mode.toString(8));
   } catch (permErr) {
     console.error("No se pudo obtener permisos del directorio:", permErr);
   }
@@ -64,13 +45,8 @@ export default async function handler(req, res) {
   // Procesar el formulario
   form.parse(req, async (err, fields, files) => {
     if (err) {
-      console.error("Error parseando formulario:", err);
-      return res
-        .status(500)
-        .json({
-          error: "Error al procesar el formulario",
-          details: err.message,
-        });
+      console.error('Error parseando formulario:', err);
+      return res.status(500).json({ error: 'Error al procesar el formulario', details: err.message });
     }
 
     // LOG para depuración
@@ -80,9 +56,9 @@ export default async function handler(req, res) {
     // Función helper para extraer valores (formidable puede devolver arrays)
     const getValue = (field) => {
       if (Array.isArray(field)) {
-        return field[0] || "";
+        return field[0] || '';
       }
-      return field || "";
+      return field || '';
     };
 
     // Obtener valores del formulario
@@ -91,16 +67,13 @@ export default async function handler(req, res) {
     const classification = getValue(fields.classification);
     const jefatura = getValue(fields.jefatura);
     const review = getValue(fields.review);
-    // Usar el usuario autenticado en lugar del campo del formulario
-    const usuarioId = currentUser.id;
+    const usuarioId = Number(getValue(fields.usuarioId)) || 1;
 
     // Verificar si el archivo se recibió
     let uploadedFile = Array.isArray(files.file) ? files.file[0] : files.file;
     if (!uploadedFile) {
       console.error("No se recibió archivo");
-      return res
-        .status(400)
-        .json({ error: "No se recibió ningún archivo", debug: { files } });
+      return res.status(400).json({ error: 'No se recibió ningún archivo', debug: { files } });
     }
 
     // Log explícito del tipo MIME recibido
@@ -108,23 +81,23 @@ export default async function handler(req, res) {
 
     // Validar tipo de archivo permitido
     const allowedMimeTypes = [
-      "application/pdf",
-      "application/vnd.openxmlformats-officedocument.wordprocessingml.document", // .docx
-      "application/msword", // .doc
-      "image/jpeg",
-      "image/png",
-      "image/gif",
-      "image/webp",
-      "application/vnd.ms-excel", // .xls
-      "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", // .xlsx
-      "application/vnd.openxmlformats-officedocument.presentationml.presentation", // .pptx
+      'application/pdf',
+      'application/vnd.openxmlformats-officedocument.wordprocessingml.document', // .docx
+      'application/msword', // .doc
+      'image/jpeg',
+      'image/png',
+      'image/gif',
+      'image/webp',
+      'application/vnd.ms-excel', // .xls
+      'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', // .xlsx
+      'application/vnd.openxmlformats-officedocument.presentationml.presentation', // .pptx
     ];
     if (!allowedMimeTypes.includes(uploadedFile.mimetype)) {
       console.error("Tipo de archivo no permitido:", uploadedFile.mimetype);
       return res.status(400).json({
-        error: "Tipo de archivo no permitido",
+        error: 'Tipo de archivo no permitido',
         allowed: allowedMimeTypes,
-        received: uploadedFile.mimetype,
+        received: uploadedFile.mimetype
       });
     }
 
@@ -132,8 +105,7 @@ export default async function handler(req, res) {
     console.log("uploadedFile:", uploadedFile);
 
     // Obtener información del archivo
-    const finalFilename =
-      uploadedFile.newFilename || path.basename(uploadedFile.filepath);
+    const finalFilename = uploadedFile.newFilename || path.basename(uploadedFile.filepath);
     const savedPath = `/uploads/${finalFilename}`;
     const absolutePath = path.join(uploadDir, finalFilename);
 
@@ -145,15 +117,11 @@ export default async function handler(req, res) {
       console.log("Permisos del archivo:", fileStats.mode.toString(8));
       console.log("Tamaño del archivo:", fileStats.size);
     } catch (fileErr) {
-      console.error(
-        "El archivo no existe físicamente tras la subida:",
-        absolutePath,
-        fileErr
-      );
+      console.error("El archivo no existe físicamente tras la subida:", absolutePath, fileErr);
       return res.status(500).json({
-        error: "El archivo no se guardó correctamente en el servidor",
+        error: 'El archivo no se guardó correctamente en el servidor',
         details: fileErr.message,
-        debug: { absolutePath, uploadedFile },
+        debug: { absolutePath, uploadedFile }
       });
     }
 
@@ -163,7 +131,7 @@ export default async function handler(req, res) {
         data: {
           nombre: nombre || uploadedFile.originalFilename || finalFilename,
           descripcion: review || null,
-          mime: uploadedFile.mimetype || "application/octet-stream",
+          mime: uploadedFile.mimetype || 'application/octet-stream',
           ruta: savedPath,
           tipos_documentos_id: 1, // Asegúrate de que este ID existe en tu tabla tipos_documentos
           usuarios_id: usuarioId,
@@ -171,20 +139,18 @@ export default async function handler(req, res) {
         },
       });
 
-      console.log(
-        `✅ Documento ${documento.id} subido exitosamente por ${currentUser.email}`
-      );
+      console.log("Documento guardado exitosamente:", documento);
 
       // Responder al frontend
       return res.status(200).json({
         documento,
-        message: "Documento subido exitosamente",
+        message: 'Documento subido exitosamente'
       });
     } catch (dbErr) {
-      console.error("Error guardando en BD:", dbErr);
+      console.error('Error guardando en BD:', dbErr);
       return res.status(500).json({
-        error: "No se pudo guardar en la base de datos",
-        details: dbErr.message,
+        error: 'No se pudo guardar en la base de datos',
+        details: dbErr.message
       });
     }
   });

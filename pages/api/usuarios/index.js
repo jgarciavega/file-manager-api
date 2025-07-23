@@ -1,79 +1,70 @@
-// pages/api/usuarios/index.js - API con datos mock temporal
-// NOTA: Esta es una versión temporal que usa datos mock mientras se soluciona MySQL
-
-import { requireAuth } from "../../../lib/auth-utils";
-import fs from "fs";
-import path from "path";
-
-// Cargar datos mock
-const getMockData = () => {
-  try {
-    const mockDataPath = path.join(process.cwd(), 'mock-data.json');
-    const mockData = JSON.parse(fs.readFileSync(mockDataPath, 'utf8'));
-    return mockData;
-  } catch (error) {
-    console.error('Error cargando datos mock:', error);
-    return { usuarios: [] };
-  }
-};
+// pages/api/usuarios/index.js
+import { PrismaClient } from '@prisma/client'
+const prisma = new PrismaClient()
 
 export default async function handler(req, res) {
-  // Verificar autenticación para todas las operaciones
-  const authResult = await requireAuth(req, res, "admin"); // Solo admins pueden gestionar usuarios
-  if (authResult.error) {
-    return res.status(authResult.status).json({ error: authResult.error });
-  }
+  switch (req.method) {
+    case 'GET':
+      try {
+        // Traemos usuarios + sus roles
+        const usuarios = await prisma.usuarios.findMany({
+          include: {
+            usuarios_has_roles: {
+              include: { roles: true }
+            }
+          }
+        })
+        // Aplanamos para enviar sólo un campo `rol`
+        const resultado = usuarios.map(u => ({
+          id: u.id,
+          nombre: u.nombre,
+          apellidos: u.apellidos,
+          email: u.email,
+          departamentos_id: u.departamentos_id,
+          activo: u.activo,
+          rol: u.usuarios_has_roles[0]?.roles?.tipo ?? null
+        }))
+        return res.status(200).json(resultado)
+      } catch (err) {
+        console.error('ERROR GET usuarios:', err)
+        return res.status(500).json({ error: 'Error al consultar usuarios' })
+      }
 
-  const { user: currentUser } = authResult;
+    case 'POST':
+      try {
+        const { nombre, rol } = req.body
+        if (!nombre || !rol) {
+          return res.status(400).json({ error: 'Nombre y rol son obligatorios' })
+        }
+        // 1️⃣ Crear al usuario
+        const nuevo = await prisma.usuarios.create({
+          data: { nombre }
+        })
+        // 2️⃣ Buscar el rol
+        const r = await prisma.roles.findFirst({ where: { tipo: rol } })
+        if (!r) {
+          return res.status(404).json({ error: 'Rol no encontrado' })
+        }
+        // 3️⃣ Asignar la relación
+        await prisma.usuarios_has_roles.create({
+          data: {
+            usuarios_id: nuevo.id,
+            roles_id: r.id
+          }
+        })
+        // 4️⃣ Respondemos con el nuevo recurso plano
+        return res.status(201).json({
+          id: nuevo.id,
+          nombre: nuevo.nombre,
+          rol: r.tipo
+        })
+      } catch (err) {
+        console.error('ERROR POST usuarios:', err)
+        return res.status(500).json({ error: 'No se pudo crear usuario' })
+      }
 
-  try {
-    switch (req.method) {
-      case "GET":
-        console.log(`🔍 Admin ${currentUser.email} consultando usuarios`);
-        
-        // Cargar datos mock
-        const mockData = getMockData();
-        const usuarios = mockData.usuarios || [];
-        
-        console.log(`✅ Devolviendo ${usuarios.length} usuarios (datos mock)`);
-        return res.status(200).json(usuarios);
-
-      case "POST":
-        // Para POST, simulamos la creación
-        console.log(`➕ Admin ${currentUser.email} intentando crear usuario`);
-        
-        return res.status(501).json({ 
-          error: "Creación de usuarios no disponible con datos mock. Configure MySQL para funcionalidad completa.",
-          message: "Funcionalidad solo disponible con base de datos"
-        });
-
-      case "PUT":
-        // Para PUT, simulamos la actualización
-        console.log(`✏️ Admin ${currentUser.email} intentando actualizar usuario`);
-        
-        return res.status(501).json({ 
-          error: "Actualización de usuarios no disponible con datos mock. Configure MySQL para funcionalidad completa.",
-          message: "Funcionalidad solo disponible con base de datos"
-        });
-
-      case "DELETE":
-        // Para DELETE, simulamos la eliminación
-        console.log(`🗑️ Admin ${currentUser.email} intentando eliminar usuario`);
-        
-        return res.status(501).json({ 
-          error: "Eliminación de usuarios no disponible con datos mock. Configure MySQL para funcionalidad completa.",
-          message: "Funcionalidad solo disponible con base de datos"
-        });
-
-      default:
-        return res.status(405).json({ error: "Método no permitido" });
-    }
-  } catch (error) {
-    console.error("Error en API de usuarios:", error);
-    return res.status(500).json({ 
-      error: "Error interno del servidor",
-      message: "Usando datos mock temporales",
-      details: error.message 
-    });
+    default:
+      res.setHeader('Allow', ['GET','POST'])
+      return res.status(405).end(`Method ${req.method} Not Allowed`)
   }
 }
