@@ -27,10 +27,8 @@ import useAutoComplete from "../../../hooks/useAutoComplete";
 import SelectorTemplates from "./SelectorTemplates";
 import Link from "next/link";
 
-export default function UploadNew() {
-  const { data: session, status } = useSession();
-
-  // Estados del formulario
+export default function UploadNew({ session }) {
+  // Campos requeridos por LEA-BCS y wizard
   const [form, setForm] = useState({
     nombre: "",
     jefatura: "",
@@ -480,10 +478,17 @@ export default function UploadNew() {
     }
   };
 
-  const closeModal = () => {
-    setShowModal(false);
-    setUploadProgress(0);
-  };
+    const closeModal = () => {
+      setShowModal(false);
+      setUploadProgress(0);
+    };
+
+    // Nombres de los pasos
+    const stepTitles = [
+      "Subir nuevo documento",
+      "Datos de clasificación y gestión",
+      "Detalles y tipo documental"
+    ];
 
   return (
     <div

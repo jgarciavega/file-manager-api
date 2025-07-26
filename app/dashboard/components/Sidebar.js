@@ -27,11 +27,12 @@ import {
   faChartBar,
   faThumbtack,
   faBoxes,
-  faArrowLeft,
-  faFolderOpen, // <-- Importa el icono de carpeta abierta
+  faCircleInfo,
+  faFolderOpen,
 } from "@fortawesome/free-solid-svg-icons";
 
-export default function Sidebar({ isSidebarCollapsed }) {
+export default function Sidebar({ isCollapsed = false, onToggleCollapse }) {
+  const darkMode = true;
   const { data: session } = useSession();
   const router = useRouter();
   const { globalSearch, setGlobalSearch } = useGlobalSearch();
@@ -40,11 +41,17 @@ export default function Sidebar({ isSidebarCollapsed }) {
   const [search, setSearch] = useState("");
   const [isListening, setIsListening] = useState(false);
   const recognitionRef = useRef(null);
+  const [collapsed, setCollapsed] = useState(false);
 
-  // Inicializa reconocimiento de voz 
+  const handleCollapseToggle = () => {
+    setCollapsed((prev) => !prev);
+  };
+
+  // Inicializa reconocimiento de voz
   useEffect(() => {
-    if (typeof window !== "undefined" && 'webkitSpeechRecognition' in window) {
-      const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+    if (typeof window !== "undefined" && "webkitSpeechRecognition" in window) {
+      const SpeechRecognition =
+        window.SpeechRecognition || window.webkitSpeechRecognition;
       recognitionRef.current = new SpeechRecognition();
       recognitionRef.current.lang = "es-MX";
       recognitionRef.current.interimResults = false;
@@ -67,18 +74,9 @@ export default function Sidebar({ isSidebarCollapsed }) {
     );
   };
 
-  const toggleSidebar = () => {
-    isSidebarCollapsed(!isSidebarCollapsed);
-    if (!isSidebarCollapsed) setOpenMenus([]);
-  };
-
   const toggleUserInfo = () => {
     setUserInfoOpen(!isUserInfoOpen);
   };
-
-  useEffect(() => {
-    if (isSidebarCollapsed) setOpenMenus([]);
-  }, [isSidebarCollapsed]);
 
   const handleLogoutClick = () => {
     Swal.fire({
@@ -103,9 +101,9 @@ export default function Sidebar({ isSidebarCollapsed }) {
       recognitionRef.current.start();
     } else {
       Swal.fire({
-        icon: 'info',
-        title: 'Reconocimiento de voz no soportado',
-        text: 'Tu navegador no soporta reconocimiento de voz.',
+        icon: "info",
+        title: "Reconocimiento de voz no soportado",
+        text: "Tu navegador no soporta reconocimiento de voz.",
       });
     }
   };
@@ -114,49 +112,69 @@ export default function Sidebar({ isSidebarCollapsed }) {
   const menuOptions = [
     {
       key: "file",
-      label: "Gestión de archivos",
+      label: "GESTION DE ARCHIVOS",
       icon: faBoxes,
       sub: [
         { label: "Subir Documento", href: "/dashboard/upload", icon: faUpload },
-        { label: "Estado del Documento", href: "/dashboard/estado-documento", icon: faCheck },
+        {
+          label: "Estado del Documento",
+          href: "/dashboard/estado-documento",
+          icon: faCheck,
+        },
         { label: "Favoritos", href: "/dashboard/favorites", icon: faStar },
-        { label: "Mis Documentos", href: "/dashboard/mis-documentos", icon: faFolderOpen },
+        {
+          label: "Mis Documentos",
+          href: "/dashboard/mis-documentos",
+          icon: faFolderOpen,
+        },
       ],
     },
     {
       key: "task",
-      label: "Tareas Pendientes",
+      label: "TAREAS PENDIENTES",
       icon: faThumbtack,
       sub: [
-        { label: "Pendientes de Validación", href: "/dashboard/PendientesDeValidacion", icon: faTasks },
+        {
+          label: "Pendientes de Validación",
+          href: "/dashboard/PendientesDeValidacion",
+          icon: faTasks,
+        },
         { label: "Verificación de LEA-BCS", href: "/dashboard/verification", icon: faFileAlt },
       ],
     },
     {
       key: "reports",
-      label: "Consultas & Reportes",
+      label: "CONSULTAS & REPORTES",
       icon: faChartBar,
       sub: [
         { label: "Bitácora", href: "/dashboard/bitacora", icon: faHistory },
-        { label: "Informes", href: "/dashboard/informes", icon: faChartBar },
+        { label: "Informes", href: "/dashboard/informes", icon: faFileAlt },
       ],
     },
     {
       key: "settings",
-      label: "Configuración & Ayuda",
+      label: "CONFIGURACION & AYUDA",
       icon: faCog,
       sub: [
         { label: "Ajustes", href: "/dashboard/ajustes", icon: faCog },
-        { label: "Ayuda", href: "/dashboard/ayuda", icon: faArrowLeft },
+        { label: "Ayuda", href: "/dashboard/ayuda", icon: faCircleInfo },
       ],
     },
   ];
 
   // Filtrado de submenús según búsqueda
-  const filteredMenus = menuOptions.map(menu => {
-    const filteredSub = menu.sub.filter(sub => sub.label.toLowerCase().includes(search.toLowerCase()));
-    return { ...menu, sub: filteredSub };
-  }).filter(menu => menu.label.toLowerCase().includes(search.toLowerCase()) || menu.sub.length > 0);
+  const filteredMenus = menuOptions
+    .map((menu) => {
+      const filteredSub = menu.sub.filter((sub) =>
+        sub.label.toLowerCase().includes(search.toLowerCase())
+      );
+      return { ...menu, sub: filteredSub };
+    })
+    .filter(
+      (menu) =>
+        menu.label.toLowerCase().includes(search.toLowerCase()) ||
+        menu.sub.length > 0
+    );
 
   const email = session?.user?.email || "";
   const fullName = session?.user?.name || "Usuario";
@@ -171,164 +189,180 @@ export default function Sidebar({ isSidebarCollapsed }) {
   };
 
   return (
-    <div className={styles["sidebar-container"]} style={{ borderLeft: 'none' }}>
-      <aside
-        className={`${styles.sidebar} ${
-          isSidebarCollapsed ? styles["sidebar-collapsed"] : ""
-        }`}
-        style={isSidebarCollapsed ? { backgroundColor: '#18181b' } : { backgroundColor: '#fff' }}
+    <div
+      className={
+        styles["sidebar-container"] +
+        (darkMode ? " border-none" : "") +
+        (collapsed ? " sidebar-collapsed" : "")
+      }
+      style={{
+        borderLeft: "none",
+        background: darkMode
+          ? "linear-gradient(135deg, #0a1120 60%, #1e293b 100%)"
+          : undefined,
+        width: collapsed ? "72px" : undefined,
+        minWidth: collapsed ? "72px" : undefined,
+        transition: "width 0.3s",
+      }}
+    >
+      {/* Botón hamburguesa en el Sidebar */}
+      <button
+        className="absolute top-6 left-6 z-50 p-2 rounded-full bg-blue-700 text-white shadow-lg hover:bg-blue-900 transition-all"
+        onClick={handleCollapseToggle}
+        aria-label={collapsed ? "Expandir menú" : "Contraer menú"}
+        style={{ display: "block" }}
       >
-        {/* Menú colapsado: solo íconos principales y submenús al hacer clic, SIN input de búsqueda */}
-        {isSidebarCollapsed ? (
-          <>
-            {/* Solo íconos principales y submenús, sin input de búsqueda */}
-            <ul className="flex flex-col items-center mt-8 space-y-8">
-              {filteredMenus.map(menu => (
-                <li key={menu.key}>
-                  <button
-                    title={menu.label}
-                    onClick={() => toggleMenu(menu.key)}
-                    className={`group focus:outline-none flex items-center justify-center w-14 h-14 rounded-full transition-all duration-200 shadow-md
-                      ${openMenus.includes(menu.key) ? "bg-blue-100 ring-2 ring-blue-400" : "bg-white hover:bg-blue-50"}`}
-                  >
-                    <FontAwesomeIcon icon={menu.icon} size="xl" className="text-blue-500 group-hover:text-blue-700 transition-all duration-200" />
-                  </button>
-        {openMenus.includes(menu.key) && menu.sub.length > 0 && (
-          <ul className="flex flex-col items-center space-y-4 mt-2">
-            {menu.sub.map(sub => (
-              <li key={sub.label}>
-                <a href={sub.href} title={sub.label}
-                  className="group flex items-center justify-center w-12 h-12 rounded-full bg-white hover:bg-blue-100 shadow-lg transition-all duration-200 border border-blue-200"
+        <FontAwesomeIcon icon={faBars} size="lg" />
+      </button>
+      <aside
+        className={
+          `${styles.sidebar} ${
+            darkMode
+              ? "bg-gradient-to-br from-[#0a1120] via-[#1e293b] to-[#23395d] border-r border-blue-900 text-blue-100 shadow-2xl rounded-2xl"
+              : "bg-blue-50 border-r border-blue-200 text-blue-900 shadow-lg"
+          } transition-all duration-300` + (collapsed ? " sidebar-collapsed" : "")
+        }
+        role="navigation"
+        aria-label="Menú principal"
+        style={{
+          width: collapsed ? "72px" : undefined,
+          minWidth: collapsed ? "72px" : undefined,
+          transition: "width 0.3s",
+        }}
+      >
+        {/* SOLO ICONOS PRINCIPALES Y BOTÓN HAMBURGUESA EN MODO CONTRAÍDO */}
+        {collapsed ? (
+          <ul className="flex flex-col items-center mt-40 space-y-6">
+            {menuOptions.map(menu => (
+              <li key={menu.key} className="flex flex-col items-center">
+                <button
+                  className="w-14 h-14 flex items-center justify-center rounded-full bg-gradient-to-br from-blue-800 via-blue-700 to-blue-900 border-4 border-blue-400 shadow-2xl hover:bg-blue-600 transition-all duration-200"
+                  onClick={() => setOpenMenus(prev => prev.includes(menu.key) ? prev.filter(m => m !== menu.key) : [...prev, menu.key])}
+                  title={menu.label}
+                  style={{ boxShadow: '0 4px 16px rgba(37,99,235,0.35)' }}
                 >
-                  <FontAwesomeIcon icon={sub.icon} style={{color:'#2563eb', fontSize:'2rem'}} className="group-hover:text-blue-700 transition-all duration-200" />
-                </a>
+                  <FontAwesomeIcon
+                    icon={menu.icon}
+                    className="text-white text-3xl drop-shadow"
+                  />
+                </button>
+                {/* Submenú: solo íconos, debajo del ícono principal, funcionales, sin texto */}
+                {openMenus.includes(menu.key) && menu.sub.length > 0 && (
+                  <ul className="flex flex-col items-center mt-2 space-y-3">
+                    {menu.sub.map(sub => (
+                      <li key={sub.label}>
+                        <button
+                          className="w-10 h-10 flex items-center justify-center rounded-full bg-blue-100 hover:bg-blue-300 border-2 border-blue-300 shadow transition-all duration-200"
+                          onClick={() => router.push(sub.href)}
+                          title={sub.label}
+                        >
+                          <FontAwesomeIcon
+                            icon={sub.icon}
+                            className="text-blue-700 text-xl"
+                          />
+                        </button>
+                      </li>
+                    ))}
+                  </ul>
+                )}
               </li>
             ))}
           </ul>
-        )}
-      </li>
-    ))}
-    {/* Cerrar sesión */}
-    <li>
-      <span title="Cerrar sesión" onClick={handleLogoutClick}
-        className="group flex items-center justify-center w-14 h-14 rounded-full bg-white hover:bg-red-100 shadow transition-all duration-200 cursor-pointer"
-      >
-        <FontAwesomeIcon icon={faSignOutAlt} size="lg" className="text-red-500 group-hover:text-red-700" />
-      </span>
-    </li>
-  </ul>
-          </>
         ) : (
+          // ...existing code...
           <>
-            <div className="sidebar-logo mt-8">
+            <div className="sidebar-logo mt-16 mb-2 flex flex-col items-center justify-center w-full">
               <Image
-                src="/api.jpg"
-                alt={user.name}
-                width={650}
-                height={10}
-                className="rounded-full mx-auto mb-2"
-              />
-            </div>
-            {/* Buscador debajo del logo */}
-            <div style={{ marginTop: 48 }} /> {/* Aumenta el margen superior aquí */}
-            <div className="flex items-center justify-center py-4 px-4 gap-2">
-              <input
-                type="text"
-                value={globalSearch}
-                onChange={e => setGlobalSearch(e.target.value)}
-                onKeyDown={e => {
-                  if (e.key === "Enter" && globalSearch.trim()) {
-                    router.push(`/dashboard/busqueda?query=${encodeURIComponent(globalSearch)}`);
-                  }
+                src="/api-dark23.png"
+                alt="Logo institucional modo oscuro"
+                width={750}
+                height={150}
+                className="object-contain"
+                style={{
+                  filter:
+                    "drop-shadow(0 0 32px rgba(37,99,235,0.35)) drop-shadow(0 4px 16px rgba(0,0,0,0.18))",
+                  transition: "width 0.3s, height 0.3s",
                 }}
-                placeholder="Buscar documentos..."
-                className="w-full rounded-lg bg-gray-100 px-4 py-2 text-gray-800 border-2 border-blue-500 focus:ring-2 focus:ring-blue-400 focus:border-blue-700 hover:border-blue-700 transition-all duration-200 outline-none"
-                style={{ boxShadow: '0 1px 4px 0 rgba(0,0,0,0.04)' }}
+                priority
               />
-              <button
-                type="button"
-                aria-label="Buscar por voz"
-                onClick={handleMicClick}
-                className={`ml-2 p-2 rounded-full border-2 ${isListening ? 'border-red-500 bg-red-100 animate-pulse' : 'border-blue-400 bg-white'} transition-all`}
-                title="Buscar por voz"
-              >
-                <FontAwesomeIcon icon={faMicrophone} className={isListening ? 'text-red-500' : 'text-blue-500'} size="lg" />
-              </button>
             </div>
-            {/* Más separación entre buscador y menú */}
             <div style={{ marginTop: 48 }} />
-            <ul className="space-y-6 mt-2 overflow-y-auto max-h-[calc(100vh-350px)] pr-2 custom-scrollbar">
+            <div style={{ marginTop: 48 }} />
+            <ul className={`space-y-6 mt-4 overflow-y-auto max-h-[calc(100vh-350px)] pr-2 custom-scrollbar rounded-2xl shadow-xl px-2 py-4 border ${darkMode ? 'bg-gradient-to-br from-[#181f2a] via-[#23395d] to-[#1e293b] border-blue-900' : 'bg-white/90 border-blue-100'}`}>
               {filteredMenus.map(menu => (
                 <li key={menu.key} className="flex flex-col">
-                  <div className="flex items-center group">
-                    <FontAwesomeIcon
-                      icon={menu.icon}
-                      className="mr-3 text-blue-600 group-hover:text-blue-800 transition"
-                      size="2x"
-                    />
-                    <span
-                      onClick={() => toggleMenu(menu.key)}
-                      className="cursor-pointer flex-grow text-xl font-bold text-gray-900 group-hover:text-blue-700 select-none"
-                      style={{ letterSpacing: '0.5px' }}
-                    >
+                  <div
+                    className={`flex items-center group rounded-xl px-3 py-3 transition-all duration-300 cursor-pointer relative shadow-md ${openMenus.includes(menu.key)
+                      ? (darkMode ? 'bg-blue-900/90 border border-blue-400' : 'bg-blue-100/80 border border-blue-700')
+                      : (darkMode ? 'hover:bg-blue-900/60 border border-transparent' : 'hover:bg-blue-50/80 border border-transparent')}`}
+                    onClick={() => toggleMenu(menu.key)}
+                    tabIndex={0}
+                    aria-expanded={openMenus.includes(menu.key)}
+                    role="button"
+                  >
+                    <span className={`absolute left-0 top-0 h-full w-2 rounded-l-xl transition-all duration-300 ${openMenus.includes(menu.key) ? (darkMode ? 'bg-gradient-to-b from-blue-400 to-blue-700' : 'bg-blue-700') : 'bg-transparent'}`}></span>
+                    <span className={`flex items-center justify-center w-12 h-12 rounded-full shadow-lg transition-all duration-200 ${darkMode ? 'bg-blue-800 group-hover:bg-blue-600' : 'bg-blue-200 group-hover:bg-blue-400'}`}>
+                      <FontAwesomeIcon
+                        icon={menu.icon}
+                        className={darkMode ? "text-blue-100 group-hover:text-blue-300 text-3xl" : "text-blue-700 group-hover:text-blue-900 text-3xl"}
+                      />
+                    </span>
+                    <span className={`flex-grow text-xl font-bold select-none ml-4 ${darkMode ? 'text-blue-100 group-hover:text-blue-300 drop-shadow-sm' : 'text-blue-900 group-hover:text-blue-800'}`} style={{ letterSpacing: '0.5px' }}>
                       {menu.label}
                     </span>
-                    <span className="ml-2 text-2xl text-gray-400 select-none">{openMenus.includes(menu.key) ? "−" : "+"}</span>
+                    <span className={`ml-2 text-2xl select-none ${darkMode ? 'text-blue-400' : 'text-blue-400'}`}>{openMenus.includes(menu.key) ? "−" : "+"}</span>
                   </div>
-                  {/* Submenú: justo debajo, con separación y estilos claros */}
-                  {openMenus.includes(menu.key) && menu.sub.length > 0 && (
-                    <ul className="pl-8 mt-2 space-y-1 border-l-2 border-blue-100 bg-blue-50 rounded-lg py-2 shadow-sm">
-                      {menu.sub.map(sub => (
-                        <li key={sub.label} className="flex items-center font-medium text-base text-violet-700 hover:text-blue-900 transition px-2 py-1 rounded-lg hover:bg-blue-100">
-                          <FontAwesomeIcon
-                            icon={sub.icon}
-                            className="mr-2 text-violet-500 bg-white rounded-full p-1 border border-blue-200 shadow-sm"
-                            size="lg"
-                          />
-                          <a href={sub.href} className="flex items-center">
-                            <span className="ml-1">{sub.label}</span>
-                          </a>
-                        </li>
-                      ))}
-                    </ul>
-                  )}
+                  {/* Submenú: solo visible si sidebar expandido */}
+                  <div className={`transition-all duration-300 ease-in-out ${openMenus.includes(menu.key) ? 'max-h-96 opacity-100' : 'max-h-0 opacity-0 overflow-hidden'}`}>
+                    {openMenus.includes(menu.key) && menu.sub.length > 0 && (
+                      <ul className={`pl-8 mt-2 space-y-1 border-l-2 rounded-lg py-2 shadow-sm ${darkMode ? 'border-blue-900 bg-[#232b3b]' : 'border-blue-100 bg-blue-50'}`}>
+                        {menu.sub.map(sub => (
+                          <li key={sub.label} className={`flex items-center font-medium text-base px-2 py-1 rounded-lg transition-all duration-200 ${window.location.pathname === sub.href ? (darkMode ? 'bg-blue-900/80 text-blue-100 font-bold' : 'bg-blue-300/60 text-blue-900 font-bold') : (darkMode ? 'text-blue-300 hover:text-blue-100 hover:bg-blue-900/60' : 'text-blue-700 hover:text-blue-900 hover:bg-blue-100')}`}>
+                            <FontAwesomeIcon
+                              icon={sub.icon}
+                              className={darkMode ? "mr-2 text-blue-400 text-lg" : "mr-2 text-blue-500 text-lg"}
+                            />
+                            <a href={sub.href} className="flex items-center">
+                              <span className="ml-1">{sub.label}</span>
+                            </a>
+                          </li>
+                        ))}
+                      </ul>
+                    )}
+                  </div>
+                  <div className={darkMode ? "w-full border-t border-blue-800 my-2" : "w-full border-t border-blue-100 my-2"}></div>
                 </li>
               ))}
-              {/* Cerrar sesión */}
+              <li className={darkMode ? "w-full border-t border-blue-800 my-4" : "w-full border-t border-blue-200 my-4"}></li>
               <li
-                className="font-bold cursor-pointer mt-12 text-gray-500 flex items-center"
+                className={`font-bold cursor-pointer flex items-center transition-all duration-200 rounded-xl px-3 py-3 shadow-md ${darkMode ? 'text-blue-200 hover:text-red-400 bg-[#1e293b] hover:bg-red-900 border border-blue-900' : 'text-gray-500 hover:text-red-700'}`}
                 onClick={handleLogoutClick}
+                tabIndex={0}
+                role="button"
+                aria-label="Cerrar sesión"
               >
                 <FontAwesomeIcon
                   icon={faSignOutAlt}
-                  className="mr-2 text-red-500"
+                  className={darkMode ? "mr-2 text-blue-600 drop-shadow-lg" : "mr-2 text-red-500"}
                   size="2x"
                 />
-                Cerrar sesión
+                CERRAR SESION
               </li>
             </ul>
-            {/* Información de usuario */}
-            <div
-              className={`${styles["user-info"]} mt-12 cursor-pointer flex flex-col items-center gap-2`}
-              onClick={toggleUserInfo}
-            >
-              <p className="font-bold text-black-800 mt-12 text-black">
-                {user.title}
-              </p>
-
-              {isUserInfoOpen && (
-                <div className="bg-blue-600 text-black p-3 rounded-xl shadow-lg text-left w-48 border-6 border-yellow-400 mt-1">
-                  <p className="mb-3">
-                    <strong>👤 :</strong> {user.name}
-                  </p>
-                  <p className="mb-3">
-                    <strong>📍 Área:</strong> {user.workArea}
-                  </p>
-                  <p className="mb-3">
-                    <strong>🆔 ADM:</strong> {user.position}
-                  </p>
-                </div>
-              )}
+            <div className={`mt-12 flex flex-col items-center gap-1 select-none ${darkMode ? 'bg-gradient-to-r from-[#181f2a] to-[#23395d] rounded-xl py-3 shadow-xl border border-blue-900' : ''}`}>
+              <span className={darkMode ? "text-xs text-blue-200 font-semibold tracking-widest drop-shadow-sm" : "text-xs text-blue-900 font-semibold tracking-widest"}>Sistema de Gestión Documental</span>
+              <span className={darkMode ? "text-xs text-blue-400 font-medium drop-shadow-sm" : "text-xs text-blue-700 font-medium"}>LEA-BCS © 2025</span>
+            </div>
+            {/* Notas informativas LEA-BCS */}
+            <div className="mt-6 px-4 pb-6">
+              <div className="bg-gradient-to-br from-blue-900 via-blue-700 to-blue-400 rounded-2xl shadow-2xl border-4 border-blue-500 p-5 flex flex-col items-center animate-pulse">
+                <span className="text-2xl font-extrabold text-white drop-shadow-lg tracking-wide mb-2 text-center" style={{letterSpacing:'1px'}}>¿Sabías que?</span>
+                <span className="text-lg text-blue-100 font-semibold text-center mb-2 drop-shadow-sm">La <span className="text-blue-300 font-bold">Ley Estatal de Archivos de Baja California Sur</span> garantiza la transparencia, protección y acceso a la información pública documental.</span>
+                <span className="text-base text-blue-200 text-center mb-2 italic">¡Tu gestión documental es parte fundamental de la legalidad y el futuro digital de BCS!</span>
+                <span className="text-sm text-blue-300 text-center mt-2">#TransformaciónDigital #LEA-BCS #InnovaciónLegal</span>
+                <div className="w-full h-1 bg-gradient-to-r from-blue-400 via-blue-700 to-blue-900 rounded-full mt-4 mb-2 animate-pulse"></div>
+                <span className="text-xs text-blue-100 text-center">Para más información visita <a href="https://www.bcs.gob.mx/archivos" target="_blank" rel="noopener noreferrer" className="underline text-blue-300 hover:text-white font-bold">bcs.gob.mx/archivos</a></span>
+              </div>
             </div>
           </>
         )}

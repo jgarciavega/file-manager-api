@@ -1,11 +1,10 @@
 .sidebar-container {
-  position: relative;;
-  height: 240vh;
+  position: relative;
+  min-height: 147vh;
   display: flex;
   flex-direction: column;
-  margin-top: 50; /* Ajusta esto */
-  padding-top: 10; /* Asegura que no haya espacio extra */
-  
+  margin-top: 0;
+  padding-top: 0;
 }
 
 .sidebar {
@@ -13,8 +12,8 @@
   margin-left: 1px;
   display: flex;
   width: 400px;
-  height: 100%;
-  padding: 25px;
+  height: 150%;
+  padding: 30px;
   flex-direction: column;
   background-color: #ffff;
   overflow-y: auto;

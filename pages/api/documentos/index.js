@@ -1,66 +1,108 @@
-// pages/api/documentos/index.js - API con datos mock temporal
-// NOTA: Esta es una versión temporal que usa datos mock mientras se soluciona MySQL
+// pages/api/documentos/index.js
 
-import { requireAuth } from "../../../lib/auth-utils";
-import fs from "fs";
-import path from "path";
+import { PrismaClient } from '@prisma/client'
+import formidable from 'formidable'
+import fs from 'fs'
+import path from 'path'
 
-// Cargar datos mock
-const getMockData = () => {
-  try {
-    const mockDataPath = path.join(process.cwd(), 'mock-data.json');
-    const mockData = JSON.parse(fs.readFileSync(mockDataPath, 'utf8'));
-    return mockData;
-  } catch (error) {
-    console.error('Error cargando datos mock:', error);
-    return { documentos: [] };
-  }
-};
+/**
+ * 1️⃣ Desactivamos el bodyParser nativo de Next
+ *    para poder procesar multipart/form-data con formidable
+ */
+export const config = {
+  api: {
+    bodyParser: false,
+  },
+}
+
+const prisma = new PrismaClient()
 
 export default async function handler(req, res) {
-  // Verificar autenticación para todas las operaciones
-  const authResult = await requireAuth(req, res);
-  if (authResult.error) {
-    return res.status(authResult.status).json({ error: authResult.error });
-  }
-
-  const { user: currentUser } = authResult;
-
-  try {
-    if (req.method === "GET") {
-      console.log(`📄 Usuario ${currentUser.email} consultando documentos`);
-      
-      // Cargar datos mock
-      const mockData = getMockData();
-      const documentos = mockData.documentos || [];
-      
-      // Si es admin, puede ver todos los documentos
-      // Si es usuario normal, solo sus documentos
-      let filteredDocs = documentos;
-      if (currentUser.role !== "admin") {
-        filteredDocs = documentos.filter(doc => doc.usuario_id === currentUser.id);
+  // ————————————————————— GET —————————————————————
+  if (req.method === 'GET') {
+    try {
+      // Filtrado opcional por usuario
+      const where = {}
+      if (req.query.usuarioId) {
+        where.usuarios_id = Number(req.query.usuarioId)
       }
-      
-      console.log(`✅ Devolviendo ${filteredDocs.length} documentos (datos mock)`);
-      return res.status(200).json(filteredDocs);
-      
-    } else if (req.method === "POST") {
-      // Para POST, aún necesitaríamos implementar la lógica de subida
-      // Por ahora, retornamos un mensaje informativo
-      return res.status(501).json({ 
-        error: "Subida de archivos no disponible con datos mock. Configure MySQL para funcionalidad completa." 
-      });
-      
-    } else {
-      return res.status(405).json({ error: "Método no permitido" });
+
+      const documentos = await prisma.documentos.findMany({
+        where,
+        include: {
+          tipos_documentos: true,
+          usuarios: {
+            select: { id: true, nombre: true, email: true },
+          },
+        },
+        orderBy: { fecha_subida: 'desc' },
+      })
+
+      return res.status(200).json(documentos)
+    } catch (error) {
+      console.error('Error en GET /api/documentos:', error)
+      return res.status(500).json({ error: 'Fallo al consultar documentos' })
+    } finally {
+      await prisma.$disconnect()
     }
-    
-  } catch (error) {
-    console.error("Error en GET /api/documentos:", error);
-    return res.status(500).json({ 
-      error: "Error interno del servidor",
-      message: "Usando datos mock temporales",
-      details: error.message 
-    });
   }
+
+  // ————————————————————— POST —————————————————————//
+  if (req.method === 'POST') {
+    /**
+     * 2️⃣ Configuramos formidable para guardar
+     *    el archivo en public/uploads manteniendo extensión.
+     */
+    const form = formidable({
+      uploadDir: path.join(process.cwd(), '/public/uploads'),
+      keepExtensions: true,
+      maxFileSize: 10 * 1024 * 1024, // límite: 10MB
+    })
+
+    // 3️⃣ Parseamos la petición
+    form.parse(req, async (err, fields, files) => {
+      if (err) {
+        console.error('Error formidable:', err)
+        return res.status(500).json({ error: 'Error procesando archivo' })
+      }
+
+      // 4️⃣ Extraemos campos y archivo
+      const { nombre, descripcion, tipos_documentos_id, usuarios_id } = fields
+      const file = files.archivo
+      if (!file) {
+        return res.status(400).json({ error: 'Falta el archivo' })
+      }
+
+      // 5️⃣ Generamos la URL pública (next sirve static files desde /public)
+      const fileName = path.basename(file.filepath)
+      const ruta = `/uploads/${fileName}`
+
+      try {
+        // 6️⃣ Guardamos en la BD
+        const nuevo = await prisma.documentos.create({
+          data: {
+            nombre,
+            descripcion,
+            mime: file.mimetype,
+            ruta,
+            tipos_documentos_id: parseInt(tipos_documentos_id, 10),
+            usuarios_id:       parseInt(usuarios_id, 10),
+            fecha_subida:      new Date(),
+          },
+        })
+        return res.status(201).json(nuevo)
+      } catch (e) {
+        console.error('Error al guardar en BD:', e)
+        return res.status(500).json({ error: 'Error guardando en BD' })
+      } finally {
+        await prisma.$disconnect()
+      }
+    })
+
+    return // importante: no continuar tras parse()
+  }
+
+  // ————— Si es otro método, lo bloqueamos —————
+  res.setHeader('Allow', ['GET', 'POST'])
+  res.status(405).end(`Method ${req.method} Not Allowed`)
 }
