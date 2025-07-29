@@ -8,12 +8,12 @@ import styles from "./HomePage.module.css";
 import avatarMap from "../../lib/avatarMap";
 import admMap from "../../lib/admMap";
 import profesionMap from "../../lib/profesionMap";
-import { useAutoCorrect } from '../../lib/useAutoCorrect';
+import { useAutoCorrect } from "../../lib/useAutoCorrect";
 
 export default function Home() {
   const { data: session, status } = useSession();
   const [isSidebarCollapsed, setSidebarCollapsed] = useState(true);
-  const [search, setSearch] = useState('');
+  const [search, setSearch] = useState("");
   const [docs, setDocs] = useState([]);
   const [loading, setLoading] = useState(true);
   const handleAutoCorrect = useAutoCorrect();
@@ -21,29 +21,32 @@ export default function Home() {
   useEffect(() => {
     if (!session) return;
     setLoading(true);
-    fetch('/api/documentos')
-      .then(res => res.json())
-      .then(data => setDocs(data))
+    fetch("/api/documentos")
+      .then((res) => res.json())
+      .then((data) => setDocs(data))
       .finally(() => setLoading(false));
   }, [session]);
 
   // Función utilitaria para normalizar texto (minúsculas, sin tildes, sin puntuación, sin espacios extra)
   function normalizeText(text) {
-    if (!text) return '';
+    if (!text) return "";
     return text
       .toLowerCase()
-      .normalize('NFD').replace(/\p{Diacritic}/gu, '') // quita tildes
-      .replace(/[.,;:!?¿¡()\[\]{}"'`´]/g, '') // quita puntuación
-      .replace(/\s+/g, ' ') // espacios múltiples a uno
+      .normalize("NFD")
+      .replace(/\p{Diacritic}/gu, "") // quita tildes
+      .replace(/[.,;:!?¿¡()\[\]{}"'`´]/g, "") // quita puntuación
+      .replace(/\s+/g, " ") // espacios múltiples a uno
       .trim();
   }
 
-  const filteredDocs = docs.filter(doc => {
-    const nombre = normalizeText(doc.nombre);
-    const descripcion = normalizeText(doc.descripcion);
-    const searchNorm = normalizeText(search);
-    return nombre.includes(searchNorm) || descripcion.includes(searchNorm);
-  });
+  const filteredDocs = Array.isArray(docs)
+    ? docs.filter((doc) => {
+        const nombre = normalizeText(doc.nombre);
+        const descripcion = normalizeText(doc.descripcion);
+        const searchNorm = normalizeText(search);
+        return nombre.includes(searchNorm) || descripcion.includes(searchNorm);
+      })
+    : [];
 
   const toggleSidebar = () => setSidebarCollapsed((prev) => !prev);
 
