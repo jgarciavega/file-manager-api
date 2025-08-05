@@ -12,7 +12,11 @@ import { useAutoCorrect } from "../../lib/useAutoCorrect";
 
 export default function Home() {
   const { data: session, status } = useSession();
-  const [isSidebarCollapsed, setSidebarCollapsed] = useState(true);
+  const [isSidebarCollapsed, setSidebarCollapsed] = useState(false); // Sidebar expandido por defecto
+  // Al montar el Home, forzar sidebar expandido
+  useEffect(() => {
+    setSidebarCollapsed(false);
+  }, []);
   const [search, setSearch] = useState("");
   const [docs, setDocs] = useState([]);
   const [loading, setLoading] = useState(true);

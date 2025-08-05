@@ -3,12 +3,13 @@
 import { useSession } from "next-auth/react";
 import Image from "next/image";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faArrowLeft, faCheck, faTimes } from "@fortawesome/free-solid-svg-icons";
-import { faMoon, faSun } from "@fortawesome/free-solid-svg-icons";
+import { faArrowLeft, faCheck, faTimes, faMoon, faSun } from "@fortawesome/free-solid-svg-icons";
 import Link from "next/link";
 import avatarMap from "../../../lib/avatarMap";
 import admMap from "../../../lib/admMap";
 import { useState, useEffect } from "react";
+import DashboardHeader from "../components/DashboardHeader";
+import BackToHomeButton from "../../../components/BackToHomeButton";
 
 // Toast simple reutilizable
 function Toast({ message, onClose, duration = 3000 }) {
@@ -125,55 +126,23 @@ export default function VerificacionLEA() {
   }
 
   return (
-    <div className="min-h-screen p-6 bg-gray-50 dark:bg-[#0a1120] text-gray-800 dark:text-gray-100 transition" id="verificacion-lea-root">
-      {/* Encabezado premium */}
-      <div className="flex justify-between items-start mb-6 p-4 rounded-lg bg-white dark:bg-[#181f2a] shadow">
-        <Image src="/api-dark23.png" alt="Logo" width={350} height={60} />
-        <div className="flex items-center gap-4">
-          <button
-            onClick={toggleDarkMode}
-            aria-label={darkMode ? "Cambiar a modo claro" : "Cambiar a modo oscuro"}
-            className="p-2 rounded-full border border-blue-200 dark:border-blue-700 bg-white dark:bg-[#232b3b] text-blue-700 dark:text-yellow-300 shadow hover:scale-110 transition-all"
-            style={{ fontSize: 22 }}
-          >
-            <FontAwesomeIcon icon={darkMode ? faSun : faMoon} />
-          </button>
-          <Image
-            src={userAvatar}
-            alt={`Avatar de ${userName}`}
-            width={50}
-            height={50}
-            className="rounded-full border-2 border-white"
-          />
-          <span className="font-semibold">{userName}</span>
-        </div>
+    <div className={`min-h-screen transition-all duration-300 ${darkMode ? "bg-[#0a1120] text-gray-100" : "bg-gray-50 text-gray-900"}`} id="verificacion-lea-root">
+      {/* Header premium reutilizable */}
+      <DashboardHeader title="Verificación de LEA-BCS" darkMode={darkMode} onToggleDarkMode={toggleDarkMode} />
+      {/* Botón Volver al Inicio premium */}
+      <div className="px-6 pt-4">
+        <BackToHomeButton href="/home" darkMode={darkMode} />
       </div>
 
-      {/* Botón regreso premium */}
-      <div className="mb-6 flex justify-start animate-fade-in-up delay-200">
-        <Link href="/home" legacyBehavior>
-          <a className="inline-flex items-center gap-2 px-6 py-2 rounded-full bg-gradient-to-r from-blue-500 via-blue-700 to-blue-500 text-white font-semibold shadow-lg hover:scale-105 hover:from-blue-600 hover:to-blue-700 transition-all duration-300 border border-blue-700/30 focus:outline-none focus:ring-2 focus:ring-blue-400">
-            <FontAwesomeIcon icon={faArrowLeft} className="text-lg" />
-            <span className="tracking-wide">Volver al Inicio</span>
-          </a>
-        </Link>
-      </div>
-
-      {/* Título premium animado */}
-      <div className="flex flex-col items-center mt-[-3rem] mb-14">
-        <h1
-          className="text-3xl md:text-5xl font-extrabold tracking-tight text-center animate-title-slide-fade premium-title-gradient"
-          style={{ letterSpacing: '0.04em' }}
-        >
-          Verificación de LEA-BCS
-        </h1>
-        <span className="block mt-4 text-base md:text-lg text-blue-900 dark:text-blue-200 opacity-95 animate-fade-in-up delay-150 text-center max-w-2xl font-semibold">
+      {/* Subtítulo premium */}
+      <div className="flex flex-col items-center mt-2 mb-10">
+        <span className="block mt-2 text-base md:text-lg text-blue-900 dark:text-blue-200 opacity-95 animate-fade-in-up delay-150 text-center max-w-2xl font-semibold">
           Revisa y valida el cumplimiento de la LEA-BCS para cada documento.
         </span>
       </div>
 
       {/* Filtros y búsqueda */}
-      <div className="flex flex-col md:flex-row gap-4 items-center justify-between w-full max-w-5xl mx-auto mb-10 mt-16 px-6 py-4 bg-white border border-gray-200 rounded-lg shadow-sm dark:bg-transparent dark:border-none">
+      <div className="flex flex-col md:flex-row gap-4 items-center justify-between w-full max-w-5xl mx-auto mb-10 mt-6 px-6 py-4 bg-white border border-gray-200 rounded-lg shadow-sm dark:bg-transparent dark:border-none">
         <div className="flex gap-2 items-center w-full md:w-auto">
           <label className="font-semibold">Estado:</label>
           <select value={filterState} onChange={e => setFilterState(e.target.value)} className="rounded px-3 py-1 border border-blue-400 dark:border-blue-700 bg-white dark:bg-[#232b3b] text-gray-800 dark:text-blue-100 focus:ring-2 focus:ring-blue-300">
@@ -192,57 +161,59 @@ export default function VerificacionLEA() {
         />
       </div>
 
-      {/* Tabla premium */}
-      <div className="w-full max-w-6xl mx-auto mt-2 shadow-md rounded-lg p-0 border bg-white dark:bg-[#181f2a] border-gray-300 dark:border-blue-800 transition-colors overflow-x-auto">
-        <table className="w-full table-auto text-sm border-collapse">
-          <thead className="bg-blue-400 text-gray-800 dark:bg-[#22315a] dark:text-blue-100">
-            <tr>
-              <th className="p-3 border border-gray-300 dark:border-gray-700">Documento</th>
-              <th className="p-3 border border-gray-300 dark:border-gray-700">Fecha</th>
-              <th className="p-3 border border-gray-300 dark:border-gray-700">Responsable</th>
-              <th className="p-3 border border-gray-300 dark:border-gray-700">Tipo</th>
-              <th className="p-3 border border-gray-300 dark:border-gray-700">Clasificación</th>
-              <th className="p-3 border border-gray-300 dark:border-gray-700">Área</th>
-              <th className="p-3 border border-gray-300 dark:border-gray-700">Expediente</th>
-              <th className="p-3 border border-gray-300 dark:border-gray-700">Hash/Folio</th>
-              <th className="p-3 border border-gray-300 dark:border-gray-700">Estado</th>
-              <th className="p-3 border border-gray-300 dark:border-gray-700">Acciones</th>
-            </tr>
-          </thead>
-          <tbody>
-            {paginatedDocs.length > 0 ? (
-              paginatedDocs.map((doc, idx) => (
-                <tr key={doc.id} className={`text-center even:bg-gray-50 odd:bg-white dark:even:bg-[#232b3b] dark:odd:bg-[#181f2a] dark:hover:bg-[#22315a] hover:bg-blue-50 transition-colors ${idx === paginatedDocs.length - 1 ? '' : 'border-b border-gray-300 dark:border-blue-800'}`}> 
-                  <td className="p-3 border-l border-gray-300 dark:border-blue-800 dark:text-blue-100">{doc.name}</td>
-                  <td className="p-3 border-l border-gray-300 dark:border-blue-800 dark:text-blue-100">{doc.date}</td>
-                  <td className="p-3 border-l border-gray-300 dark:border-blue-800 dark:text-blue-100">{doc.owner}</td>
-                  <td className="p-3 border-l border-gray-300 dark:border-blue-800 dark:text-blue-100">{doc.tipo}</td>
-                  <td className="p-3 border-l border-gray-300 dark:border-blue-800 dark:text-blue-100">{doc.clasificacion}</td>
-                  <td className="p-3 border-l border-gray-300 dark:border-blue-800 dark:text-blue-100">{doc.area}</td>
-                  <td className="p-3 border-l border-gray-300 dark:border-blue-800 dark:text-blue-100">{doc.expediente}</td>
-                  <td className="p-3 border-l border-gray-300 dark:border-blue-800 dark:text-blue-100">{doc.hash}</td>
-                  <td className="p-3 border-l border-gray-300 dark:border-blue-800 dark:text-blue-100">{doc.status}</td>
-                  <td className="p-3 border-l dark:text-blue-100 flex flex-col items-center gap-2 border-r border-gray-300 dark:border-blue-800"> 
-                    <div className="flex justify-center gap-3">
-                      <button onClick={() => handleValidate(doc)} className="text-green-600 dark:text-green-400" title="Validar">
-                        <FontAwesomeIcon icon={faCheck} />
-                      </button>
-                      <button onClick={() => handleReject(doc)} className="text-red-600 dark:text-red-400" title="Rechazar">
-                        <FontAwesomeIcon icon={faTimes} />
-                      </button>
-                    </div>
+      {/* Tabla premium sin fondo ni bordes */}
+      <div className="w-screen max-w-full px-2 sm:px-4 py-6 mx-auto">
+        <div className="overflow-x-auto w-full">
+          <table className="w-screen max-w-full min-w-[1200px] mx-auto text-base">
+            <thead>
+              <tr>
+                <th className="px-6 py-4 text-left font-semibold text-gray-700 dark:text-gray-200">Documento</th>
+                <th className="px-6 py-4 text-left font-semibold text-gray-700 dark:text-gray-200">Fecha</th>
+                <th className="px-6 py-4 text-left font-semibold text-gray-700 dark:text-gray-200">Responsable</th>
+                <th className="px-6 py-4 text-left font-semibold text-gray-700 dark:text-gray-200">Tipo</th>
+                <th className="px-6 py-4 text-left font-semibold text-gray-700 dark:text-gray-200">Clasificación</th>
+                <th className="px-6 py-4 text-left font-semibold text-gray-700 dark:text-gray-200">Área</th>
+                <th className="px-6 py-4 text-left font-semibold text-gray-700 dark:text-gray-200">Expediente</th>
+                <th className="px-6 py-4 text-left font-semibold text-gray-700 dark:text-gray-200">Hash/Folio</th>
+                <th className="px-6 py-4 text-left font-semibold text-gray-700 dark:text-gray-200">Estado</th>
+                <th className="px-6 py-4 text-center font-semibold text-gray-700 dark:text-gray-200">Acciones</th>
+              </tr>
+            </thead>
+            <tbody>
+              {paginatedDocs.length > 0 ? (
+                paginatedDocs.map((doc) => (
+                  <tr key={doc.id} className="hover:bg-blue-50 dark:hover:bg-slate-800 transition-all duration-200">
+                    <td className="px-6 py-4">{doc.name}</td>
+                    <td className="px-6 py-4">{doc.date}</td>
+                    <td className="px-6 py-4">{doc.owner}</td>
+                    <td className="px-6 py-4">{doc.tipo}</td>
+                    <td className="px-6 py-4">{doc.clasificacion}</td>
+                    <td className="px-6 py-4">{doc.area}</td>
+                    <td className="px-6 py-4">{doc.expediente}</td>
+                    <td className="px-6 py-4">{doc.hash}</td>
+                    <td className="px-6 py-4">{doc.status}</td>
+                    <td className="px-6 py-4 text-center">
+                      <div className="flex justify-center gap-3">
+                        <button onClick={() => handleValidate(doc)} className="text-green-600 dark:text-green-400 hover:scale-125 transition-transform duration-200" title="Validar">
+                          <FontAwesomeIcon icon={faCheck} />
+                        </button>
+                        <button onClick={() => handleReject(doc)} className="text-red-600 dark:text-red-400 hover:scale-125 transition-transform duration-200" title="Rechazar">
+                          <FontAwesomeIcon icon={faTimes} />
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                ))
+              ) : (
+                <tr>
+                  <td colSpan="10" className="text-center p-4 text-gray-500 dark:text-blue-200">
+                    No hay documentos que coincidan con el filtro o búsqueda.
                   </td>
                 </tr>
-              ))
-            ) : (
-              <tr>
-                <td colSpan="10" className="text-center p-4 text-gray-500 dark:text-blue-200">
-                  No hay documentos que coincidan con el filtro o búsqueda.
-                </td>
-              </tr>
-            )}
-          </tbody>
-        </table>
+              )}
+            </tbody>
+          </table>
+        </div>
         {/* Paginación */}
         <div className="flex justify-center items-center gap-2 py-6">
           <button

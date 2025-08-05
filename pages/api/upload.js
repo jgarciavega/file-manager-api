@@ -46,7 +46,7 @@ export default async function handler(req, res) {
   form.parse(req, async (err, fields, files) => {
     if (err) {
       console.error('Error parseando formulario:', err);
-      return res.status(500).json({ error: 'Error al procesar el formulario', details: err.message });
+      return res.status(500).json({ success: false, error: 'Error al procesar el formulario', details: err.message });
     }
 
     // LOG para depuración
@@ -73,7 +73,7 @@ export default async function handler(req, res) {
     let uploadedFile = Array.isArray(files.file) ? files.file[0] : files.file;
     if (!uploadedFile) {
       console.error("No se recibió archivo");
-      return res.status(400).json({ error: 'No se recibió ningún archivo', debug: { files } });
+      return res.status(400).json({ success: false, error: 'No se recibió ningún archivo', debug: { files } });
     }
 
     // Log explícito del tipo MIME recibido
@@ -95,6 +95,7 @@ export default async function handler(req, res) {
     if (!allowedMimeTypes.includes(uploadedFile.mimetype)) {
       console.error("Tipo de archivo no permitido:", uploadedFile.mimetype);
       return res.status(400).json({
+        success: false,
         error: 'Tipo de archivo no permitido',
         allowed: allowedMimeTypes,
         received: uploadedFile.mimetype
@@ -119,6 +120,7 @@ export default async function handler(req, res) {
     } catch (fileErr) {
       console.error("El archivo no existe físicamente tras la subida:", absolutePath, fileErr);
       return res.status(500).json({
+        success: false,
         error: 'El archivo no se guardó correctamente en el servidor',
         details: fileErr.message,
         debug: { absolutePath, uploadedFile }
@@ -143,12 +145,15 @@ export default async function handler(req, res) {
 
       // Responder al frontend
       return res.status(200).json({
+        success: true,
+        fileUrl: documento.ruta ? documento.ruta : '',
         documento,
         message: 'Documento subido exitosamente'
       });
     } catch (dbErr) {
       console.error('Error guardando en BD:', dbErr);
       return res.status(500).json({
+        success: false,
         error: 'No se pudo guardar en la base de datos',
         details: dbErr.message
       });

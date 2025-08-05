@@ -33,6 +33,73 @@ model documentos {
   usuarios            usuarios?         @relation(fields: [usuarios_id], references: [id])
   favoritos           favoritos[]
 
+  serieId             Int?
+  subserieId          Int?
+  expedienteId        Int?
+  serie               SerieDocumental?     @relation(fields: [serieId], references: [id])
+  subserie            SubserieDocumental?  @relation(fields: [subserieId], references: [id])
+  expediente          Expediente?          @relation(fields: [expedienteId], references: [id])
+  transferencias      Transferencia[]
+  versiones           VersionDocumento[]
+  prestamos           PrestamoDocumento[]
+model SerieDocumental {
+  id          Int                 @id @default(autoincrement())
+  nombre      String
+  descripcion String?
+  subseries   SubserieDocumental[]
+  documentos  documentos[]
+}
+
+model SubserieDocumental {
+  id                Int               @id @default(autoincrement())
+  nombre            String
+  descripcion       String?
+  serieId           Int
+  serie             SerieDocumental   @relation(fields: [serieId], references: [id])
+  documentos        documentos[]
+}
+
+model Expediente {
+  id          Int           @id @default(autoincrement())
+  nombre      String
+  descripcion String?
+  documentos  documentos[]
+}
+
+model Transferencia {
+  id            Int         @id @default(autoincrement())
+  documentoId   Int
+  documento     documentos  @relation(fields: [documentoId], references: [id])
+  tipo          String      // administrativa, histórica, baja
+  fecha         DateTime
+  usuarioId     Int
+  usuario       usuarios    @relation(fields: [usuarioId], references: [id])
+  observaciones String?
+}
+
+model VersionDocumento {
+  id            Int         @id @default(autoincrement())
+  documentoId   Int
+  documento     documentos  @relation(fields: [documentoId], references: [id])
+  version       Int
+  fecha         DateTime
+  usuarioId     Int
+  usuario       usuarios    @relation(fields: [usuarioId], references: [id])
+  ruta          String
+  descripcion   String?
+}
+
+model PrestamoDocumento {
+  id              Int         @id @default(autoincrement())
+  documentoId     Int
+  documento       documentos  @relation(fields: [documentoId], references: [id])
+  usuarioId       Int
+  usuario         usuarios    @relation(fields: [usuarioId], references: [id])
+  fechaPrestamo   DateTime
+  fechaDevolucion DateTime?
+  observaciones   String?
+}
+
   @@index([tipos_documentos_id], map: "tipos_documentos_id")
   @@index([usuarios_id], map: "usuarios_id")
 }

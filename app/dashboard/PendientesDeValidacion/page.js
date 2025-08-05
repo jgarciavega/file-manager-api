@@ -1,6 +1,24 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
+import Image from "next/image";
+import Link from "next/link";
+import { useSession } from "next-auth/react";
+import avatarMap from "../../../lib/avatarMap";
+import DashboardHeader from "../components/DashboardHeader";
+import BackToHomeButton from "../../../components/BackToHomeButton";
+import {
+  faDownload,
+  faCheck,
+  faTimes,
+  faEye,
+  faMoon,
+  faSun,
+  faSearch,
+  faArrowLeft,
+} from "@fortawesome/free-solid-svg-icons";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+
 // Toast simple
 function Toast({ message, onClose, duration = 3000 }) {
   useEffect(() => {
@@ -16,21 +34,6 @@ function Toast({ message, onClose, duration = 3000 }) {
     </div>
   );
 }
-import Image from "next/image";
-import Link from "next/link";
-import { useSession } from "next-auth/react";
-import avatarMap from "../../../lib/avatarMap";
-import {
-  faDownload,
-  faCheck,
-  faTimes,
-  faEye,
-  faMoon,
-  faSun,
-  faSearch,
-  faArrowLeft,
-} from "@fortawesome/free-solid-svg-icons";
-import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 
 export default function PendingDocumentsPage() {
   // Funciones de acción (simples para evitar errores de referencia)
@@ -134,148 +137,87 @@ export default function PendingDocumentsPage() {
   const paginatedDocs = filteredDocs.slice((page - 1) * pageSize, page * pageSize);
 
   return (
-    <div className={`p-6 min-h-screen transition-all ${darkMode ? "bg-[#0d1b2a] text-white" : "bg-gray-50 text-gray-900"}`}>
-      {/* Encabezado */}
-      <div className={`flex justify-between items-start mb-6 p-4 rounded-lg ${darkMode ? "bg-[#1a2b3c]" : "bg-white shadow"}`}>
-        <Image src={darkMode ? "/api-dark23.png" : "/api.jpg"} alt="Logo API" width={300} height={50} />
-        <div className="flex flex-col items-center gap-2">
-          <button onClick={() => setDarkMode(!darkMode)} className="text-xl" title="Cambiar modo">
-            <FontAwesomeIcon icon={darkMode ? faSun : faMoon} />
-          </button>
-          <div className="flex items-center gap-2">
-            <Image src={userAvatar} alt="Avatar" width={45} height={45} className="rounded-full border border-gray-300" />
-            <span className={`font-medium ${darkMode ? "text-white" : "text-gray-900"}`}>{userName}</span>
-          </div>
-        </div>
+    <div className={`min-h-screen transition-all duration-300 ${darkMode ? "bg-[#0d1b2a] text-white" : "bg-gray-50 text-gray-900"}`}>
+      {/* Header premium reutilizable */}
+      <DashboardHeader title="Pendientes de Validación" darkMode={darkMode} onToggleDarkMode={() => setDarkMode(!darkMode)} />
+      {/* Botón Volver al Inicio premium */}
+      <div className="px-6 pt-4">
+        <BackToHomeButton href="/home" darkMode={darkMode} />
       </div>
 
-      {/* Botón regreso  */}
-      <div className="mb-6 flex justify-start animate-fade-in-up delay-200">
-        <Link href="/home" legacyBehavior>
-          <a className="inline-flex items-center gap-2 px-6 py-2 rounded-full bg-gradient-to-r from-blue-500 via-blue-700 to-blue-500 text-white font-semibold shadow-lg hover:scale-105 hover:from-blue-600 hover:to-blue-700 transition-all duration-300 border border-blue-700/30 focus:outline-none focus:ring-2 focus:ring-blue-400">
-            <FontAwesomeIcon icon={faArrowLeft} className="text-lg" />
-            <span className="tracking-wide">Volver al Inicio</span>
-          </a>
-        </Link>
-      </div>
-
-      {/* Título premium, solo texto, arriba y con animación */}
-
-      <div className="flex flex-col items-center mt-[-4.5rem] mb-6">
-        <h1
-          className="text-3xl md:text-5xl font-extrabold tracking-tight text-center animate-title-slide-fade premium-title-gradient"
-          style={{ letterSpacing: '0.04em' }}
-        >
-          Pendientes de Validación
-        </h1>
-        <span className="block mt-6 text-base md:text-lg text-red-400 dark:text-gray-600 opacity-95 animate-fade-in-up delay-150 text-center max-w-2xl font-semibold">
+      {/* Subtítulo premium */}
+      <div className="flex flex-col items-center mt-2 mb-6">
+        <span className="block mt-2 text-base md:text-lg text-red-400 dark:text-gray-600 opacity-95 animate-fade-in-up delay-150 text-center max-w-2xl font-semibold">
           Revisa, valida y gestiona documentos conforme a la LEA-BCS
-        </span> 
+        </span>
       </div>
 
-<style jsx global>{`
-  @keyframes title-slide-fade {
-    0% { opacity: 0; transform: translateY(-80px) scale(0.96); }
-    60% { opacity: 1; transform: translateY(10px) scale(1.04); }
-    100% { opacity: 1; transform: translateY(0) scale(1); }
-  }
-  .animate-title-slide-fade {
-    animation: title-slide-fade 1.1s cubic-bezier(0.23, 1, 0.32, 1) both;
-  }
-  /* Gradiente premium animado, sin glow ni subrayado */
-  .premium-title-gradient {
-    background: linear-gradient(90deg, #1e3a8a 0%, #60a5fa 50%, #fff 100%);
-    background-size: 200% auto;
-    background-clip: text;
-    -webkit-background-clip: text;
-    color: transparent;
-    -webkit-text-fill-color: transparent;
-    animation: premium-gradient-move 3.5s linear infinite;
-  }
-  @keyframes premium-gradient-move {
-    0% { background-position: 0% 50%; }
-    100% { background-position: 200% 50%; }
-  }
-  @keyframes underline-slide {
-    0% { width: 0; opacity: 0; }
-    60% { width: 40%; opacity: 1; }
-    100% { width: 100%; opacity: 1; }
-  }
-  .animate-underline-slide {
-    animation: underline-slide 1.2s cubic-bezier(0.23, 1, 0.32, 1) 0.3s both;
-  }
-  @media (max-width: 640px) {
-    .animate-title-slide-fade { font-size: 2.2rem !important; }
-    .premium-title-underline { height: 4px; }
-  }
-`}</style>
-      {/* Tabla con metadatos y paginación */}
-      <div className={`shadow-md rounded-lg p-6 border ${darkMode ? "bg-[#1a2b3c] border-gray-800" : "bg-white border-gray-400"}`}> 
-        <table className="w-full table-auto text-sm border-collapse">
-          <thead className={darkMode ? "bg-blue-600 text-white" : "bg-blue-400 text-gray-800"}>
-            <tr>
-              <th className={`p-3 border ${darkMode ? "border-gray-700" : "border-gray-400"}`}>Documento</th>
-              <th className={`p-3 border ${darkMode ? "border-gray-700" : "border-gray-400"}`}>Fecha</th>
-              <th className={`p-3 border ${darkMode ? "border-gray-700" : "border-gray-400"}`}>Responsable</th>
-              <th className={`p-3 border ${darkMode ? "border-gray-700" : "border-gray-400"}`}>Tipo</th>
-              <th className={`p-3 border ${darkMode ? "border-gray-700" : "border-gray-400"}`}>Clasificación</th>
-              <th className={`p-3 border ${darkMode ? "border-gray-700" : "border-gray-400"}`}>Vigencia</th>
-              <th className={`p-3 border ${darkMode ? "border-gray-700" : "border-gray-400"}`}>Área</th>
-              <th className={`p-3 border ${darkMode ? "border-gray-700" : "border-gray-400"}`}>Expediente</th>
-              <th className={`p-3 border ${darkMode ? "border-gray-700" : "border-gray-400"}`}>Hash/Folio</th>
-              <th className={`p-3 border ${darkMode ? "border-gray-700" : "border-gray-400"}`}>Estado</th>
-              <th className={`p-3 border ${darkMode ? "border-gray-700" : "border-gray-400"}`}>Acciones</th>
-            </tr>
-          </thead>
-          <tbody>
-            {paginatedDocs.length > 0 ? (
-              paginatedDocs.map((doc) => (
-                <tr
-                  key={doc.id}
-                  className={`text-center ${darkMode ? "even:bg-[#2c3e50] odd:bg-[#1a2634]" : "even:bg-gray-50 odd:bg-white"}`}
-                >
-                  <td className="p-3 border dark:border-gray-700 border-gray-400">{doc.name}</td>
-                  <td className="p-3 border dark:border-gray-700 border-gray-400">{doc.date}</td>
-                  <td className="p-3 border dark:border-gray-700 border-gray-400">{doc.owner}</td>
-                  <td className="p-3 border dark:border-gray-700 border-gray-400">{doc.tipo}</td>
-                  <td className="p-3 border dark:border-gray-700 border-gray-400">{doc.clasificacion}</td>
-                  <td className="p-3 border dark:border-gray-700 border-gray-400">{doc.vigencia}</td>
-                  <td className="p-3 border dark:border-gray-700 border-gray-400">{doc.area}</td>
-                  <td className="p-3 border dark:border-gray-700 border-gray-400">{doc.expediente}</td>
-                  <td className="p-3 border dark:border-gray-700 border-gray-400">{doc.hash}</td>
-                  <td className="p-3 border dark:border-gray-700 border-gray-400">{doc.status}</td>
-                  <td className="p-3 border dark:border-gray-700 border-gray-400 flex flex-col items-center gap-2">
-                    <div className="flex justify-center gap-3">
-                      <button onClick={() => handleDownload(doc)} className="text-blue-600 dark:text-blue-400" title="Descargar">
-                        <FontAwesomeIcon icon={faDownload} />
-                      </button>
-                      <button onClick={() => handleValidate(doc)} className="text-green-600 dark:text-green-400" title="Validar">
-                        <FontAwesomeIcon icon={faCheck} />
-                      </button>
-                      <button onClick={() => handleReject(doc)} className="text-red-600 dark:text-red-400" title="Rechazar">
-                        <FontAwesomeIcon icon={faTimes} />
-                      </button>
-                      <button onClick={() => openDetails(doc)} className="text-yellow-500" title="Ver historial/bitácora">
-                        <FontAwesomeIcon icon={faEye} />
-                      </button>
-                    </div>
-                    <Link href={`/dashboard/bitacora?docId=${doc.id}`} legacyBehavior>
-                      <a className="mt-1 text-xs underline text-blue-500 hover:text-blue-700 dark:text-blue-300 dark:hover:text-blue-400 transition-all duration-200" title="Ver bitácora completa de este documento">
-                        Ver Bitácora Completa
-                      </a>
-                    </Link>
+      {/* Tabla premium sin fondo ni bordes */}
+      <div className="w-screen max-w-full px-2 sm:px-4 py-6 mx-auto">
+        <div className="overflow-x-auto w-full">
+          <table className="w-screen max-w-full min-w-[1200px] mx-auto text-base">
+            <thead>
+              <tr>
+                <th className="px-6 py-4 text-left font-semibold text-gray-700 dark:text-gray-200">Documento</th>
+                <th className="px-6 py-4 text-left font-semibold text-gray-700 dark:text-gray-200">Fecha</th>
+                <th className="px-6 py-4 text-left font-semibold text-gray-700 dark:text-gray-200">Responsable</th>
+                <th className="px-6 py-4 text-left font-semibold text-gray-700 dark:text-gray-200">Tipo</th>
+                <th className="px-6 py-4 text-left font-semibold text-gray-700 dark:text-gray-200">Clasificación</th>
+                <th className="px-6 py-4 text-left font-semibold text-gray-700 dark:text-gray-200">Vigencia</th>
+                <th className="px-6 py-4 text-left font-semibold text-gray-700 dark:text-gray-200">Área</th>
+                <th className="px-6 py-4 text-left font-semibold text-gray-700 dark:text-gray-200">Expediente</th>
+                <th className="px-6 py-4 text-left font-semibold text-gray-700 dark:text-gray-200">Hash/Folio</th>
+                <th className="px-6 py-4 text-left font-semibold text-gray-700 dark:text-gray-200">Estado</th>
+                <th className="px-6 py-4 text-center font-semibold text-gray-700 dark:text-gray-200">Acciones</th>
+              </tr>
+            </thead>
+            <tbody>
+              {paginatedDocs.length > 0 ? (
+                paginatedDocs.map((doc) => (
+                  <tr key={doc.id} className="hover:bg-blue-50 dark:hover:bg-slate-800 transition-all duration-200">
+                    <td className="px-6 py-4">{doc.name}</td>
+                    <td className="px-6 py-4">{doc.date}</td>
+                    <td className="px-6 py-4">{doc.owner}</td>
+                    <td className="px-6 py-4">{doc.tipo}</td>
+                    <td className="px-6 py-4">{doc.clasificacion}</td>
+                    <td className="px-6 py-4">{doc.vigencia}</td>
+                    <td className="px-6 py-4">{doc.area}</td>
+                    <td className="px-6 py-4">{doc.expediente}</td>
+                    <td className="px-6 py-4">{doc.hash}</td>
+                    <td className="px-6 py-4">{doc.status}</td>
+                    <td className="px-6 py-4 text-center">
+                      <div className="flex justify-center gap-3">
+                        <button onClick={() => handleDownload(doc)} className="text-blue-600 dark:text-blue-400 hover:scale-125 transition-transform duration-200" title="Descargar">
+                          <FontAwesomeIcon icon={faDownload} />
+                        </button>
+                        <button onClick={() => handleValidate(doc)} className="text-green-600 dark:text-green-400 hover:scale-125 transition-transform duration-200" title="Validar">
+                          <FontAwesomeIcon icon={faCheck} />
+                        </button>
+                        <button onClick={() => handleReject(doc)} className="text-red-600 dark:text-red-400 hover:scale-125 transition-transform duration-200" title="Rechazar">
+                          <FontAwesomeIcon icon={faTimes} />
+                        </button>
+                        <button onClick={() => openDetails(doc)} className="text-yellow-500 hover:scale-125 transition-transform duration-200" title="Ver historial/bitácora">
+                          <FontAwesomeIcon icon={faEye} />
+                        </button>
+                      </div>
+                      <Link href={`/dashboard/bitacora?docId=${doc.id}`} legacyBehavior>
+                        <a className="mt-1 text-xs underline text-blue-500 hover:text-blue-700 dark:text-blue-300 dark:hover:text-blue-400 transition-all duration-200" title="Ver bitácora completa de este documento">
+                          Ver Bitácora Completa
+                        </a>
+                      </Link>
+                    </td>
+                  </tr>
+                ))
+              ) : (
+                <tr>
+                  <td colSpan="11" className="text-center p-4 text-gray-500 dark:text-gray-300">
+                    No hay documentos que coincidan con el filtro o búsqueda.
                   </td>
                 </tr>
-              ))
-            ) : (
-              <tr>
-                <td colSpan="11" className="text-center p-4 text-gray-500 dark:text-gray-300">
-                  No hay documentos que coincidan con el filtro o búsqueda.
-                </td>
-              </tr>
-            )}
-          </tbody>
-        </table>
+              )}
+            </tbody>
+          </table>
+        </div>
         {/* Paginación */}
         <div className="flex justify-center items-center gap-2 py-6">
           <button
@@ -296,6 +238,7 @@ export default function PendingDocumentsPage() {
         </div>
         <Toast message={toast} onClose={() => setToast("")} />
       </div>
+
       {/* Modal de Detalles / Bitácora */}
       {selectedDoc && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">

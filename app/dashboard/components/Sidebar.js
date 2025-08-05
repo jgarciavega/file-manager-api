@@ -150,6 +150,19 @@ export default function Sidebar({ isSidebarCollapsed }) {
         { label: "Ayuda", href: "/dashboard/ayuda", icon: faArrowLeft },
       ],
     },
+    {
+      key: "gestion-documental",
+      label: "Gestión Documental",
+      icon: faFolderOpen,
+      sub: [
+        { label: "Expedientes", href: "/dashboard/gestion-documental/expedientes", icon: faFileAlt },
+        { label: "Préstamos documentales", href: "/dashboard/gestion-documental/prestamos-documento", icon: faTasks },
+        { label: "Series documentales", href: "/dashboard/gestion-documental/series-documentales", icon: faBoxes },
+        { label: "Subseries documentales", href: "/dashboard/gestion-documental/subseries-documentales", icon: faBoxes },
+        { label: "Transferencias", href: "/dashboard/gestion-documental/transferencias", icon: faArrowLeft },
+        { label: "Versiones documentales", href: "/dashboard/gestion-documental/versiones-documentales", icon: faHistory },
+      ],
+    },
   ];
 
   // Filtrado de submenús según búsqueda

@@ -2,33 +2,28 @@
 
 import { useState, useEffect } from "react";
 import Image from "next/image";
-import Link from "next/link";
+import DashboardHeader from "../components/DashboardHeader";
+import BackToHomeButton from "../../../components/BackToHomeButton";
 import { useSession } from "next-auth/react";
 import avatarMap from "../../../lib/avatarMap";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
-  faDownload,
-  faEdit,
-  faTrash,
-  faMoon,
-  faSun,
-  faFileAlt,
-  faArrowLeft,
-  faSearch,
-  faFilter,
-  faChartLine,
   faShieldAlt,
-  faCalendarAlt,
-  faArchive,
-  faExclamationTriangle,
   faCheckCircle,
-  faClock,
+  faExclamationTriangle,
+  faArchive,
+  faFileAlt,
+  faChartLine,
+  faFilter,
   faGavel,
-  faFileContract,
-  faHistory,
   faBarcode,
-
+  faFileContract,
+  faSearch,
   faStar,
+  faDownload,
+  faHistory,
+  faEdit,
+  faTrash
 } from "@fortawesome/free-solid-svg-icons";
 
 export default function MisDocumentosPage() {
@@ -269,88 +264,38 @@ export default function MisDocumentosPage() {
     <div className={`min-h-screen transition-all duration-300 ${
       darkMode ? "bg-gradient-to-br from-slate-900 via-blue-900 to-slate-900" : "bg-gradient-to-br from-blue-50 via-white to-purple-50"
     }`}>
-      {/* Header directo y simplificado */}
-      <div className={`sticky top-0 z-40 border-b transition-all duration-300 flex items-center justify-between px-6 py-4 ${
-        darkMode 
-          ? "bg-slate-900/95 border-slate-700 backdrop-blur-sm" 
-          : "bg-white/95 border-blue-200 backdrop-blur-sm"
-      }`}>
-        {/* Logo a la izquierda, fondo transparente, sin caja */}
-        <Image
-          src="/api-dark23.png"
-          alt="API Logo"
-          width={300}
-          height={100}
-          className="transition-all duration-300 hover:scale-105 object-contain"
-          priority
-        />
-
-        {/* Título centrado - más grande con efectos */}
-        <div className="flex-1 text-center px-4">
-          <h1 className={`text-4xl font-bold bg-gradient-to-r from-blue-600 via-purple-600 to-blue-600 bg-clip-text text-transparent hover:from-cyan-500 hover:via-pink-500 hover:to-purple-500 transition-all duration-500 transform hover:scale-105 hover:-translate-y-1 cursor-default animate-pulse ${
-            darkMode ? "from-blue-400 via-purple-400 to-blue-400 hover:from-cyan-400 hover:via-pink-400 hover:to-purple-400" : ""
-          }`}>
-            Mis Documentos
-          </h1>
-          <div className={`text-sm font-medium mt-2 flex items-center justify-center gap-1 transition-all duration-300 hover:scale-105 ${
-            darkMode ? "text-gray-300 hover:text-green-300" : "text-gray-600 hover:text-green-600"
-          }`}>
-            <FontAwesomeIcon icon={faGavel} className="text-green-500 text-sm animate-bounce" />
-            <span className="hover:tracking-wider transition-all duration-300">Gestión Archivística Conforme a Ley Estatal de BCS</span>
-          </div>
-        </div>
-
-        {/* Avatar y toggle a la derecha - más grande */}
-        <div className="flex items-center gap-3">
-          <Image
-            src={user.avatar}
-            alt="Avatar"
-            width={90}
-            height={90}
-            className="rounded-full border-3 border-blue-400 shadow-lg hover:scale-105 transition-all duration-300"
-          />
-          
-          <button
-            onClick={toggleTheme}
-            className={`p-3 rounded-lg transition-all duration-300 transform hover:scale-110 hover:rotate-12 hover:-translate-y-1 shadow-lg hover:shadow-xl ${
-              darkMode 
-                ? "bg-slate-800 text-yellow-400 hover:bg-slate-700 hover:text-yellow-300 hover:shadow-yellow-400/30" 
-                : "bg-gray-100 text-gray-600 hover:bg-gray-200 hover:text-blue-600 hover:shadow-blue-400/30"
-            }`}
-          >
-            <FontAwesomeIcon icon={darkMode ? faSun : faMoon} className="text-lg transition-all duration-300 hover:scale-125" />
-          </button>
-        </div>
-      </div>
-
-      {/* Botón Volver al Inicio - Fuera del header, alineado debajo del logo */}
+      {/* Header premium reutilizable */}
+      <DashboardHeader title="Mis Documentos" darkMode={darkMode} onToggleDarkMode={toggleTheme} />
+      {/* Botón Volver al Inicio premium */}
       <div className="px-6 pt-4">
-        <Link 
-          href="/home"
-          className={`group inline-flex items-center gap-3 px-5 py-2.5 rounded-xl transition-all duration-300 shadow-lg hover:shadow-xl transform hover:-translate-y-1 hover:scale-105 ${
-            darkMode 
-              ? "bg-gradient-to-r from-emerald-600 to-teal-600 border border-emerald-500 text-white hover:from-emerald-500 hover:to-teal-500 hover:shadow-emerald-500/30" 
-              : "bg-gradient-to-r from-indigo-600 to-purple-600 border border-indigo-500 text-white hover:from-indigo-500 hover:to-purple-500 hover:shadow-indigo-500/30"
-          }`}
-        >
-          <FontAwesomeIcon 
-            icon={faArrowLeft} 
-            className="text-sm transition-all duration-300 group-hover:-translate-x-1 group-hover:scale-110"
-          />
-          <span className="font-semibold text-sm tracking-wide group-hover:tracking-wider transition-all duration-300">
-            Volver al Inicio
-          </span>
-        </Link>
+        <BackToHomeButton href="/home" darkMode={darkMode} />
       </div>
+
+      {/* Botón flotante para mostrar el panel de cumplimiento */}
+      {!showCompliance && (
+        <button
+          onClick={() => setShowCompliance(true)}
+          className={`fixed z-50 bottom-8 right-8 flex items-center gap-2 px-5 py-3 rounded-full shadow-lg border-2 transition-all duration-300 text-base font-semibold focus:outline-none focus:ring-2 focus:ring-blue-400/50
+            ${darkMode
+              ? "bg-gradient-to-r from-blue-900 to-purple-900 border-blue-700 text-white hover:bg-blue-800/80 hover:border-blue-500"
+              : "bg-white border-blue-400 text-blue-900 hover:bg-blue-100 hover:border-blue-600"}
+          `}
+          title="Mostrar Panel de Cumplimiento Archivístico"
+          aria-label="Mostrar Panel de Cumplimiento Archivístico"
+        >
+          <FontAwesomeIcon icon={faShieldAlt} className="text-blue-500 text-lg" />
+          Mostrar Panel de Cumplimiento
+        </button>
+      )}
 
       {/* Contenido principal */}
-      <div className="max-w-7xl mx-auto px-4 py-6">
+      <div className="w-screen max-w-full px-2 sm:px-4 py-6 mx-auto">
         {/* Panel de Cumplimiento Legal */}
         {showCompliance && (
-          <div className={`p-6 rounded-xl border mb-8 transition-all duration-300 ${
+          <div className={`p-6 rounded-xl border-4 mb-8 transition-all duration-300 ${
             darkMode 
               ? "bg-gradient-to-r from-blue-900/30 to-purple-900/30 border-blue-700" 
-              : "bg-gradient-to-r from-blue-50 to-purple-50 border-blue-200"
+              : "bg-white border-blue-300 shadow-md"
           }`}>
             <div className="flex items-center justify-between mb-4">
               <div className="flex items-center gap-3">
@@ -369,54 +314,50 @@ export default function MisDocumentosPage() {
             
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               {[
-                { 
-                  label: "Documentos Vigentes", 
-                  value: getComplianceMetrics().vigentes, 
-                  icon: faCheckCircle, 
-                  color: "green",
+                {
+                  label: "Documentos Vigentes",
+                  value: getComplianceMetrics().vigentes,
+                  icon: faCheckCircle,
+                  color: "emerald",
+                  bg: darkMode ? "bg-emerald-900/60" : "bg-emerald-200",
+                  border: darkMode ? "border-emerald-700" : "border-emerald-300",
+                  iconColor: darkMode ? "text-emerald-200" : "text-emerald-700",
+                  text: darkMode ? "text-emerald-100" : "text-emerald-900",
                   description: "Cumplimiento de retención activa"
                 },
-                { 
-                  label: "Próximos a Transferir", 
-                  value: getComplianceMetrics().proximosVencer, 
-                  icon: faExclamationTriangle, 
-                  color: "yellow",
+                {
+                  label: "Próximos a Transferir",
+                  value: getComplianceMetrics().proximosVencer,
+                  icon: faExclamationTriangle,
+                  color: "amber",
+                  bg: darkMode ? "bg-amber-900/60" : "bg-amber-200",
+                  border: darkMode ? "border-amber-700" : "border-amber-300",
+                  iconColor: darkMode ? "text-amber-200" : "text-amber-700",
+                  text: darkMode ? "text-amber-100" : "text-amber-900",
                   description: "Requieren evaluación de disposición"
                 },
-                { 
-                  label: "Archivo Histórico", 
-                  value: getComplianceMetrics().historicos, 
-                  icon: faArchive, 
-                  color: "blue",
+                {
+                  label: "Archivo Histórico",
+                  value: getComplianceMetrics().historicos,
+                  icon: faArchive,
+                  color: "sky",
+                  bg: darkMode ? "bg-sky-900/60" : "bg-sky-200",
+                  border: darkMode ? "border-sky-700" : "border-sky-300",
+                  iconColor: darkMode ? "text-sky-200" : "text-sky-700",
+                  text: darkMode ? "text-sky-100" : "text-sky-900",
                   description: "Conservación permanente o transferidos"
                 }
               ].map((metric, index) => (
-                <div key={index} className={`p-4 rounded-lg border transition-all duration-300 ${
-                  darkMode 
-                    ? "bg-slate-800/50 border-slate-600 hover:bg-slate-700/50" 
-                    : "bg-white/80 border-gray-200 hover:shadow-md"
-                }`}>
+                <div
+                  key={index}
+                  className={`p-4 rounded-2xl shadow-md border-2 transition-all duration-300 transform hover:scale-[1.035] hover:shadow-xl flex flex-col justify-between ${metric.bg} ${metric.border}`}
+                >
                   <div className="flex items-center gap-3 mb-2">
-                    <FontAwesomeIcon 
-                      icon={metric.icon} 
-                      className={`text-lg ${
-                        metric.color === "green" ? "text-green-500" :
-                        metric.color === "yellow" ? "text-yellow-500" : "text-blue-500"
-                      }`} 
-                    />
-                    <span className={`font-semibold text-lg ${
-                      metric.color === "green" ? "text-green-600" :
-                      metric.color === "yellow" ? "text-yellow-600" : "text-blue-600"
-                    }`}>
-                      {metric.value}
-                    </span>
+                    <FontAwesomeIcon icon={metric.icon} className={`text-2xl ${metric.iconColor}`} />
+                    <span className={`font-semibold text-lg ${metric.text}`}>{metric.value}</span>
                   </div>
-                  <p className={`text-sm font-medium ${darkMode ? "text-gray-200" : "text-gray-800"}`}>
-                    {metric.label}
-                  </p>
-                  <p className={`text-xs ${darkMode ? "text-gray-400" : "text-gray-500"}`}>
-                    {metric.description}
-                  </p>
+                  <p className={`text-sm font-medium ${metric.text}`}>{metric.label}</p>
+                  <p className={`text-xs ${darkMode ? "text-gray-400" : "text-gray-500"}`}>{metric.description}</p>
                 </div>
               ))}
             </div>
@@ -426,37 +367,58 @@ export default function MisDocumentosPage() {
         {/* Estadísticas expandidas */}
         <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
           {[
-            { label: "Total Documentos", value: documentos.length, icon: faFileAlt, color: "blue" },
-            { label: "Subidos Hoy", value: documentos.filter(d => 
-              new Date(d.fecha_subida).toDateString() === new Date().toDateString()
-            ).length, icon: faChartLine, color: "green" },
-            { label: "Tipos de Serie", value: new Set(documentos.map(d => d.tipos_documentos?.tipo)).size, icon: faFilter, color: "purple" },
-            { label: "Retención Legal", value: `${Math.round((getComplianceMetrics().vigentes / (documentos.length || 1)) * 100)}%`, icon: faGavel, color: "orange" }
+            {
+              label: "Total Documentos",
+              value: documentos.length,
+              icon: faFileAlt,
+              color: "sky",
+              bg: darkMode ? "bg-sky-900/60" : "bg-sky-200",
+              border: darkMode ? "border-sky-700" : "border-sky-300",
+              iconColor: darkMode ? "text-sky-200" : "text-sky-700",
+              text: darkMode ? "text-sky-100" : "text-sky-900"
+            },
+            {
+              label: "Subidos Hoy",
+              value: documentos.filter(d => new Date(d.fecha_subida).toDateString() === new Date().toDateString()).length,
+              icon: faChartLine,
+              color: "teal",
+              bg: darkMode ? "bg-teal-900/60" : "bg-teal-200",
+              border: darkMode ? "border-teal-700" : "border-teal-300",
+              iconColor: darkMode ? "text-teal-200" : "text-teal-700",
+              text: darkMode ? "text-teal-100" : "text-teal-900"
+            },
+            {
+              label: "Tipos de Serie",
+              value: new Set(documentos.map(d => d.tipos_documentos?.tipo)).size,
+              icon: faFilter,
+              color: "rose",
+              bg: darkMode ? "bg-rose-900/60" : "bg-rose-200",
+              border: darkMode ? "border-rose-700" : "border-rose-300",
+              iconColor: darkMode ? "text-rose-200" : "text-rose-700",
+              text: darkMode ? "text-rose-100" : "text-rose-900"
+            },
+            {
+              label: "Retención Legal",
+              value: `${Math.round((getComplianceMetrics().vigentes / (documentos.length || 1)) * 100)}%`,
+              icon: faGavel,
+              color: "violet",
+              bg: darkMode ? "bg-violet-900/60" : "bg-violet-200",
+              border: darkMode ? "border-violet-700" : "border-violet-300",
+              iconColor: darkMode ? "text-violet-200" : "text-violet-700",
+              text: darkMode ? "text-violet-100" : "text-violet-900"
+            }
           ].map((stat, index) => (
-            <div key={index} className={`animate-scale-in p-6 rounded-xl border transition-all duration-300 ${
-              darkMode 
-                ? "bg-slate-800/50 border-slate-700 hover:bg-slate-700/50" 
-                : "bg-white/80 border-gray-200 hover:shadow-lg backdrop-blur-sm"
-            }`}>
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className={`text-sm font-medium ${darkMode ? "text-gray-300" : "text-gray-600"}`}>
-                    {stat.label}
-                  </p>
-                  <p className={`text-2xl font-bold ${
-                    stat.color === "blue" ? "text-blue-600" :
-                    stat.color === "green" ? "text-green-600" : 
-                    stat.color === "purple" ? "text-purple-600" : "text-orange-600"
-                  }`}>
-                    {stat.value}
-                  </p>
+            <div
+              key={index}
+              className={`animate-scale-in p-6 rounded-2xl shadow-md border-2 transition-all duration-300 transform hover:scale-[1.035] hover:shadow-xl flex flex-col justify-between ${stat.bg} ${stat.border}`}
+            >
+              <div className="flex items-center gap-4 mb-2">
+                <div className={`flex items-center justify-center w-12 h-12 rounded-xl bg-white/70 shadow ${stat.iconColor}`}>
+                  <FontAwesomeIcon icon={stat.icon} className={`text-2xl ${stat.iconColor}`} />
                 </div>
-                <div className={`p-3 rounded-lg ${
-                  stat.color === "blue" ? "bg-blue-100 text-blue-600" :
-                  stat.color === "green" ? "bg-green-100 text-green-600" : 
-                  stat.color === "purple" ? "bg-purple-100 text-purple-600" : "bg-orange-100 text-orange-600"
-                }`}>
-                  <FontAwesomeIcon icon={stat.icon} className="text-xl" />
+                <div>
+                  <p className={`text-sm font-medium ${stat.text}`}>{stat.label}</p>
+                  <p className={`text-2xl font-bold ${stat.text}`}>{stat.value}</p>
                 </div>
               </div>
             </div>
@@ -467,7 +429,7 @@ export default function MisDocumentosPage() {
         <div className={`p-6 rounded-xl border mb-8 transition-all duration-300 ${
           darkMode 
             ? "bg-slate-800/50 border-slate-700" 
-            : "bg-white/80 border-gray-200 backdrop-blur-sm"
+            : "bg-white border-blue-200 shadow-sm"
         }`}>
           <div className="flex items-center gap-3 mb-4">
             <FontAwesomeIcon icon={faFileContract} className="text-blue-600" />
@@ -536,7 +498,41 @@ export default function MisDocumentosPage() {
 
             <div>
               <button
-                onClick={() => alert("Generando reporte de inventario conforme a la Ley...")}
+                onClick={() => {
+                  // Generar CSV de ejemplo de inventario legal
+                  const encabezados = [
+                    'ID', 'Nombre', 'Serie Documental', 'Fecha Ingreso', 'Estado Legal', 'Días en Archivo', 'Descripción', 'MIME'
+                  ];
+                  let rows = filteredDocuments.map(doc => {
+                    const status = getDocumentStatus(doc);
+                    const dias = Math.floor((new Date() - new Date(doc.fecha_subida)) / (1000 * 60 * 60 * 24));
+                    return [
+                      doc.id,
+                      '"' + doc.nombre.replace(/"/g, '""') + '"',
+                      doc.tipos_documentos?.tipo || 'Sin clasificar',
+                      formatDate(doc.fecha_subida),
+                      status.status,
+                      dias,
+                      '"' + (doc.descripcion ? doc.descripcion.replace(/"/g, '""') : '') + '"',
+                      doc.mime
+                    ].join(',');
+                  });
+                  if (rows.length === 0) {
+                    rows = [
+                      '1,"Ejemplo de documento","Serie General",01/01/2024,Vigente,12,"Descripción de ejemplo","application/pdf"'
+                    ];
+                  }
+                  const csv = [encabezados.join(','), ...rows].join('\r\n');
+                  const blob = new Blob([csv], { type: 'text/csv' });
+                  const url = URL.createObjectURL(blob);
+                  const a = document.createElement('a');
+                  a.href = url;
+                  a.download = 'inventario_legal.csv';
+                  document.body.appendChild(a);
+                  a.click();
+                  document.body.removeChild(a);
+                  setTimeout(() => URL.revokeObjectURL(url), 1000);
+                }}
                 className={`w-full px-4 py-2 rounded-lg transition-all duration-300 transform hover:scale-105 hover:-translate-y-1 shadow-lg hover:shadow-xl font-semibold ${
                   darkMode
                     ? "bg-gradient-to-r from-green-600 to-emerald-600 text-white hover:from-green-500 hover:to-emerald-500 hover:shadow-green-500/30"
@@ -554,8 +550,8 @@ export default function MisDocumentosPage() {
         <div className={`rounded-xl border overflow-hidden transition-all duration-300 ${
           darkMode 
             ? "bg-slate-800/50 border-slate-700" 
-            : "bg-white/80 border-gray-200 backdrop-blur-sm"
-        }`}>
+            : "bg-white border-blue-200 shadow-sm"
+        } w-screen max-w-full mx-auto`}>
           {loading ? (
             <div className="p-8 text-center">
               <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-4"></div>
@@ -572,25 +568,40 @@ export default function MisDocumentosPage() {
               </p>
             </div>
           ) : (
-            <div className="overflow-x-auto">
-              <table className="w-full">
+            <div className="overflow-x-auto w-full">
+              <table className="w-screen max-w-full min-w-[1400px] mx-auto">
                 <thead className={`${darkMode ? "bg-slate-700" : "bg-gray-50"}`}>
                   <tr>
-                    <th className={`px-6 py-4 text-left text-sm font-semibold ${darkMode ? "text-gray-200" : "text-gray-700"}`}>
-                      📄 Documento / Serie
-                    </th>
-                    <th className={`px-6 py-4 text-left text-sm font-semibold ${darkMode ? "text-gray-200" : "text-gray-700"}`}>
-                      📂 Clasificación
-                    </th>
-                    <th className={`px-6 py-4 text-left text-sm font-semibold ${darkMode ? "text-gray-200" : "text-gray-700"}`}>
-                      📅 Fechas Archivísticas
-                    </th>
-                    <th className={`px-6 py-4 text-left text-sm font-semibold ${darkMode ? "text-gray-200" : "text-gray-700"}`}>
-                      ⚖️ Estado Legal
-                    </th>
-                    <th className={`px-6 py-4 text-center text-sm font-semibold ${darkMode ? "text-gray-200" : "text-gray-700"}`}>
-                      🛠️ Acciones
-                    </th>
+                <th
+                  className={`px-6 py-4 text-left text-sm font-semibold ${darkMode ? "text-gray-200" : "text-gray-700"}`}
+                  title="Nombre del documento y serie documental"
+                >
+                  📄 Documento / Serie
+                </th>
+                <th
+                  className={`px-6 py-4 text-left text-sm font-semibold ${darkMode ? "text-gray-200" : "text-gray-700"}`}
+                  title="Clasificación archivística o serie documental"
+                >
+                  📂 Clasificación
+                </th>
+                <th
+                  className={`px-6 py-4 text-left text-sm font-semibold ${darkMode ? "text-gray-200" : "text-gray-700"}`}
+                  title="Fechas de ingreso y antigüedad en archivo"
+                >
+                  📅 Fechas Archivísticas
+                </th>
+                <th
+                  className={`px-6 py-4 text-left text-sm font-semibold ${darkMode ? "text-gray-200" : "text-gray-700"}`}
+                  title="Estado legal según la Ley Estatal de Archivos"
+                >
+                  ⚖️ Estado Legal
+                </th>
+                <th
+                  className={`px-6 py-4 text-center text-sm font-semibold ${darkMode ? "text-gray-200" : "text-gray-700"}`}
+                  title="Acciones disponibles sobre el documento"
+                >
+                  🛠️ Acciones
+                </th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-200 dark:divide-slate-700">
@@ -666,6 +677,7 @@ export default function MisDocumentosPage() {
                                   : (darkMode ? "text-gray-400 hover:text-yellow-300 hover:bg-yellow-900/30" : "text-gray-400 hover:text-yellow-500 hover:bg-yellow-100/70")
                               } ${favoritoLoading === documento.id ? 'opacity-60 pointer-events-none' : ''}`}
                               title={favoritos.includes(String(documento.id)) ? "Quitar de favoritos" : "Agregar a favoritos"}
+                              aria-label={favoritos.includes(String(documento.id)) ? "Quitar de favoritos" : "Agregar a favoritos"}
                             >
                               <FontAwesomeIcon icon={faStar} className="transition-all duration-300" />
                             </button>
@@ -677,10 +689,12 @@ export default function MisDocumentosPage() {
                                   ? "text-blue-400 hover:bg-blue-900/50 hover:text-blue-300 hover:shadow-blue-400/30" 
                                   : "text-blue-600 hover:bg-blue-50 hover:text-blue-700 hover:shadow-blue-400/30"
                               }`}
-                              title="Descargar documento"
+                              title="Descargar el documento en tu equipo"
+                              aria-label="Descargar documento"
                             >
                               <FontAwesomeIcon icon={faDownload} className="transition-all duration-300" />
                             </button>
+                            {/* Botón Metadatos */}
                             <button
                               onClick={() => alert(`Visualizando metadatos archivísticos de: ${documento.nombre}`)}
                               className={`p-2 rounded-lg transition-all duration-300 transform hover:scale-125 hover:-translate-y-1 hover:rotate-12 shadow-md hover:shadow-lg ${
@@ -688,10 +702,12 @@ export default function MisDocumentosPage() {
                                   ? "text-green-400 hover:bg-green-900/50 hover:text-green-300 hover:shadow-green-400/30" 
                                   : "text-green-600 hover:bg-green-50 hover:text-green-700 hover:shadow-green-400/30"
                               }`}
-                              title="Ver metadatos legales"
+                              title="Ver metadatos legales y archivísticos"
+                              aria-label="Ver metadatos legales"
                             >
                               <FontAwesomeIcon icon={faHistory} className="transition-all duration-300" />
                             </button>
+                            {/* Botón Editar */}
                             <button
                               onClick={() => handleEdit(documento)}
                               className={`p-2 rounded-lg transition-all duration-300 transform hover:scale-125 hover:-translate-y-1 hover:rotate-12 shadow-md hover:shadow-lg ${
@@ -699,10 +715,12 @@ export default function MisDocumentosPage() {
                                   ? "text-yellow-400 hover:bg-yellow-900/50 hover:text-yellow-300 hover:shadow-yellow-400/30" 
                                   : "text-yellow-600 hover:bg-yellow-50 hover:text-yellow-700 hover:shadow-yellow-400/30"
                               }`}
-                              title="Editar metadatos"
+                              title="Editar metadatos del documento"
+                              aria-label="Editar metadatos"
                             >
                               <FontAwesomeIcon icon={faEdit} className="transition-all duration-300" />
                             </button>
+                            {/* Botón Eliminar */}
                             <button
                               onClick={() => {
                                 if (confirm("⚠️ ATENCIÓN: Esta acción debe cumplir con los plazos de retención establecidos en la Ley Estatal de Archivos de BCS.\n\n¿Confirma la eliminación del documento?")) {
@@ -714,7 +732,8 @@ export default function MisDocumentosPage() {
                                   ? "text-red-400 hover:bg-red-900/50 hover:text-red-300 hover:shadow-red-400/30" 
                                   : "text-red-600 hover:bg-red-50 hover:text-red-700 hover:shadow-red-400/30"
                               }`}
-                              title="Eliminar (cumplir normativa)"
+                              title="Eliminar documento (cumplir normativa de archivo)"
+                              aria-label="Eliminar documento"
                             >
                               <FontAwesomeIcon icon={faTrash} className="transition-all duration-300" />
                             </button>

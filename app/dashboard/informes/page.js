@@ -3,14 +3,57 @@ import Image from "next/image";
 import { useState } from "react";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faSun, faMoon } from "@fortawesome/free-solid-svg-icons";
+
+
+import UsuariosList from "../../../components/usuariosList";
+import DashboardHeader from "../components/DashboardHeader";
 import BackToHomeButton from "../../../components/BackToHomeButton";
+
 
 export default function InformesPage() {
   const [darkMode, setDarkMode] = useState(false);
   // Datos de ejemplo
   const [informes, setInformes] = useState([
-    { fecha: "2025-07-12", usuario: "Jorge Vega", tipo: "Acceso", descripcion: "Consultó expediente 2025/001" },
-    { fecha: "2025-07-11", usuario: "Lupita Pérez", tipo: "Descarga", descripcion: "Descargó documento confidencial" },
+    {
+      fecha: "2025-07-12",
+      usuario: "Jorge Vega",
+      tipo: "Acceso",
+      descripcion: "Consultó expediente 2025/001",
+      area: "Recursos Humanos",
+      ip: "192.168.1.10",
+      dispositivo: "PC Escritorio",
+      estado: "Exitoso"
+    },
+    {
+      fecha: "2025-07-11",
+      usuario: "Lupita Pérez",
+      tipo: "Descarga",
+      descripcion: "Descargó documento confidencial",
+      area: "Jurídico",
+      ip: "192.168.1.15",
+      dispositivo: "Laptop",
+      estado: "Exitoso"
+    },
+    {
+      fecha: "2025-07-10",
+      usuario: "Carlos Ruiz",
+      tipo: "Modificación",
+      descripcion: "Editó metadatos de documento 2025/002",
+      area: "Archivo",
+      ip: "192.168.1.22",
+      dispositivo: "Tablet",
+      estado: "Exitoso"
+    },
+    {
+      fecha: "2025-07-09",
+      usuario: "Ana Torres",
+      tipo: "Eliminación",
+      descripcion: "Eliminó documento temporal",
+      area: "Sistemas",
+      ip: "192.168.1.30",
+      dispositivo: "Móvil",
+      estado: "Fallido"
+    },
   ]);
   // Filtros (puedes expandir lógica real después)
   const [dateStart, setDateStart] = useState("");
@@ -40,71 +83,20 @@ export default function InformesPage() {
     setTimeout(() => URL.revokeObjectURL(url), 1000);
   };
 
-  return (
-    <div className={`min-h-screen transition-all duration-300 ${darkMode ? "bg-gradient-to-br from-slate-900 via-blue-900 to-slate-900 text-white" : "bg-gradient-to-br from-blue-50 via-white to-purple-50 text-gray-900"}`}>
-      {/* Header premium institucional */}
-      <div className={`sticky top-0 z-40 border-b flex items-center justify-between px-6 py-4 ${darkMode ? "bg-slate-900/95 border-slate-700" : "bg-white/95 border-blue-200"}`}>
-        {/* Logo institucional a la izquierda */}
-        <div className="flex items-center gap-6 min-w-[300px]">
-          <Image src="/api-dark23.png" alt="API Logo" width={240} height={90} className="object-contain" priority />
-        </div>
-        {/* Título */}
-        <h1
-          className="flex-1 text-5xl md:text-6xl font-extrabold text-center tracking-tight relative group select-none"
-          style={{ letterSpacing: '0.01em', lineHeight: 1.1 }}
-        >
-          <span
-            className="inline-block bg-gradient-to-r from-blue-700 via-cyan-400 to-green-400 bg-[length:200%_200%] bg-clip-text text-transparent animate-gradient-move transition-transform duration-300 group-hover:scale-105"
-            style={{
-              WebkitBackgroundClip: 'text',
-              backgroundClip: 'text',
-              WebkitTextFillColor: 'transparent',
-              textFillColor: 'transparent',
-            }}
-          >
-            Informes
-          </span>
-          <span className="block h-1 w-1/2 mx-auto mt-2 rounded-full bg-gradient-to-r from-blue-400 via-cyan-300 to-green-300 opacity-80 animate-underline-move group-hover:scale-x-110 transition-transform duration-300"></span>
-          <style jsx>{`
-            .animate-gradient-move {
-              animation: gradient-move 3.5s ease-in-out infinite alternate;
-            }
-            @keyframes gradient-move {
-              0% { background-position: 0% 50%; }
-              100% { background-position: 100% 50%; }
-            }
-            .animate-underline-move {
-              animation: underline-move 2.2s cubic-bezier(0.4,0,0.2,1) infinite alternate;
-            }
-            @keyframes underline-move {
-              0% { transform: scaleX(0.85); opacity: 0.7; }
-              60% { transform: scaleX(1.1); opacity: 1; }
-              100% { transform: scaleX(1); opacity: 0.85; }
-            }
-          `}</style>
-        </h1>
-        {/* Toggle modo y avatar */}
-        <div className="flex items-center justify-end min-w-[60px] gap-5">
-          <button
-            onClick={() => setDarkMode(!darkMode)}
-            className={`p-4 rounded-xl text-2xl transition-all duration-300 transform hover:scale-110 hover:rotate-12 hover:-translate-y-1 shadow-lg hover:shadow-xl ${darkMode ? "bg-slate-800 text-yellow-400 hover:bg-slate-700 hover:text-yellow-300 hover:shadow-yellow-400/30" : "bg-gray-100 text-gray-600 hover:bg-gray-200 hover:text-blue-600 hover:shadow-blue-400/30"}`}
-            title="Cambiar modo"
-          >
-            <FontAwesomeIcon icon={darkMode ? faSun : faMoon} className="text-2xl transition-all duration-300 hover:scale-125" />
-          </button>
-          <Image src="/blanca.jpeg" alt="Avatar" width={64} height={64} className="rounded-full border-4 border-blue-400 shadow-xl object-cover" />
-        </div>
-      </div>
 
-      {/* Botón volver pegado al borde izquierdo debajo del header */}
-      <div className="w-full flex mt-4">
-        <div className="flex items-start">
-          <BackToHomeButton darkMode={darkMode} />
+    return (
+      <div className={`min-h-screen transition-all duration-300 ${darkMode ? "bg-gradient-to-br from-slate-900 via-blue-900 to-slate-900 text-white" : "bg-gradient-to-br from-blue-50 via-white to-purple-50 text-gray-900"}`}>
+        {/* Header premium institucional reutilizable */}
+        <DashboardHeader title="Informes" darkMode={darkMode} onToggleDarkMode={() => setDarkMode((v) => !v)} />
+        {/* Botón volver reutilizable */}
+        <div className="w-full flex mt-4">
+          <div className="flex items-start">
+            <BackToHomeButton darkMode={darkMode} />
+          </div>
         </div>
-      </div>
 
-      {/* Filtros premium */}
-      <div className="max-w-7xl mx-auto mt-8 p-6 rounded-xl shadow-lg bg-blue/600 dark:bg-[#10172a] border border-blue-600 dark:border-[#10172a]">
+      {/* Filtros premium y tabla a pantalla completa */}
+      <div className="w-full mt-8 p-6 rounded-xl shadow-lg bg-transparent dark:bg-transparent border-0">
         <form className="flex flex-wrap gap-4 items-end justify-between mb-6" onSubmit={e => e.preventDefault()}>
           <div className="flex flex-col">
             <label htmlFor="dateStart" className="mb-1 text-xs font-bold text-blue-500 dark:text-yellow-400">Fecha inicial</label>
@@ -114,7 +106,7 @@ export default function InformesPage() {
             <label htmlFor="dateEnd" className="mb-1 text-xs font-bold text-blue-400 dark:text-gray-400">Fecha final</label>
             <input id="dateEnd" type="date" value={dateEnd} onChange={e => setDateEnd(e.target.value)} className="px-3 py-2 rounded-lg border text-sm font-semibold focus:ring-2 focus:ring-blue-500 transition-all duration-300 shadow-sm bg-white dark:bg-[#232b47] border-blue-200 dark:border-[#232b47] text-blue-900 dark:text-blue-100 placeholder:text-blue-400 dark:placeholder:text-blue-400" />
           </div>
-          <div className="flex flex-col flex-1 min-w-[180px]">
+          <div className="flex flex-col min-w-[120px] max-w-[180px]">
             <label htmlFor="userFilter" className="mb-1 text-xs font-bold text-blue-400 dark:text-gray-400">Usuario</label>
             <input id="userFilter" type="text" value={userFilter} onChange={e => setUserFilter(e.target.value)} className="px-3 py-2 rounded-lg border text-sm font-semibold focus:ring-2 focus:ring-blue-500 transition-all duration-300 shadow-sm bg-white dark:bg-[#232b47] border-blue-200 dark:border-[#232b47] text-blue-900 dark:text-blue-100 placeholder:text-blue-400 dark:placeholder:text-blue-400" placeholder="Buscar por usuario..." />
           </div>
@@ -136,36 +128,54 @@ export default function InformesPage() {
         </form>
 
         {/* Tabla de resultados premium */}
-        <div className="overflow-x-auto rounded-lg bg-white dark:bg-[#232b47]">
-          <table className="w-full min-w-[700px] text-sm border-separate border-spacing-0 table-fixed">
+        <div className={`overflow-x-auto rounded-lg ${darkMode ? "bg-[#181f36]" : "bg-white"}`}>
+          <table className={`w-full min-w-[1400px] text-base table-fixed ${darkMode ? "text-blue-100" : "text-blue-900"}`}>
             <colgroup>
               <col style={{width: '120px'}} />
-              <col style={{width: '180px'}} />
+              <col style={{width: '140px'}} />
+              <col style={{width: '140px'}} />
+              <col style={{width: '220px'}} />
+              <col style={{width: '120px'}} />
               <col style={{width: '160px'}} />
-              <col />
+              <col style={{width: '120px'}} />
             </colgroup>
-            <thead className={darkMode ? "bg-[#181f36] text-blue-100" : "bg-gradient-to-r from-blue-100 via-white to-blue-100 text-blue-900"}>
+            <thead className={darkMode ? "bg-[#232b47] text-blue-100" : "bg-blue-50 text-blue-900"}>
               <tr>
-                <th className="px-4 py-3 border-b border-blue-800/60 dark:border-blue-900/80 font-semibold text-xs uppercase tracking-wider text-left align-middle">Fecha</th>
-                <th className="px-4 py-3 border-b border-blue-800/60 dark:border-blue-900/80 font-semibold text-xs uppercase tracking-wider text-left align-middle">Usuario</th>
-                <th className="px-4 py-3 border-b border-blue-800/60 dark:border-blue-900/80 font-semibold text-xs uppercase tracking-wider text-left align-middle">Tipo de Informe</th>
-                <th className="px-4 py-3 border-b border-blue-800/60 dark:border-blue-900/80 font-semibold text-xs uppercase tracking-wider text-left align-middle">Descripción</th>
+                <th className="px-4 py-3 font-semibold text-xs uppercase tracking-wider text-left align-middle">Fecha</th>
+                <th className="px-4 py-3 font-semibold text-xs uppercase tracking-wider text-left align-middle">Usuario</th>
+                <th className="px-4 py-3 font-semibold text-xs uppercase tracking-wider text-left align-middle">Área</th>
+                <th className="px-4 py-3 font-semibold text-xs uppercase tracking-wider text-left align-middle">Tipo de Informe</th>
+                <th className="px-4 py-3 font-semibold text-xs uppercase tracking-wider text-left align-middle">IP</th>
+                <th className="px-4 py-3 font-semibold text-xs uppercase tracking-wider text-left align-middle">Dispositivo</th>
+                <th className="px-4 py-3 font-semibold text-xs uppercase tracking-wider text-left align-middle">Estado</th>
+                <th className="px-4 py-3 font-semibold text-xs uppercase tracking-wider text-left align-middle">Descripción</th>
               </tr>
             </thead>
             <tbody>
               {filtered.length === 0 ? (
                 <tr>
-                  <td colSpan={4} className="text-center py-8 text-lg font-semibold text-blue-700 dark:text-blue-200 bg-blue-50 dark:bg-slate-900/60 border-b border-blue-200 dark:border-blue-900/40">
+                  <td colSpan={8} className="text-center py-8 text-lg font-semibold text-blue-700 dark:text-blue-200">
                     No hay resultados para los filtros seleccionados.
                   </td>
                 </tr>
               ) : (
                 filtered.map((ev, idx) => (
-                  <tr key={idx} className={darkMode ? (idx % 2 === 0 ? "bg-[#232b47] hover:bg-[#2d3657]" : "bg-[#181f36] hover:bg-[#232b47]") : (idx % 2 === 0 ? "bg-white hover:bg-blue-100/80" : "bg-blue-50/60 hover:bg-blue-100/80") }>
-                    <td className="px-4 py-3 border-b border-blue-900/30 dark:border-blue-900/60 align-middle whitespace-nowrap">{ev.fecha}</td>
-                    <td className="px-4 py-3 border-b border-blue-900/30 dark:border-blue-900/60 align-middle whitespace-nowrap">{ev.usuario}</td>
-                    <td className="px-4 py-3 border-b border-blue-900/30 dark:border-blue-900/60 align-middle whitespace-nowrap">{ev.tipo}</td>
-                    <td className="px-4 py-3 border-b border-blue-900/30 dark:border-blue-900/60 align-middle">{ev.descripcion}</td>
+                  <tr
+                    key={idx}
+                    className={
+                      darkMode
+                        ? `${idx % 2 === 0 ? "bg-[#232b47]" : "bg-[#181f36]"} hover:bg-[#2d3657] text-blue-100`
+                        : `${idx % 2 === 0 ? "bg-white" : "bg-blue-50/60"} hover:bg-blue-100/80 text-blue-900`
+                    }
+                  >
+                    <td className="px-4 py-3 align-middle whitespace-nowrap">{ev.fecha}</td>
+                    <td className="px-4 py-3 align-middle whitespace-nowrap">{ev.usuario}</td>
+                    <td className="px-4 py-3 align-middle whitespace-nowrap">{ev.area}</td>
+                    <td className="px-4 py-3 align-middle whitespace-nowrap">{ev.tipo}</td>
+                    <td className="px-4 py-3 align-middle whitespace-nowrap">{ev.ip}</td>
+                    <td className="px-4 py-3 align-middle whitespace-nowrap">{ev.dispositivo}</td>
+                    <td className="px-4 py-3 align-middle whitespace-nowrap">{ev.estado}</td>
+                    <td className="px-4 py-3 align-middle">{ev.descripcion}</td>
                   </tr>
                 ))
               )}
@@ -173,9 +183,10 @@ export default function InformesPage() {
           </table>
         </div>
       </div>
-
+      {/* Lista de usuarios del sistema */}
+      <UsuariosList />
       {/* Aviso legal de informes al pie de la página */}
-      <footer className="w-full flex justify-center mt-10 mb-4">
+      <footer className="w-full flex justify-center mt-24 mb-8">
         <div
           className={`max-w-3xl w-full mx-auto px-6 py-5 rounded-xl shadow border transition-colors duration-300 text-center flex flex-col items-center gap-2
             ${darkMode
@@ -193,6 +204,7 @@ export default function InformesPage() {
             Toda consulta queda registrada para fines de <span className="font-semibold text-blue-700 dark:text-blue-200">auditoría, transparencia y rendición de cuentas</span>.<br />
             El uso indebido de esta información puede ser sancionado conforme a la legislación aplicable.
           </p>
+          
         </div>
       </footer>
     </div>

@@ -23,42 +23,43 @@ import 'react-circular-progressbar/dist/styles.css';
 import avatarMap from '../../../lib/avatarMap';
 import Link from 'next/link';
 
+
 export default function UploadNew() {
+  // Referencia para el input de archivo
+  const fileInputRef = useRef(null);
+
+  // Tipos de archivo permitidos
+  const ALLOWED_FILE_TYPES = {
+    'application/pdf': 'PDF',
+    'application/msword': 'DOC',
+    'application/vnd.openxmlformats-officedocument.wordprocessingml.document': 'DOCX',
+    'application/vnd.ms-excel': 'XLS',
+    'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet': 'XLSX',
+    'application/vnd.ms-powerpoint': 'PPT',
+    'application/vnd.openxmlformats-officedocument.presentationml.presentation': 'PPTX',
+    'image/jpeg': 'JPG/JPEG',
+    'image/png': 'PNG',
+    'text/plain': 'TXT'
+  };
+
+  // Tamaño máximo de archivo (150MB)
+  const MAX_FILE_SIZE = 150 * 1024 * 1024;
+
+  // Estado para modal de éxito
+  const [showModal, setShowModal] = useState(false);
+
+  // Estado para la URL del archivo subido
+  const [uploadedFileUrl, setUploadedFileUrl] = useState("");
+  // Estado para mensaje de error general
+  const [errorMessage, setErrorMessage] = useState("");
+  // Estado para saber si se está subiendo un archivo
+  const [uploading, setUploading] = useState(false);
   const { data: session, status } = useSession();
 
-  // Estados del formulario
-  const [form, setForm] = useState({
-    nombre: '',
-    jefatura: '',
-    review: '',
-    file: null,
-    serie: '',
-    subserie: '',
-    expediente: '', // Mantenido para compatibilidad
-    fecha_creacion: '',
-    vigencia: '',
-    acceso: '',
-    observaciones: '',
-    classification: '', // Tipo de documento
-    // 🏛️ CAMPOS ARCHIVÍSTICOS OBLIGATORIOS - LEY DE ARCHIVOS BCS
-    codigo_clasificacion: '', // Código del Cuadro de Clasificación Archivística
-    valor_documental: '', // Administrativo, Legal, Fiscal, Histórico
-    plazo_conservacion: '', // Años específicos de conservación
-    destino_final: '', // Conservación permanente o baja documental
-    soporte_documental: '', // Original, Copia, Digitalización
-    numero_expediente: '', // Generado automáticamente
-    folio_documento: '', // Folio dentro del expediente
-    procedencia_admin: '' // Unidad administrativa productora
-  });
-
-  const [errors, setErrors] = useState({});
-  const [uploading, setUploading] = useState(false);
-  const [uploadProgress, setUploadProgress] = useState(0);
+  // Estado para modo oscuro
   const [darkMode, setDarkMode] = useState(false);
-  const [showModal, setShowModal] = useState(false);
-  const [uploadedFileUrl, setUploadedFileUrl] = useState('');
-  const [errorMessage, setErrorMessage] = useState('');
-  const [showTooltip, setShowTooltip] = useState(false);
+
+  // Estado para tooltips
   const [tooltips, setTooltips] = useState({
     titulo: false,
     descripcion: false,
@@ -72,50 +73,50 @@ export default function UploadNew() {
     folio: false
   });
 
-  const fileInputRef = useRef(null);
+  // Estado para tooltip de archivo digital
+  const [showTooltip, setShowTooltip] = useState(false);
 
-  // Tipos de archivo permitidos
-  const ALLOWED_FILE_TYPES = {
-    'application/pdf': 'PDF',
-    'application/msword': 'DOC',
-    'application/vnd.openxmlformats-officedocument.wordprocessingml.document': 'DOCX',
-    'application/vnd.ms-excel': 'XLS',
-    'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet': 'XLSX',
-    'application/vnd.openxmlformats-officedocument.presentationml.presentation': 'PPTX',
-    'image/jpeg': 'JPG',
-    'image/jpg': 'JPG',
-    'image/png': 'PNG',
-    'text/plain': 'TXT'
-  };
+  // Estado para errores del formulario
+  const [errors, setErrors] = useState({});
 
-  const MAX_FILE_SIZE = 150 * 1024 * 1024; // 150MB
+  // Estado para progreso de subida
+  const [uploadProgress, setUploadProgress] = useState(0);
 
-  // 🏛️ CATÁLOGOS ARCHIVÍSTICOS - LEY DE ARCHIVOS BCS
-  const CUADRO_CLASIFICACION = {
-    '001': 'Normatividad y Legislación',
-    '002': 'Planeación y Programación', 
-    '003': 'Organización y Funcionamiento',
-    '004': 'Recursos Humanos',
-    '005': 'Recursos Financieros',
-    '006': 'Recursos Materiales y Servicios',
-    '007': 'Servicios Portuarios',
-    '008': 'Operaciones Marítimas',
-    '009': 'Seguridad Portuaria',
-    '010': 'Medio Ambiente',
-    '011': 'Tecnologías de la Información',
-    '012': 'Comunicación Social',
-    '013': 'Transparencia y Acceso a la Información',
-    '014': 'Contraloría Interna',
-    '015': 'Asuntos Jurídicos'
-  };
+  // Estado para los campos del formulario
+  const [form, setForm] = useState({
+    nombre: '',
+    review: '',
+    jefatura: '',
+    file: null,
+    codigo_clasificacion: '',
+    serie: '',
+    subserie: '',
+    expediente: '',
+    fecha_creacion: '',
+    vigencia: '',
+    acceso: '',
+    observaciones: '',
+    classification: '',
+    valor_documental: '',
+    plazo_conservacion: '',
+    destino_final: '',
+    soporte_documental: '',
+    numero_expediente: '',
+    folio_documento: '',
+    procedencia_admin: ''
+  });
 
-  const VALORES_DOCUMENTALES = {
-    'administrativo': 'Administrativo',
-    'legal': 'Legal', 
-    'fiscal': 'Fiscal',
-    'historico': 'Histórico',
-    'mixto': 'Mixto (Varios valores)'
-  };
+  // Estados del formulario
+
+  const userEmail = session?.user?.email || 'default';
+  const userName = session?.user?.name || 'Usuario';
+  const userAvatar = avatarMap[userEmail] || '/default-avatar.png';
+
+  // ...existing code...
+
+
+  // Render principal UNIFICADO
+  // ...todo el contenido del formulario y helpers debe estar dentro de este único return principal...
 
   const PLAZOS_CONSERVACION = {
     '1': '1 año',
@@ -141,6 +142,27 @@ export default function UploadNew() {
     'copia_fisica': 'Copia Física',
     'copia_digital': 'Copia Digital',
     'digitalizacion': 'Digitalización de Original Físico'
+  };
+
+  // Catálogo de valores documentales (ejemplo, personaliza según tu sistema)
+  const VALORES_DOCUMENTALES = {
+    'administrativo': 'Administrativo',
+    'legal': 'Legal',
+    'fiscal': 'Fiscal',
+    'historico': 'Histórico'
+  };
+
+  // Catálogo de clasificación archivística (ejemplo, personaliza según tu sistema)
+  const CUADRO_CLASIFICACION = {
+    '100': 'Administración General',
+    '200': 'Recursos Humanos',
+    '300': 'Finanzas',
+    '400': 'Jurídico',
+    '500': 'Operaciones',
+    '600': 'Planeación',
+    '700': 'Informática',
+    '800': 'Contraloría',
+    '900': 'Otros'
   };
 
   // Función helper para manejar tooltips
@@ -217,17 +239,21 @@ export default function UploadNew() {
     }
   }, [tooltips]);
 
-  if (status === "loading") {
-    return <p className="text-center p-10">Cargando sesión...</p>;
-  }
+  // Eliminados returns condicionales para permitir renderizado completo
 
-  if (status === "unauthenticated") {
-    return <p className="text-center p-10">No estás autenticado. Por favor, inicia sesión.</p>;
-  }
-
-  const userEmail = session?.user?.email || 'default';
-  const userName = session?.user?.name || 'Usuario';
-  const userAvatar = avatarMap[userEmail] || '/default-avatar.png';
+  // --- LOGO GRANDE Y VISUALMENTE DESTACADO ---
+  const LogoGrande = () => (
+    <div className="flex justify-center items-center w-full my-8">
+      <Image
+        src="/api_logo.png"
+        alt="Logo API"
+        width={180}
+        height={180}
+        className="rounded-2xl shadow-2xl border-4 border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 object-contain"
+        priority
+      />
+    </div>
+  );
 
   // 🏛️ FUNCIÓN PARA GENERAR NÚMERO DE EXPEDIENTE
   const generarNumeroExpediente = () => {
@@ -1230,6 +1256,13 @@ export default function UploadNew() {
           </div>
         </div>
       )}
+    </div>
+  );
+  // --- RETURN PRINCIPAL ---
+  return (
+    <div>
+      <LogoGrande />
+      {/* ...existing code del formulario y helpers... */}
     </div>
   );
 }

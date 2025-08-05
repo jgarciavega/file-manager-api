@@ -2,7 +2,8 @@
 
 import { useState, useEffect, useRef } from "react";
 import Image from "next/image";
-import Link from "next/link";
+import DashboardHeader from "../components/DashboardHeader";
+import BackToHomeButton from "../../../components/BackToHomeButton";
 import { useSession } from "next-auth/react";
 import avatarMap from "../../../lib/avatarMap";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
@@ -65,7 +66,50 @@ function FavoritosPage() {
   const csvLink = useRef(null);
   const [darkMode, setDarkMode] = useState(false);
   const [search, setSearch] = useState("");
-  const [favoritos, setFavoritos] = useState([]);
+  const [favoritos, setFavoritos] = useState([
+    {
+      id: 1,
+      nombre: "Contrato de Arrendamiento 2024",
+      fecha_subida: "2024-06-15",
+      responsable: "Lic. Ana Torres",
+      tipo: "Contrato",
+      clasificacion: "Confidencial",
+      vigencia: "2024-2026",
+      area: "Jurídico",
+      expediente: "EXP-2024-001",
+      estado: "Revisado",
+      hash: "abc123xyz",
+      ruta: "/uploads/contrato-arrendamiento.pdf"
+    },
+    {
+      id: 2,
+      nombre: "Acta de Entrega de Equipo",
+      fecha_subida: "2025-01-10",
+      responsable: "Ing. Mario López",
+      tipo: "Acta",
+      clasificacion: "Pública",
+      vigencia: "2025-2027",
+      area: "Tecnologías de la Información",
+      expediente: "EXP-2025-014",
+      estado: "Pendiente",
+      hash: "def456uvw",
+      ruta: "/uploads/acta-entrega.pdf"
+    },
+    {
+      id: 3,
+      nombre: "Oficio Circular 2025-02",
+      fecha_subida: "2025-02-20",
+      responsable: "C.P. Laura Méndez",
+      tipo: "Oficio",
+      clasificacion: "Reservada",
+      vigencia: "2025-2028",
+      area: "Finanzas",
+      expediente: "EXP-2025-022",
+      estado: "Rechazado",
+      hash: "ghi789rst",
+      ruta: "/uploads/oficio-circular.pdf"
+    }
+  ]);
   const [loading, setLoading] = useState(true);
   const [page, setPage] = useState(1);
   const pageSize = 10;
@@ -225,76 +269,11 @@ function FavoritosPage() {
 
   return (
     <div className={`min-h-screen transition-all duration-300 ${darkMode ? "bg-gradient-to-br from-slate-900 via-blue-900 to-slate-900 text-white" : "bg-gradient-to-br from-blue-50 via-white to-purple-50 text-gray-900"}`}>
-      {/* Header premium */}
-      <div className={`sticky top-0 z-40 border-b transition-all duration-300 flex items-center justify-between px-6 py-4 ${darkMode ? "bg-slate-900/95 border-slate-700 backdrop-blur-sm" : "bg-white/95 border-blue-200 backdrop-blur-sm"}`}>
-        {/* Logo premium */}
-        <Image
-          src="/api-dark23.png"
-          alt="API Logo"
-          width={300}
-          height={100}
-          className="transition-all duration-300 hover:scale-105 object-contain"
-          priority
-        />
-        {/* Título premium */}
-        <div className="flex-1 text-center px-4">
-          <h1
-            className={`relative text-4xl md:text-5xl font-extrabold tracking-tight text-center transition-all duration-500 transform hover:scale-105 hover:-translate-y-1 cursor-default overflow-hidden select-none`}
-            style={{ letterSpacing: '0.04em' }}
-          >
-            <span className={`relative z-10 ${darkMode ? "text-white drop-shadow-[0_2px_12px_rgba(0,0,0,0.7)]" : "text-blue-900 drop-shadow-[0_2px_8px_rgba(96,165,250,0.25)]"}`}>Mis Favoritos</span>
-            <span
-              className="absolute left-0 top-0 h-full w-full pointer-events-none animate-shine"
-              style={{
-                background: 'linear-gradient(120deg, transparent 0%, rgba(255,255,255,0.7) 50%, transparent 100%)',
-                WebkitBackgroundClip: 'text',
-                WebkitTextFillColor: 'transparent',
-                mixBlendMode: 'lighten',
-                opacity: 0.7,
-              }}
-            >
-              Mis Favoritos
-            </span>
-          </h1>
-
-
-          <div className={`text-sm font-medium mt-2 flex items-center justify-center gap-1 transition-all duration-300 hover:scale-105 ${darkMode ? "text-gray-300 hover:text-green-300" : "text-gray-600 hover:text-green-600"}`}>
-            <FontAwesomeIcon icon={faStar} className="text-yellow-400 text-base animate-bounce drop-shadow" />
-            <span className="hover:tracking-wider transition-all duration-300 font-semibold">Tus documentos favoritos siempre a la mano</span>
-          </div>
-        </div>
-
-        {/* Avatar y toggle */}
-        <div className="flex items-center gap-3">
-          <Image
-            src={
-              session?.user?.avatar
-                ? session.user.avatar
-                : avatarMap[session?.user?.rol] || "/blanca.jpeg"
-            }
-            alt="Avatar"
-            width={90}
-            height={90}
-            className="rounded-full border-3 border-blue-400 shadow-lg hover:scale-105 transition-all duration-300"
-          />
-          <button
-            onClick={() => setDarkMode(!darkMode)}
-            className={`p-3 rounded-lg transition-all duration-300 transform hover:scale-110 hover:rotate-12 hover:-translate-y-1 shadow-lg hover:shadow-xl ${darkMode ? "bg-slate-800 text-yellow-400 hover:bg-slate-700 hover:text-yellow-300 hover:shadow-yellow-400/30" : "bg-gray-100 text-gray-600 hover:bg-gray-200 hover:text-blue-600 hover:shadow-blue-400/30"}`}
-            title="Cambiar modo"
-          >
-            <FontAwesomeIcon icon={darkMode ? faSun : faMoon} className="text-lg transition-all duration-300 hover:scale-125" />
-          </button>
-        </div>
-      </div>
+      {/* Header premium reutilizable */}
+      <DashboardHeader title="Mis Favoritos" darkMode={darkMode} onToggleDarkMode={() => setDarkMode(!darkMode)} />
       {/* Botón Volver al Inicio y Exportar */}
       <div className="px-6 pt-4 flex flex-wrap gap-4 items-center justify-between">
-        <Link
-          href="/home"
-          className={`group inline-flex items-center gap-3 px-5 py-2.5 rounded-xl transition-all duration-300 shadow-lg hover:shadow-xl transform hover:-translate-y-1 hover:scale-105 ${darkMode ? "bg-gradient-to-r from-emerald-600 to-teal-600 border border-emerald-500 text-white hover:from-emerald-500 hover:to-teal-500 hover:shadow-emerald-500/30" : "bg-gradient-to-r from-indigo-600 to-purple-600 border border-indigo-500 text-white hover:from-indigo-500 hover:to-purple-500 hover:shadow-indigo-500/30"}`}
-        >
-          <FontAwesomeIcon icon={faArrowLeft} className="text-sm transition-all duration-300 group-hover:-translate-x-1 group-hover:scale-110" />
-          <span className="font-semibold text-sm tracking-wide group-hover:tracking-wider transition-all duration-300">Volver al Inicio</span>
-        </Link>
+        <BackToHomeButton href="/home" darkMode={darkMode} />
         {/* Botón exportar */}
         <button
           className={`inline-flex items-center gap-2 px-5 py-2.5 rounded-xl font-semibold transition-all duration-300 shadow-lg hover:shadow-xl transform hover:-translate-y-1 hover:scale-105 ${darkMode ? "bg-gradient-to-r from-blue-700 to-purple-700 text-white hover:from-blue-600 hover:to-purple-600" : "bg-gradient-to-r from-blue-200 to-purple-200 text-blue-900 hover:from-blue-300 hover:to-purple-300"}`}
@@ -305,83 +284,53 @@ function FavoritosPage() {
         </button>
         <a ref={csvLink} style={{ display: 'none' }}>Descargar</a>
       </div>
-      {/* Advertencia confidencialidad */}
-      <div className={`max-w-7xl mx-auto px-4 mt-4 mb-2`}>
-        <div className={`rounded-lg p-3 flex items-center gap-3 text-sm font-semibold shadow-md border-2 ${darkMode ? "bg-yellow-900/30 text-yellow-100 border-yellow-700/60" : "bg-yellow-50 text-yellow-900 border-yellow-300/80"}`}>
-          <FontAwesomeIcon icon={faStar} className="text-yellow-400 animate-pulse" />
-          <span className="tracking-wide">Algunos documentos pueden ser confidenciales o restringidos. El acceso y descarga están sujetos a la Ley Estatal de Archivos y políticas internas.</span>
-        </div>
-      </div>
+      {/* ...existing code... */}
       {/* Buscador premium */}
-      <div className="max-w-7xl mx-auto px-4 py-6">
-        <div className="flex justify-end mb-6">
+      <div className="w-screen max-w-full px-2 sm:px-4 py-6 mx-auto">
+        <div className="flex justify-end mb-6 max-w-7xl mx-auto">
           <input
             type="text"
             placeholder="🔍 Buscar por nombre, responsable, expediente..."
-            className={`px-4 py-2 rounded-lg border text-base w-full max-w-sm focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all duration-300 shadow-md font-semibold ${darkMode ? "bg-slate-800 border-slate-600 text-white placeholder-gray-400" : "bg-white border-blue-200 text-blue-900 placeholder-blue-400"}`}
+            className={`px-4 py-2 border-b-2 border-blue-300 bg-transparent text-base w-full max-w-sm focus:outline-none focus:border-blue-500 font-semibold ${darkMode ? "text-white placeholder-gray-400 border-slate-600 focus:border-blue-400" : "text-blue-900 placeholder-blue-400 border-blue-200 focus:border-blue-500"}`}
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            style={{ letterSpacing: '0.01em' }}
+            style={{ letterSpacing: '0.01em', boxShadow: 'none' }}
           />
         </div>
         {/* Tabla premium con nuevas columnas */}
-        <div className={`rounded-xl border overflow-x-auto transition-all duration-300 shadow-xl ring-1 ring-blue-100/40 ${darkMode ? "bg-slate-900/90 border-slate-800 ring-0" : "bg-white/95 border-blue-100"}`}>
-      <style jsx global>{`
-        .premium-title-gradient-fav {
-          background: linear-gradient(90deg, #1e3a8a 0%, #60a5fa 40%, #a78bfa 60%, #fff 100%);
-          background-size: 200% auto;
-          background-clip: text;
-          -webkit-background-clip: text;
-          color: transparent;
-          -webkit-text-fill-color: transparent;
-          animation: premium-gradient-move 3.5s linear infinite;
-        }
-        .dark-premium-title-gradient-fav {
-          background: linear-gradient(90deg, #60a5fa 0%, #a78bfa 40%, #facc15 60%, #fff 100%);
-          background-size: 200% auto;
-          background-clip: text;
-          -webkit-background-clip: text;
-          color: transparent;
-          -webkit-text-fill-color: transparent;
-          animation: premium-gradient-move 3.5s linear infinite;
-        }
-        @keyframes premium-gradient-move {
-          0% { background-position: 0% 50%; }
-          100% { background-position: 200% 50%; }
-        }
-      `}</style>
-          <table className="w-full min-w-[1200px] table-auto text-sm border-collapse">
-            <thead className={darkMode ? "bg-gradient-to-r from-blue-900 via-slate-800 to-blue-900 text-blue-100" : "bg-gradient-to-r from-blue-100 via-white to-blue-100 text-blue-900"}>
+        <div className="overflow-x-auto w-full">
+          <table className="w-screen max-w-full min-w-[1400px] table-auto text-base border-collapse mx-auto">
+            <thead>
               <tr>
-                <th className="px-4 py-3 border-b font-semibold text-xs">Documento</th>
-                <th className="px-4 py-3 border-b font-semibold text-xs">Fecha</th>
-                <th className="px-4 py-3 border-b font-semibold text-xs">Responsable</th>
-                <th className="px-4 py-3 border-b font-semibold text-xs">Tipo</th>
-                <th className="px-4 py-3 border-b font-semibold text-xs">Clasificación</th>
-                <th className="px-4 py-3 border-b font-semibold text-xs">Vigencia</th>
-                <th className="px-4 py-3 border-b font-semibold text-xs">Área</th>
-                <th className="px-4 py-3 border-b font-semibold text-xs">Expediente</th>
-                <th className="px-4 py-3 border-b font-semibold text-xs">Estado</th>
-                <th className="px-4 py-3 border-b font-semibold text-xs">Hash/Folio</th>
-                <th className="px-4 py-3 border-b font-semibold text-xs">Historial</th>
-                <th className="px-4 py-3 border-b font-semibold text-xs">Acciones</th>
+                <th className="px-4 py-3 font-bold text-blue-900 dark:text-blue-100 text-sm uppercase tracking-wider border-0 bg-transparent">Documento</th>
+                <th className="px-4 py-3 font-bold text-blue-900 dark:text-blue-100 text-sm uppercase tracking-wider border-0 bg-transparent">Fecha</th>
+                <th className="px-4 py-3 font-bold text-blue-900 dark:text-blue-100 text-sm uppercase tracking-wider border-0 bg-transparent">Responsable</th>
+                <th className="px-4 py-3 font-bold text-blue-900 dark:text-blue-100 text-sm uppercase tracking-wider border-0 bg-transparent">Tipo</th>
+                <th className="px-4 py-3 font-bold text-blue-900 dark:text-blue-100 text-sm uppercase tracking-wider border-0 bg-transparent">Clasificación</th>
+                <th className="px-4 py-3 font-bold text-blue-900 dark:text-blue-100 text-sm uppercase tracking-wider border-0 bg-transparent">Vigencia</th>
+                <th className="px-4 py-3 font-bold text-blue-900 dark:text-blue-100 text-sm uppercase tracking-wider border-0 bg-transparent">Área</th>
+                <th className="px-4 py-3 font-bold text-blue-900 dark:text-blue-100 text-sm uppercase tracking-wider border-0 bg-transparent">Expediente</th>
+                <th className="px-4 py-3 font-bold text-blue-900 dark:text-blue-100 text-sm uppercase tracking-wider border-0 bg-transparent">Estado</th>
+                <th className="px-4 py-3 font-bold text-blue-900 dark:text-blue-100 text-sm uppercase tracking-wider border-0 bg-transparent">Hash/Folio</th>
+                <th className="px-4 py-3 font-bold text-blue-900 dark:text-blue-100 text-sm uppercase tracking-wider border-0 bg-transparent">Historial</th>
+                <th className="px-4 py-3 font-bold text-blue-900 dark:text-blue-100 text-sm uppercase tracking-wider border-0 bg-transparent">Acciones</th>
               </tr>
             </thead>
             <tbody>
               {paginatedFiles.length > 0 ? (
                 paginatedFiles.map((file) => (
                   <tr key={file.id} className={`text-center transition-all duration-200 ${darkMode ? "hover:bg-blue-900/30" : "hover:bg-blue-50/60"}`} style={{ borderBottom: darkMode ? '1px solid #223' : '1px solid #e0e7ef' }}>
-                    <td className="px-4 py-3">{file.nombre}</td>
-                    <td className="px-4 py-3">{formatDate(file.fecha_subida)}</td>
-                    <td className="px-4 py-3">{file.responsable || 'N/A'}</td>
-                    <td className="px-4 py-3">{file.tipo}</td>
-                    <td className="px-4 py-3">{file.clasificacion || <span className="italic text-gray-400">No especificada</span>}</td>
-                    <td className="px-4 py-3">{file.vigencia || <span className="italic text-gray-400">N/A</span>}</td>
-                    <td className="px-4 py-3">{file.area || <span className="italic text-gray-400">N/A</span>}</td>
-                    <td className="px-4 py-3">{file.expediente || <span className="italic text-gray-400">N/A</span>}</td>
-                    <td className={`px-4 py-3 font-semibold ${statusColor(file.estado)}`}>{file.estado || <span className="italic text-gray-400">N/A</span>}</td>
-                    <td className="px-4 py-3">{file.hash || file.folio || <span className="italic text-gray-400">N/A</span>}</td>
-                    <td className="px-4 py-3">
+                    <td className="px-4 py-3 border-0 bg-transparent">{file.nombre}</td>
+                    <td className="px-4 py-3 border-0 bg-transparent">{formatDate(file.fecha_subida)}</td>
+                    <td className="px-4 py-3 border-0 bg-transparent">{file.responsable || 'N/A'}</td>
+                    <td className="px-4 py-3 border-0 bg-transparent">{file.tipo}</td>
+                    <td className="px-4 py-3 border-0 bg-transparent">{file.clasificacion || <span className="italic text-gray-400">No especificada</span>}</td>
+                    <td className="px-4 py-3 border-0 bg-transparent">{file.vigencia || <span className="italic text-gray-400">N/A</span>}</td>
+                    <td className="px-4 py-3 border-0 bg-transparent">{file.area || <span className="italic text-gray-400">N/A</span>}</td>
+                    <td className="px-4 py-3 border-0 bg-transparent">{file.expediente || <span className="italic text-gray-400">N/A</span>}</td>
+                    <td className={`px-4 py-3 font-semibold border-0 bg-transparent ${statusColor(file.estado)}`}>{file.estado || <span className="italic text-gray-400">N/A</span>}</td>
+                    <td className="px-4 py-3 border-0 bg-transparent">{file.hash || file.folio || <span className="italic text-gray-400">N/A</span>}</td>
+                    <td className="px-4 py-3 border-0 bg-transparent">
                       <button
                         className={`underline text-blue-500 hover:text-blue-700 dark:text-blue-300 dark:hover:text-blue-400 transition-all duration-200`}
                         title="Ver historial/bitácora"
@@ -391,9 +340,7 @@ function FavoritosPage() {
                         Ver
                       </button>
                     </td>
-      <Toast message={toast} onClose={() => setToast("")} />
-      <HistoryModal open={historyModal.open} onClose={() => setHistoryModal({ open: false, history: [] })} history={historyModal.history} />
-                    <td className="px-4 py-3 flex justify-center gap-2">
+                    <td className="px-4 py-3 flex justify-center gap-2 border-0 bg-transparent">
                       <button
                         className={`p-2 rounded-lg transition-all duration-300 transform hover:scale-125 hover:-translate-y-1 hover:rotate-12 shadow-md hover:shadow-lg ${darkMode ? "text-blue-400 hover:bg-blue-900/50 hover:text-blue-300 hover:shadow-blue-400/30" : "text-blue-600 hover:bg-blue-50 hover:text-blue-700 hover:shadow-blue-400/30"}`}
                         onClick={() => handleDownload(file)}
@@ -438,26 +385,13 @@ function FavoritosPage() {
               Siguiente
             </button>
           </div>
-      <style jsx global>{`
-        @keyframes shine {
-          0% { left: -100%; }
-          100% { left: 100%; }
-        }
-        .animate-shine {
-          position: absolute;
-          top: 0;
-          left: -100%;
-          width: 100%;
-          height: 100%;
-          animation: shine 2.5s linear infinite;
-          background: linear-gradient(120deg, transparent 0%, rgba(255,255,255,0.7) 50%, transparent 100%);
-          background-clip: text;
-          -webkit-background-clip: text;
-          color: transparent;
-          pointer-events: none;
-          z-index: 20;
-        }
-      `}</style>
+        </div>
+        {/* Advertencia confidencialidad al final */}
+        <div className="max-w-7xl mx-auto px-4 mt-16 mb-2">
+          <div className="p-0 flex items-center gap-3 text-sm font-semibold">
+            <FontAwesomeIcon icon={faStar} className="text-yellow-400 animate-pulse" />
+            <span className="tracking-wide">Algunos documentos pueden ser confidenciales o restringidos. El acceso y descarga están sujetos a la Ley Estatal de Archivos y políticas internas.</span>
+          </div>
         </div>
       </div>
     </div>
