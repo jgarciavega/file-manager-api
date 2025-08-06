@@ -1,3 +1,8 @@
+/* Fondo general para la página Home */
+.background {
+  background-color: #fff;
+  min-height: 100vh;
+}
 /* HomePage.module.css */
 
 .welcomeSection {

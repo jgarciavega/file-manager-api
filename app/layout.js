@@ -12,12 +12,12 @@ export const metadata = {
 
 export default function RootLayout({ children }) {
   return (
-    <GlobalSearchProvider>
-      <html lang="en">
-        <body className={inter.className}>
+    <html lang="en">
+      <body className={inter.className}>
+        <GlobalSearchProvider>
           <SessionWrapper>{children}</SessionWrapper>
-        </body>
-      </html>
-    </GlobalSearchProvider>
+        </GlobalSearchProvider>
+      </body>
+    </html>
   );
 }

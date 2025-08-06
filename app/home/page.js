@@ -2,6 +2,7 @@
 
 import { useSession } from "next-auth/react";
 import { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
 import Sidebar from "../dashboard/components/Sidebar";
 import Navbar from "../dashboard/components/Navbar";
 import styles from "./HomePage.module.css";
@@ -10,8 +11,9 @@ import admMap from "../../lib/admMap";
 import profesionMap from "../../lib/profesionMap";
 import { useAutoCorrect } from "../../lib/useAutoCorrect";
 
-export default function Home() {
+export default function HomePage() {
   const { data: session, status } = useSession();
+  const router = useRouter();
   const [isSidebarCollapsed, setSidebarCollapsed] = useState(false); // Sidebar expandido por defecto
   // Al montar el Home, forzar sidebar expandido
   useEffect(() => {
@@ -21,6 +23,12 @@ export default function Home() {
   const [docs, setDocs] = useState([]);
   const [loading, setLoading] = useState(true);
   const handleAutoCorrect = useAutoCorrect();
+  // Redirección automática si no está autenticado
+  useEffect(() => {
+    if (status === "unauthenticated") {
+      router.replace("/"); // Redirige al login
+    }
+  }, [status, router]);
 
   useEffect(() => {
     if (!session) return;
@@ -58,7 +66,7 @@ export default function Home() {
     return <p className="text-white p-8">Cargando sesión...</p>;
 
   if (!session)
-    return <p className="text-red-600 p-8">No estás autenticado.</p>;
+    return null; // Evita mostrar HTML crudo
 
   // Definimos user solo para el Navbar, Sidebar ya lo hace internamente
   const email = session.user.email;
@@ -70,9 +78,8 @@ export default function Home() {
     title: profesionMap[session.user.email] || "",
     workArea: "Contraloría",
   };
-
   return (
-    <div className={`flex h-screen ${styles.background}`}>
+    <div className="flex h-screen">
       <Sidebar isSidebarCollapsed={isSidebarCollapsed} />
       <div className="flex flex-col w-full">
         <Navbar user={user} toggleSidebar={toggleSidebar} />

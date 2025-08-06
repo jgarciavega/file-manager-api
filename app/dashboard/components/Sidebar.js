@@ -186,7 +186,7 @@ export default function Sidebar({ isSidebarCollapsed }) {
   return (
     <div className={styles["sidebar-container"]} style={{ borderLeft: 'none' }}>
       <aside
-        className={`${styles.sidebar} ${isSidebarCollapsed ? styles["sidebar-collapsed"] : ""} bg-blue-50 border-r border-blue-200 shadow-lg transition-all duration-300`}
+        className={`${styles.sidebar} ${isSidebarCollapsed ? styles["sidebar-collapsed"] : ""} bg-white h-264 transition-all duration-300`}
         role="navigation"
         aria-label="Menú principal"
       >
@@ -239,8 +239,8 @@ export default function Sidebar({ isSidebarCollapsed }) {
               <Image
                 src="/api.jpg"
                 alt="Logo institucional"
-                width={260}
-                height={80}
+                width={320}
+                height={100}
                 className="object-contain"
                 priority
               />
@@ -250,7 +250,7 @@ export default function Sidebar({ isSidebarCollapsed }) {
             {/* Buscador eliminado: ahora solo en el Navbar */}
             {/* Más separación entre buscador y menú */}
             <div style={{ marginTop: 48 }} />
-            <ul className="space-y-6 mt-4 overflow-y-auto max-h-[calc(100vh-350px)] pr-2 custom-scrollbar bg-white/90 rounded-2xl shadow-lg px-2 py-4 border border-blue-100">
+            <ul className="space-y-6 mt-4 overflow-y-auto max-h-[calc(100vh-350px)] pr-2 custom-scrollbar px-2 py-4">
               {filteredMenus.map(menu => (
                 <li key={menu.key} className="flex flex-col">
                   <div
@@ -310,7 +310,7 @@ export default function Sidebar({ isSidebarCollapsed }) {
                 Cerrar sesión
               </li>
             </ul>
-            {/* Información institucional en la parte inferior */}
+            {/* Información institucional en la parte inferior, sin borde inferior */}
             <div className="mt-12 flex flex-col items-center gap-1 select-none">
               <span className="text-xs text-blue-900 font-semibold tracking-widest">Sistema de Gestión Documental</span>
               <span className="text-xs text-blue-700 font-medium">LEA-BCS © 2025</span>
