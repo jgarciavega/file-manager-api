@@ -80,7 +80,7 @@ function FavoritosPage() {
         const response = await fetch(`/api/favoritos-documentos?usuarioId=${userId}`);
         if (response.ok) {
           const data = await response.json();
-          setFavoritos(data);
+          setFavoritos(Array.isArray(data) ? data : (data?.favoritos || data?.data || []));
         }
       } catch (error) {
         console.error('❌ Error al cargar favoritos:', error);
@@ -132,10 +132,11 @@ function FavoritosPage() {
   };
 
 
-  const filteredFiles = favoritos.filter(
+  const listaFavoritos = Array.isArray(favoritos) ? favoritos : [];
+  const filteredFiles = listaFavoritos.filter(
     (file) =>
-      file.nombre?.toLowerCase().includes(search.toLowerCase()) ||
-      file.responsable?.toLowerCase().includes(search.toLowerCase())
+      file?.nombre?.toLowerCase().includes(search.toLowerCase()) ||
+      file?.responsable?.toLowerCase().includes(search.toLowerCase())
   );
 
   // Paginación

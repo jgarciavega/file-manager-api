@@ -25,10 +25,11 @@ export default function BusquedaPage() {
     fetch(`/api/documentos?query=${encodeURIComponent(globalSearch)}&usuarioId=${session.user.id}`)
       .then(res => res.json())
       .then(data => {
-        setDocs(data);
-        // Extraer usuarios únicos para el filtro
-        const usuarios = Array.from(new Set(data.map(doc => doc.usuario)));
-        setUsuariosDisponibles(["Todos", ...usuarios]);
+  const normalized = Array.isArray(data) ? data : (data?.documentos || data?.data || []);
+  setDocs(normalized);
+  // Extraer usuarios únicos para el filtro
+  const usuarios = Array.from(new Set(normalized.map(doc => doc.usuario)));
+  setUsuariosDisponibles(["Todos", ...usuarios]);
       })
       .catch(() => setError("Error al buscar documentos"))
       .finally(() => setLoading(false));
@@ -46,7 +47,8 @@ export default function BusquedaPage() {
   }
 
   // Filtro avanzado en frontend
-  const filteredDocs = docs.filter(doc => {
+  const docsList = Array.isArray(docs) ? docs : [];
+  const filteredDocs = docsList.filter(doc => {
     const nombre = normalizeText(doc.nombre);
     const descripcion = normalizeText(doc.descripcion);
     const clasificacionDoc = normalizeText(doc.clasificacion);

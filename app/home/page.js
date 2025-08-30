@@ -23,7 +23,18 @@ export default function Home() {
     setLoading(true);
     fetch('/api/documentos')
       .then(res => res.json())
-      .then(data => setDocs(data))
+      .then(data => {
+        // Normalizar distintas formas de respuesta
+        if (Array.isArray(data)) return setDocs(data);
+        if (Array.isArray(data.data)) return setDocs(data.data);
+        if (Array.isArray(data.documentos)) return setDocs(data.documentos);
+        // fallback
+        return setDocs([]);
+      })
+      .catch((err) => {
+        console.error('Error cargando documentos en Home:', err);
+        setDocs([]);
+      })
       .finally(() => setLoading(false));
   }, [session]);
 
@@ -38,7 +49,9 @@ export default function Home() {
       .trim();
   }
 
-  const filteredDocs = docs.filter(doc => {
+  const documentsList = Array.isArray(docs) ? docs : [];
+
+  const filteredDocs = documentsList.filter(doc => {
     const nombre = normalizeText(doc.nombre);
     const descripcion = normalizeText(doc.descripcion);
     const searchNorm = normalizeText(search);

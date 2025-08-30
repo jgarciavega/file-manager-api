@@ -10,13 +10,22 @@ export default function UsuariosPage() {
     nombre: "",
     rol: "capturista",
   });
+  const listaUsuarios = Array.isArray(usuarios) ? usuarios : [];
 
   // 1️⃣ Al montar, traemos la lista
   useEffect(() => {
     fetch("/api/usuarios")
       .then((r) => r.json())
-      .then((data) => setUsuarios(data))
-      .catch(console.error)
+      .then((data) => {
+        if (Array.isArray(data)) return setUsuarios(data);
+        if (Array.isArray(data.data)) return setUsuarios(data.data);
+        if (Array.isArray(data.usuarios)) return setUsuarios(data.usuarios);
+        return setUsuarios([]);
+      })
+      .catch((err) => {
+        console.error('Error cargando usuarios:', err);
+        setUsuarios([]);
+      })
       .finally(() => setLoading(false));
   }, []);
 
@@ -35,8 +44,8 @@ export default function UsuariosPage() {
         body: JSON.stringify(nuevoUsuario),
       });
       if (!res.ok) throw new Error("Falló creación");
-      const creado = await res.json();
-      setUsuarios((prev) => [...prev, creado]); // ✅ añadimos al state
+  const creado = await res.json();
+  setUsuarios((prev) => (Array.isArray(prev) ? [...prev, creado] : [creado])); // ✅ añadimos al state
       setNuevoUsuario({ nombre: "", rol: "capturista" });
     } catch (err) {
       console.error(err);
@@ -55,7 +64,7 @@ export default function UsuariosPage() {
         body: JSON.stringify({ rol }),
       });
       if (!res.ok) throw new Error();
-      setUsuarios((prev) => prev.map((u) => (u.id === id ? { ...u, rol } : u)));
+  setUsuarios((prev) => (Array.isArray(prev) ? prev.map((u) => (u.id === id ? { ...u, rol } : u)) : prev));
     } catch {
       alert("Error actualizando rol");
     }
@@ -67,7 +76,7 @@ export default function UsuariosPage() {
     try {
       const res = await fetch(`/api/usuarios/${id}`, { method: "DELETE" });
       if (!res.ok) throw new Error();
-      setUsuarios((prev) => prev.filter((u) => u.id !== id));
+  setUsuarios((prev) => (Array.isArray(prev) ? prev.filter((u) => u.id !== id) : prev));
     } catch {
       alert("No se pudo eliminar");
     }
@@ -107,7 +116,7 @@ export default function UsuariosPage() {
             </tr>
           </thead>
           <tbody>
-            {usuarios.map((u, i) => (
+            {listaUsuarios.map((u, i) => (
               <tr
                 key={u.id}
                 className={`

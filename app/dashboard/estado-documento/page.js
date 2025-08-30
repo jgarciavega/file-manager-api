@@ -90,8 +90,12 @@ export default function EstadoDocumentoPage() {
     const fetchDocs = async () => {
       try {
         const res = await fetch("/api/documentos");
-        const data = await res.json();
-        setUploadedFiles(data);
+    const data = await res.json();
+    // Normalizar respuesta: array directo o envoltorios
+    if (Array.isArray(data)) setUploadedFiles(data);
+    else if (Array.isArray(data.data)) setUploadedFiles(data.data);
+    else if (Array.isArray(data.documentos)) setUploadedFiles(data.documentos);
+    else setUploadedFiles([]);
       } catch (error) {
         alert("Error al cargar documentos");
       } finally {
@@ -100,6 +104,9 @@ export default function EstadoDocumentoPage() {
     };
     fetchDocs();
   }, []);
+
+  // Lista segura para evitar .filter/.map sobre valores no-array
+  const listaUploadedFiles = Array.isArray(uploadedFiles) ? uploadedFiles : [];
 
   useEffect(() => {
     // Cargar catálogos desde la API
@@ -143,9 +150,7 @@ export default function EstadoDocumentoPage() {
       });
       if (res.ok) {
         setUploadedFiles((prev) =>
-          prev.map((file) =>
-            file.id === id ? { ...file, status: newStatus } : file
-          )
+          Array.isArray(prev) ? prev.map((file) => (file.id === id ? { ...file, status: newStatus } : file)) : prev
         );
       } else {
         alert('No se pudo actualizar el estado');
@@ -165,9 +170,7 @@ export default function EstadoDocumentoPage() {
       });
       if (res.ok) {
         setUploadedFiles((prev) =>
-          prev.map((file) =>
-            file.id === id ? { ...file, tipos_documentos_id: Number(newTipoId) } : file
-          )
+          Array.isArray(prev) ? prev.map((file) => (file.id === id ? { ...file, tipos_documentos_id: Number(newTipoId) } : file)) : prev
         );
       } else {
         alert('No se pudo actualizar la clasificación');
@@ -187,9 +190,7 @@ export default function EstadoDocumentoPage() {
       });
       if (res.ok) {
         setUploadedFiles((prev) =>
-          prev.map((file) =>
-            file.id === id ? { ...file, jefatura_id: Number(newJefaturaId) } : file
-          )
+          Array.isArray(prev) ? prev.map((file) => (file.id === id ? { ...file, jefatura_id: Number(newJefaturaId) } : file)) : prev
         );
       } else {
         alert('No se pudo actualizar la jefatura/dirección');
@@ -209,9 +210,7 @@ export default function EstadoDocumentoPage() {
       });
       if (res.ok) {
         setUploadedFiles((prev) =>
-          prev.map((file) =>
-            file.id === id ? { ...file, vigencia_id: Number(newVigenciaId) } : file
-          )
+          Array.isArray(prev) ? prev.map((file) => (file.id === id ? { ...file, vigencia_id: Number(newVigenciaId) } : file)) : prev
         );
       } else {
         alert('No se pudo actualizar la vigencia');
@@ -231,9 +230,7 @@ export default function EstadoDocumentoPage() {
       });
       if (res.ok) {
         setUploadedFiles((prev) =>
-          prev.map((file) =>
-            file.id === id ? { ...file, acceso_id: Number(newAccesoId) } : file
-          )
+          Array.isArray(prev) ? prev.map((file) => (file.id === id ? { ...file, acceso_id: Number(newAccesoId) } : file)) : prev
         );
       } else {
         alert('No se pudo actualizar el nivel de acceso');
@@ -253,9 +250,7 @@ export default function EstadoDocumentoPage() {
       });
       if (res.ok) {
         setUploadedFiles((prev) =>
-          prev.map((file) =>
-            file.id === id ? { ...file, soporte_id: Number(newSoporteId) } : file
-          )
+          Array.isArray(prev) ? prev.map((file) => (file.id === id ? { ...file, soporte_id: Number(newSoporteId) } : file)) : prev
         );
       } else {
         alert('No se pudo actualizar el soporte');
@@ -275,9 +270,7 @@ export default function EstadoDocumentoPage() {
       });
       if (res.ok) {
         setUploadedFiles((prev) =>
-          prev.map((file) =>
-            file.id === id ? { ...file, ubicacion_id: Number(newUbicacionId) } : file
-          )
+          Array.isArray(prev) ? prev.map((file) => (file.id === id ? { ...file, ubicacion_id: Number(newUbicacionId) } : file)) : prev
         );
       } else {
         alert('No se pudo actualizar la ubicación');
@@ -297,9 +290,7 @@ export default function EstadoDocumentoPage() {
       });
       if (res.ok) {
         setUploadedFiles((prev) =>
-          prev.map((file) =>
-            file.id === id ? { ...file, responsable_id: Number(newResponsableId) } : file
-          )
+          Array.isArray(prev) ? prev.map((file) => (file.id === id ? { ...file, responsable_id: Number(newResponsableId) } : file)) : prev
         );
       } else {
         alert('No se pudo actualizar el responsable');
@@ -319,7 +310,7 @@ export default function EstadoDocumentoPage() {
     try {
       const res = await fetch(`/api/documentos/${id}/delete`, { method: 'DELETE' });
       if (res.ok) {
-        setUploadedFiles((prev) => prev.filter((file) => file.id !== id));
+        setUploadedFiles((prev) => (Array.isArray(prev) ? prev.filter((file) => file.id !== id) : prev));
         alert('Archivo eliminado correctamente.');
       } else {
         alert('No se pudo eliminar el archivo.');
@@ -362,7 +353,7 @@ export default function EstadoDocumentoPage() {
     URL.revokeObjectURL(url);
   };
 
-  const filteredFiles = uploadedFiles.filter(
+  const filteredFiles = (Array.isArray(listaUploadedFiles) ? listaUploadedFiles : []).filter(
     (file) => {
       const matchesText =
         (file.nombre?.toLowerCase().includes(searchTerm.toLowerCase()) ||

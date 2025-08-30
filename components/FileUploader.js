@@ -27,7 +27,8 @@ const FileUploader = ({ onUploadComplete }) => {
       });
       
       const data = await response.json();
-      onUploadComplete?.(data);
+  const normalized = Array.isArray(data) ? data : (data?.files || data?.data || data);
+  onUploadComplete?.(normalized);
     } catch (error) {
       console.error('Error uploading file:', error);
     }

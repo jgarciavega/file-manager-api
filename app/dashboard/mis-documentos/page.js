@@ -50,6 +50,11 @@ export default function MisDocumentosPage() {
   const [showCompliance, setShowCompliance] = useState(true);
   const userId = session?.user?.id;
 
+  // Wrapper seguro: si `documentos` no es un array, usamos un fallback vacío
+  const listaDocumentos = Array.isArray(documentos)
+    ? documentos
+    : (documentos?.documentos || documentos?.data || []);
+
   // Estado para favoritos
   const [favoritos, setFavoritos] = useState([]); // array de strings
 
@@ -130,9 +135,11 @@ export default function MisDocumentosPage() {
         if (response.ok) {
           const data = await response.json();
           console.log('📄 Documentos recibidos:', data);
-          setDocumentos(data);
+          const normalized = Array.isArray(data) ? data : (data?.documentos || data?.data || []);
+          setDocumentos(normalized);
         } else {
           console.error('❌ Error al cargar documentos:', response.statusText);
+          setDocumentos([]);
         }
       } catch (error) {
         console.error('❌ Error al cargar documentos:', error);
@@ -151,7 +158,7 @@ export default function MisDocumentosPage() {
         const response = await fetch('/api/tipos-documentos');
         if (response.ok) {
           const tipos = await response.json();
-          setTiposDocumentos(tipos);
+          setTiposDocumentos(Array.isArray(tipos) ? tipos : (tipos?.data || []));
         }
       } catch (error) {
         console.error('Error al cargar tipos de documentos:', error);

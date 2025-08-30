@@ -9,16 +9,22 @@ import { faArrowLeft } from "@fortawesome/free-solid-svg-icons";
 export default function ArchivosAdmin() {
   const [documentos, setDocumentos] = useState([]);
   const [loading, setLoading] = useState(true);
+  const listaDocumentos = Array.isArray(documentos) ? documentos : [];
 
   useEffect(() => {
     const fetchDocs = async () => {
       try {
-        const res  = await fetch("/api/documentos");
+        const res = await fetch("/api/documentos");
         const data = await res.json();
         console.log("Respuesta de la API:", data);
-        setDocumentos(data);
+        // Normalizar diferentes formas de respuesta
+        if (Array.isArray(data)) setDocumentos(data);
+        else if (Array.isArray(data.data)) setDocumentos(data.data);
+        else if (Array.isArray(data.documentos)) setDocumentos(data.documentos);
+        else setDocumentos([]);
       } catch (error) {
         console.error("Error al cargar documentos:", error);
+        setDocumentos([]);
       } finally {
         setLoading(false);
       }
@@ -60,14 +66,14 @@ export default function ArchivosAdmin() {
               </tr>
             </thead>
             <tbody>
-              {documentos.length === 0 ? (
+              {(!Array.isArray(documentos) || listaDocumentos.length === 0) ? (
                 <tr>
                   <td colSpan={6} className="p-4 text-center text-gray-500 dark:text-gray-400">
                     No hay documentos disponibles.
                   </td>
                 </tr>
               ) : (
-                documentos.map((doc) => (
+                listaDocumentos.map((doc) => (
                   <tr
                     key={doc.id}
                     className="hover:bg-gray-100 dark:hover:bg-gray-800"
