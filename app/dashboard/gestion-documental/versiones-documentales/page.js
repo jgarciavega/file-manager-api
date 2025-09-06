@@ -1,9 +1,9 @@
 "use client";
 
-import BackToHomeButton from "../../../components/BackToHomeButton";
+import BackToHomeButton from "@/components/BackToHomeButton";
 import { useSession } from "next-auth/react";
 import Image from "next/image";
-import avatarMap from "../../../lib/avatarMap";
+import avatarMap from "@/lib/avatarMap";
 
 export default function VersionesDocumentales() {
   const { data: session, status } = useSession();

@@ -138,20 +138,20 @@ export default function Sidebar() {
     },
     {
       key: "gestion documental",
-      label: "GESTION DOCUMENTAL",   
+      label: "GESTION DOCUMENTAL",
       icon: faFolder,
       sub: [
-        { label: "Expedientes", href: "/dashboard/expedientes", icon: faFolderOpen },
-        { label: "Prestamos de Documentos", href: "/dashboard/prestamos-documentos", icon: faFolderTree },
-        { label: "Serie Documentales", href: "/dashboard/serie-documentales", icon: faHistory },
-        { label: "Subserie Documentales", href: "/dashboard/subserie-documentales", icon: faCircleInfo },
-        { label: "Transferencias", href: "/dashboard/transferencias", icon: faArrowUpZA },
-        { label: "Versiones Documentales", href: "/dashboard/versiones-documentales", icon: faHistory },
+        { label: "Expedientes", href: "/dashboard/gestion-documental/expedientes", icon: faFolderOpen },
+        { label: "Prestamos de Documentos", href: "/dashboard/gestion-documental/prestamos-documento", icon: faFolderTree },
+        { label: "Serie Documentales", href: "/dashboard/gestion-documental/series-documentales", icon: faHistory },
+        { label: "Subseries Documentales", href: "/dashboard/gestion-documental/subseries-documentales", icon: faCircleInfo },
+        { label: "Transferencias", href: "/dashboard/gestion-documental/transferencias", icon: faArrowUpZA },
+        { label: "Versiones Documentales", href: "/dashboard/gestion-documental/versiones-documentales", icon: faHistory },
       ],
     },
     {
       key: "settings",
-      label: "CONFIGURACION & AYUDA",   
+      label: "CONFIGURACION & AYUDA",
       icon: faCog,
       sub: [
         { label: "Ajustes", href: "/dashboard/ajustes", icon: faCog },
@@ -267,7 +267,7 @@ export default function Sidebar() {
         </ul>
         {/* Información institucional en la parte inferior */}
         <div className={`mt-4 mb-2 flex flex-col items-center gap-1 select-none ${darkMode ? 'bg-gradient-to-r from-[#181f2a] to-[#23395d] rounded-xl py-2 shadow-xl border border-blue-900' : ''}`}>
-          <button 
+          <button
             onClick={() => {
               Swal.fire({
                 title: 'Notas sobre la LEA-BCS',
@@ -302,7 +302,7 @@ export default function Sidebar() {
             <span className={`text-xs ${darkMode ? "text-blue-200" : "text-blue-900"} font-semibold tracking-widest drop-shadow-sm flex items-center gap-2`}>
               Sistema de Gestión Documental
               <svg width="16" height="16" fill="none" viewBox="0 0 24 24" className="inline-block">
-                <path fill="currentColor" d="M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20Zm0 18.2A8.2 8.2 0 1 1 12 3.8a8.2 8.2 0 0 1 0 16.4Zm0-12.2a1 1 0 0 1 1 1v3.5a1 1 0 0 1-2 0V9a1 1 0 0 1 1-1Zm0 7.2a1.2 1.2 0 1 1 0-2.4 1.2 1.2 0 0 1 0 2.4Z"/>
+                <path fill="currentColor" d="M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20Zm0 18.2A8.2 8.2 0 1 1 12 3.8a8.2 8.2 0 0 1 0 16.4Zm0-12.2a1 1 0 0 1 1 1v3.5a1 1 0 0 1-2 0V9a1 1 0 0 1 1-1Zm0 7.2a1.2 1.2 0 1 1 0-2.4 1.2 1.2 0 0 1 0 2.4Z" />
               </svg>
             </span>
             <span className={darkMode ? "text-xs text-blue-400 font-medium drop-shadow-sm" : "text-xs text-blue-700 font-medium"}>LEA-BCS 2025</span>
