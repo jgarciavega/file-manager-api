@@ -3,7 +3,6 @@
 import { useState } from "react";
 import Image from "next/image";
 import avatarMap from "../../../lib/avatarMap";
-import styles from "./Navbar.module.css";
 
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
@@ -26,58 +25,36 @@ export default function Navbar({ user, toggleSidebar }) {
 
   return (
     <>
-      {/* 🔹 NAVBAR SUPERIOR */}
-      <nav className="relative flex items-center justify-between mr-auto px-4 py-12 bg-white shadow-md w-full h-64 gap-6">
-        <div className="flex flex-col items-start ml-8">
-          <h1 className="!text-2xl font-extrabold text-red-800 mt-12 tracking-wide">
-            <p>GESTOR DE ARCHIVOS</p>
-          </h1>
-          <h1 className="!text-3xl font-extrabold text-blue-950 mt-2 tracking-wide">
-            <p>Puerto de Pichilingue</p>
-          </h1>
-        </div>
-
-        {/* 🔹 Buscador global (input + micrófono) */}
-        <div className="flex-1 flex justify-center">
-          <NavbarGlobalSearch />
-        </div>
-
-        {/* 🔹 Botón Hamburguesa */}
-        <button
-          onClick={toggleSidebar}
-          className="text-blue-900 ml-auto text-3xl p-4 hover:bg-gray-400 rounded-md transition"
-        >
-          <FontAwesomeIcon size="2xl" icon={faBars} />
-        </button>
-      </nav>
-
       {/* 🔹 Sección de Bienvenida SOBRE la imagen y tarjetas integradas */}
-      <div className="relative shadow-md w-full">
+      <div className="relative shadow-md w-full bg-url('/inicio.webp') bg-cover bg-center overflow-hidden">
         <Image
           src="/inicio.webp"
           alt="Imagen de Bienvenida"
-          layout="responsive"
-          width={600}
+          width={1600}
           height={400}
-          className="rounded-lg"
+          className="w-full h-screen md:h-64 lg:h-screen object-cover opacity-70"
+          priority
         />
 
-        <div className="absolute top-0 right-0 w-full md:w-1/2 h-full flex flex-col items-center justify-center p-8 bg-black bg-opacity-50 rounded-l-lg text-white">
-          <Image
-            src={user.avatar}
-            alt={`Avatar de ${user.name}`}
-            width={180}
-            height={100}
-            className="rounded-full border-4 border-white mb-4"
-          />
-          <h2 className="text-3xl font-semibold tracking-wide mb-2 text-center">
-            {saludo}: {user.title}
-          </h2>
-          <p className="text-lg leading-relaxed text-center">
-            Se han enviado a tu cuenta nuevos archivos, puedes revisarlos
-            directamente mediante esta sección.
-          </p>
-          <button className="mt-6 px-6 py-3 bg-transparent text-white border border-white rounded-md hover:bg-slate-200 hover:text-gray-950 hover:shadow-lg transition-all duration-300 flex items-center">
+        <div className="absolute top-0 right-0 w-full md:w-1/2 h-full flex flex-col items-center justify-center p-6 bg-black bg-opacity-50 rounded-l-lg text-white">
+          <div className="flex items-center gap-4 mb-4">
+            <Image
+              src={user.avatar}
+              alt={`Avatar de ${user.name}`}
+              width={80}
+              height={80}
+              className="rounded-full border-2 border-white"
+            />
+            <div>
+              <h2 className="text-xl font-semibold">
+                {saludo}: {user.title}
+              </h2>
+              <p className="text-sm">
+                Tienes nuevos archivos para revisar
+              </p>
+            </div>
+          </div>
+          <button className="px-4 py-2 bg-transparent text-white border border-white rounded-md hover:bg-slate-200 hover:text-gray-950 hover:shadow-lg transition-all duration-300 flex items-center text-sm">
             Consultar
             <FontAwesomeIcon icon={faChevronRight} className="ml-2" />
           </button>

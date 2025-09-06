@@ -20,9 +20,9 @@ export default function SidebarAdmin() {
   };
 
   return (
-    <aside className="w-64 bg-gray-900 text-white p-6 flex flex-col justify-between min-h-screen">
+    <aside className="w-64 bg-gray-900 text-white p-6 flex flex-col min-h-screen overflow-hidden">
       {/* Menú */}
-      <div>
+      <div className="flex-1 overflow-y-auto">
         <h2 className="text-xl font-bold mb-4 border-b border-gray-700 pb-2">Admin</h2>
         <ul className="space-y-3">
           <li><Link href="/admin"           className="hover:text-blue-400">Inicio</Link></li>
@@ -35,7 +35,7 @@ export default function SidebarAdmin() {
       </div>
 
       {/* Perfil */}
-      <div className="flex flex-col items-center mt-8">
+      <div className="flex flex-col items-center mt-4">
         <Image
           src={user.avatar}
           alt="Avatar"

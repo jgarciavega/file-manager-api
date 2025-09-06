@@ -11,7 +11,7 @@ import { useSession } from "next-auth/react";
 import admMap from "../../../lib/admMap";
 import avatarMap from "../../../lib/avatarMap";
 import profesionMap from "../../../lib/profesionMap";
-import { faSearch, faMicrophone } from "@fortawesome/free-solid-svg-icons";
+import { faSearch, faMicrophone, faFolder, faPaperPlane, faFolderTree, faArrowUpZA } from "@fortawesome/free-solid-svg-icons";
 import { useGlobalSearch } from "../../context/GlobalSearchContext";
 
 import {
@@ -30,6 +30,7 @@ import {
   faCircleInfo,
   faFolderOpen,
 } from "@fortawesome/free-solid-svg-icons";
+import { FaDochub } from "react-icons/fa";
 
 export default function Sidebar() {
 
@@ -136,6 +137,19 @@ export default function Sidebar() {
       ],
     },
     {
+      key: "gestion documental",
+      label: "GESTION DOCUMENTAL",   
+      icon: faFolder,
+      sub: [
+        { label: "Expedientes", href: "/dashboard/expedientes", icon: faFolderOpen },
+        { label: "Prestamos de Documentos", href: "/dashboard/prestamos-documentos", icon: faFolderTree },
+        { label: "Serie Documentales", href: "/dashboard/serie-documentales", icon: faHistory },
+        { label: "Subserie Documentales", href: "/dashboard/subserie-documentales", icon: faCircleInfo },
+        { label: "Transferencias", href: "/dashboard/transferencias", icon: faArrowUpZA },
+        { label: "Versiones Documentales", href: "/dashboard/versiones-documentales", icon: faHistory },
+      ],
+    },
+    {
       key: "settings",
       label: "CONFIGURACION & AYUDA",   
       icon: faCog,
@@ -167,32 +181,33 @@ export default function Sidebar() {
   return (
     <div className={styles["sidebar-container"] + (darkMode ? " border-none" : "")} style={{ borderLeft: 'none', background: darkMode ? 'linear-gradient(135deg, #0a1120 60%, #1e293b 100%)' : undefined }}>
       <aside
-        className={`${styles.sidebar} ${darkMode ? 'bg-gradient-to-br from-[#0a1120] via-[#1e293b] to-[#23395d] border-r border-blue-900 text-blue-100 shadow-2xl rounded-2xl' : 'bg-blue-50 border-r border-blue-200 text-blue-900 shadow-lg'} transition-all duration-300`}
+        className={`${styles.sidebar} ${darkMode ? 'bg-gradient-to-br from-[#0a1120] via-[#1e293b] to-[#23395d] border-r border-blue-900 text-blue-100 shadow-2xl' : 'bg-blue-50 border-r border-blue-200 text-blue-900 shadow-lg'} transition-all duration-300`}
         role="navigation"
         aria-label="Menú principal"
       >
         {/* Sidebar expandido siempre */}
-        <div className="sidebar-logo mt-16 mb-2 flex flex-col items-center justify-center w-full">
+        <div className="sidebar-logo flex flex-col items-center justify-center w-full">
           <Image
             src="/api-dark23.png"
             alt="Logo institucional modo oscuro"
             width={450}
             height={120}
-            className="object-contain"
+            className="object-contain invert"
             style={{ filter: "drop-shadow(0 0 32px rgba(37,99,235,0.35)) drop-shadow(0 4px 16px rgba(0,0,0,0.18))" }}
             priority
           />
+          <div className="mt-6 text-center">
+            <h1 className={`text-2xl font-sans font-bold ${darkMode ? 'text-blue-200' : 'text-blue-900'} tracking-wide leading-relaxed`}>
+              Sistema de Gestión Documental LEA-BCS 2025
+            </h1>
+          </div>
         </div>
-        {/* Buscador debajo del logo */}
-        <div style={{ marginTop: 48 }} /> {/* Aumenta el margen superior aquí */}
         {/* Buscador eliminado: ahora solo en el Navbar */}
-        {/* Más separación entre buscador y menú */}
-        <div style={{ marginTop: 48 }} />
-        <ul className={`space-y-6 mt-4 overflow-y-auto max-h-[calc(100vh-350px)] pr-2 custom-scrollbar rounded-2xl shadow-xl px-2 py-4 border ${darkMode ? 'bg-gradient-to-br from-[#181f2a] via-[#23395d] to-[#1e293b] border-blue-900' : 'bg-white/90 border-blue-100'}`}>
+        <ul className={`space-y-6 mt-8 overflow-y-auto max-h-[calc(100vh-350px)] pr-2 custom-scrollbar rounded-2xl shadow-xl px-2 py-4 border ${darkMode ? 'bg-gradient-to-br from-[#181f2a] via-[#23395d] to-[#1e293b] border-blue-900' : 'bg-white/90 border-blue-100'}`}>
           {filteredMenus.map(menu => (
             <li key={menu.key} className="flex flex-col">
               <div
-                className={`flex items-center group rounded-xl px-3 py-3 transition-all duration-300 cursor-pointer relative shadow-md ${openMenus.includes(menu.key)
+                className={`flex items-center group rounded-xl px-3 transition-all duration-300 cursor-pointer relative shadow-md ${openMenus.includes(menu.key)
                   ? (darkMode ? 'bg-blue-900/90 border border-blue-400' : 'bg-blue-100/80 border border-blue-700')
                   : (darkMode ? 'hover:bg-blue-900/60 border border-transparent' : 'hover:bg-blue-50/80 border border-transparent')}`}
                 onClick={() => toggleMenu(menu.key)}
@@ -206,7 +221,7 @@ export default function Sidebar() {
                   icon={menu.icon}
                   className={darkMode ? "mr-3 text-blue-200 group-hover:text-blue-400 transition-all duration-200 text-3xl drop-shadow-lg" : "mr-3 text-blue-700 group-hover:text-blue-900 transition-all duration-200 text-3xl"}
                 />
-                <span className={`flex-grow text-xl font-bold select-none ${darkMode ? 'text-blue-100 group-hover:text-blue-300 drop-shadow-sm' : 'text-blue-900 group-hover:text-blue-800'}`} style={{ letterSpacing: '0.5px' }}>
+                <span className={`flex-grow text-md font-bold select-none ${darkMode ? 'text-blue-100 group-hover:text-blue-300 drop-shadow-sm' : 'text-blue-900 group-hover:text-blue-800'}`} style={{ letterSpacing: '0.5px' }}>
                   {menu.label}
                 </span>
                 <span className={`ml-2 text-2xl select-none ${darkMode ? 'text-blue-400' : 'text-blue-400'}`}>{openMenus.includes(menu.key) ? "−" : "+"}</span>
@@ -251,40 +266,47 @@ export default function Sidebar() {
           </li>
         </ul>
         {/* Información institucional en la parte inferior */}
-        <div className={`mt-12 flex flex-col items-center gap-1 select-none ${darkMode ? 'bg-gradient-to-r from-[#181f2a] to-[#23395d] rounded-xl py-3 shadow-xl border border-blue-900' : ''}`}>
-          <span className={darkMode ? "text-xs text-blue-200 font-semibold tracking-widest drop-shadow-sm" : "text-xs text-blue-900 font-semibold tracking-widest"}>Sistema de Gestión Documental</span>
-          <span className={darkMode ? "text-xs text-blue-400 font-medium drop-shadow-sm" : "text-xs text-blue-700 font-medium"}>LEA-BCS © 2025</span>
-          {/* Widget informativo sobre la LEA-BCS */}
-          <div
-            className={
-              darkMode
-                ? "w-full mt-4 rounded-2xl px-5 py-4 shadow-xl bg-gradient-to-br from-blue-900 via-blue-800 to-blue-700 border border-blue-500/60 text-blue-100 text-[13px] font-medium flex flex-col items-start relative animate-fadein"
-                : "w-full mt-4 rounded-2xl px-5 py-4 shadow-xl bg-gradient-to-br from-blue-100 via-blue-50 to-green-50 border border-blue-300 text-blue-900 text-[13px] font-medium flex flex-col items-start relative animate-fadein"
-            }
+        <div className={`mt-4 mb-2 flex flex-col items-center gap-1 select-none ${darkMode ? 'bg-gradient-to-r from-[#181f2a] to-[#23395d] rounded-xl py-2 shadow-xl border border-blue-900' : ''}`}>
+          <button 
+            onClick={() => {
+              Swal.fire({
+                title: 'Notas sobre la LEA-BCS',
+                html: `
+                  <div class="text-left space-y-3">
+                    <p><b class="text-blue-600">LEA-BCS</b> regula la gestión, conservación y acceso a los archivos públicos en Baja California Sur.</p>
+                    <p>Todo documento debe ser <b class="text-blue-500">clasificado y resguardado</b> conforme a la ley.</p>
+                    <p>El acceso a la información está garantizado, salvo <b class="text-red-500">excepciones legales</b>.</p>
+                    <p>La <b class="text-green-600">transparencia</b> y la <b class="text-green-600">rendición de cuentas</b> son principios rectores.</p>
+                    <p>El <b class="text-red-600">uso indebido</b> de información puede ser sancionado.</p>
+                    <p class="mt-4">
+                      <a href="https://www.cbcs.gob.mx/index.php/cmply/6728-ley-de-archivos-para-el-estado-de-baja-california-sur" 
+                         target="_blank" 
+                         class="text-blue-600 hover:text-blue-800 underline">
+                        Consulta el texto completo aquí
+                      </a>
+                    </p>
+                  </div>
+                `,
+                width: '600px',
+                showCloseButton: true,
+                showConfirmButton: false,
+                background: darkMode ? '#1e293b' : '#ffffff',
+                color: darkMode ? '#e2e8f0' : '#000000',
+                customClass: {
+                  popup: darkMode ? 'dark-mode-popup' : ''
+                }
+              });
+            }}
+            className={`flex flex-col items-center hover:opacity-80 transition-opacity cursor-pointer`}
           >
-            <span className="flex items-center gap-2 mb-3 font-extrabold text-blue-300 dark:text-yellow-200 text-base tracking-wide">
-              <svg width="22" height="22" fill="none" viewBox="0 0 24 24" className="inline-block text-blue-400 dark:text-yellow-200"><path fill="currentColor" d="M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20Zm0 18.2A8.2 8.2 0 1 1 12 3.8a8.2 8.2 0 0 1 0 16.4Zm0-12.2a1 1 0 0 1 1 1v3.5a1 1 0 0 1-2 0V9a1 1 0 0 1 1-1Zm0 7.2a1.2 1.2 0 1 1 0-2.4 1.2 1.2 0 0 1 0 2.4Z"/></svg>
-              Notas sobre la LEA-BCS
+            <span className={`text-xs ${darkMode ? "text-blue-200" : "text-blue-900"} font-semibold tracking-widest drop-shadow-sm flex items-center gap-2`}>
+              Sistema de Gestión Documental
+              <svg width="16" height="16" fill="none" viewBox="0 0 24 24" className="inline-block">
+                <path fill="currentColor" d="M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20Zm0 18.2A8.2 8.2 0 1 1 12 3.8a8.2 8.2 0 0 1 0 16.4Zm0-12.2a1 1 0 0 1 1 1v3.5a1 1 0 0 1-2 0V9a1 1 0 0 1 1-1Zm0 7.2a1.2 1.2 0 1 1 0-2.4 1.2 1.2 0 0 1 0 2.4Z"/>
+              </svg>
             </span>
-            <ul className="list-disc pl-5 space-y-2">
-              <li className="leading-snug">La <b className="text-blue-200 dark:text-yellow-200">LEA-BCS</b> regula la gestión, conservación y acceso a los archivos públicos en Baja California Sur.</li>
-              <li className="leading-snug">Todo documento debe ser <b className="text-blue-300 dark:text-yellow-100">clasificado y resguardado</b> conforme a la ley.</li>
-              <li className="leading-snug">El acceso a la información está garantizado, salvo <b className="text-red-300 dark:text-red-200">excepciones legales</b>.</li>
-              <li className="leading-snug">La <b className="text-green-300 dark:text-green-200">transparencia</b> y la <b className="text-green-300 dark:text-green-200">rendición de cuentas</b> son principios rectores.</li>
-              <li className="leading-snug">El <b className="text-red-400 dark:text-red-300">uso indebido</b> de información puede ser sancionado.</li>
-              <li className="leading-snug">Consulta el texto completo en <a href="https://www.cbcs.gob.mx/index.php/cmply/6728-ley-de-archivos-para-el-estado-de-baja-california-sur" target="_blank" className="underline font-semibold hover:text-blue-400 dark:hover:text-yellow-200">congresobcs.gob.mx</a></li>
-            </ul>
-            <span className="absolute right-2 bottom-2 opacity-20 text-5xl select-none pointer-events-none font-extrabold">LEA</span>
-            <style jsx>{`
-              .animate-fadein {
-                animation: fadein 0.7s cubic-bezier(0.4,0,0.2,1);
-              }
-              @keyframes fadein {
-                0% { opacity: 0; transform: translateY(30px) scale(0.98); }
-                100% { opacity: 1; transform: translateY(0) scale(1); }
-              }
-            `}</style>
-          </div>
+            <span className={darkMode ? "text-xs text-blue-400 font-medium drop-shadow-sm" : "text-xs text-blue-700 font-medium"}>LEA-BCS 2025</span>
+          </button>
         </div>
       </aside>
     </div>

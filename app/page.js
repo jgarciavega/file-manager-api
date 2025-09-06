@@ -75,7 +75,7 @@ export default function LoginPage() {
         src="/login.jpg"
         alt="Fondo"
         fill={true}
-        className="absolute top-0 left-0 w-full h-full filter brightness-50 -z-10"
+        className="absolute top-0 left-0 w-full filter brightness-50 -z-10 object-cover"
       />
       <div className="bg-white shadow-xl p-8 w-[480px] border-2 rounded-lg min-h-[420px]">
         <div className="text-center mb-6">
