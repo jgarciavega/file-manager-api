@@ -49,7 +49,7 @@ export default function VersionesDocumentales() {
           Versiones Documentales
         </h1>
         <p className="text-center text-lg text-gray-600 dark:text-gray-300">
-          Aquí irán las versiones documentales disponibles para revisión.
+          
         </p>
       </main>
 
