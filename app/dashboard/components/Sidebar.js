@@ -186,30 +186,101 @@ export default function Sidebar() {
     workArea: "Contraloría",
   };
 
-  // Render mínimo cuando está contraído: solo la pestaña/botón visible
+  // Render mínimo cuando está contraído: muestra iconos + mantiene el botón de expandir existente
   const collapsedAside = (
     <aside
       className={`${styles.sidebar} ${darkMode ? 'bg-gradient-to-br from-[#0a1120] via-[#1e293b] to-[#23395d] border-r border-blue-900 text-blue-100 shadow-2xl' : 'bg-blue-50 border-r border-blue-200 text-blue-900 shadow-lg'} transition-all duration-300`}
       role="navigation"
       aria-label="Menú principal (contraído)"
       style={{
-        width: '36px',
-        minWidth: '36px',
-        maxWidth: '36px',
+        width: '76px',
+        minWidth: '76px',
+        maxWidth: '76px',
         position: 'relative',
-        overflow: 'hidden',
-        padding: 0,
+        overflow: 'visible',
+        paddingTop: '12px',
+        paddingBottom: '12px',
       }}
     >
-      {/* Solo el botón visible */}
+      {/* Conserva el control para expandir (el mismo que usas) */}
       <button
         onClick={() => setCollapsed(false)}
         aria-label="Expandir sidebar"
         title="Expandir sidebar"
         className={styles.toggleButton}
+        style={{ position: 'absolute', left: '50%', transform: 'translateX(-50%)', top: '12px' }}
       >
         <span className={styles.toggleIcon}>{'›'}</span>
       </button>
+
+      <div className="flex flex-col items-center gap-4 mt-8">
+        {/* Logo pequeño */}
+        <Image
+          src="/api-dark23.png"
+          alt="Logo"
+          width={40}
+          height={40}
+          className="object-contain invert"
+          priority
+        />
+
+        {/* Lista vertical de iconos del menú */}
+        <nav aria-label="Menú iconos" className="flex flex-col items-center w-full">
+          {filteredMenus.map(menu => (
+            <div key={menu.key} className="w-full flex justify-center relative">
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  toggleMenu(menu.key);
+                }}
+                title={menu.label}
+                aria-label={menu.label}
+                className={`flex items-center justify-center w-12 h-12 rounded-lg transition-colors duration-200 ${openMenus.includes(menu.key) ? (darkMode ? 'bg-blue-900/90 border border-blue-400' : 'bg-blue-100') : (darkMode ? 'hover:bg-blue-900/60' : 'hover:bg-blue-50')}`}
+              >
+                <FontAwesomeIcon
+                  icon={menu.icon}
+                  className={darkMode ? "text-blue-200 text-2xl drop-shadow-lg" : "text-blue-700 text-2xl"}
+                />
+              </button>
+
+              {/* Panel flotante de submenú */}
+              {openMenus.includes(menu.key) && menu.sub.length > 0 && (
+                <div
+                  role="dialog"
+                  aria-label={`${menu.label} submenú`}
+                  className={`absolute left-full ml-3 top-0 z-50 rounded-lg shadow-xl ${darkMode ? 'bg-[#1e293b] border border-blue-900 text-blue-100' : 'bg-white border border-blue-100 text-blue-900'}`}
+                  style={{ minWidth: '260px', padding: '8px' }}
+                >
+                  <div className="font-bold px-2 pb-2" style={{ borderBottom: darkMode ? '1px solid rgba(66,153,225,0.06)' : '1px solid rgba(2,6,23,0.03)' }}>
+                    {menu.label}
+                  </div>
+                  <ul className="mt-2 space-y-1">
+                    {menu.sub.map(sub => (
+                      <li key={sub.label}>
+                        <a href={sub.href} className={`flex items-center gap-2 px-2 py-2 rounded-md transition-colors duration-150 ${darkMode ? 'hover:bg-blue-900/60' : 'hover:bg-blue-50'}`}>
+                          <FontAwesomeIcon icon={sub.icon} className={darkMode ? "text-blue-300" : "text-blue-600"} />
+                          <span className="text-sm font-medium">{sub.label}</span>
+                        </a>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+            </div>
+          ))}
+        </nav>
+
+        {/* Botón de cerrar sesión como icono */}
+        <div className="mt-6 w-full flex flex-col items-center">
+          <button
+            onClick={handleLogoutClick}
+            title="Cerrar sesión"
+            className={`w-12 h-12 rounded-lg flex items-center justify-center transition-colors ${darkMode ? 'text-blue-200 hover:text-red-400 bg-[#1e293b] hover:bg-red-900 border border-blue-900' : 'text-gray-500 hover:text-red-700'}`}
+          >
+            <FontAwesomeIcon icon={faSignOutAlt} className={darkMode ? "text-blue-600" : "text-red-500"} />
+          </button>
+        </div>
+      </div>
     </aside>
   );
 
