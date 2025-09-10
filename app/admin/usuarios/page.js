@@ -1,26 +1,27 @@
 "use client";
 import { useEffect, useState } from "react";
+import NEXT_PUBLIC_API_URL from "@/config";
 
-const roles = ["admin", "revisor", "capturista"];
 
 export default function UsuariosPage() {
   const [usuarios, setUsuarios] = useState([]);
+  const [roles, setRoles] = useState([]);
   const [loading, setLoading] = useState(true);
   const [nuevoUsuario, setNuevoUsuario] = useState({
     nombre: "",
-    rol: "capturista",
+    apellidos: "",
+    email: "",
+    rol: "",
+    activo: 1,
   });
-  const listaUsuarios = Array.isArray(usuarios) ? usuarios : [];
 
   // 1️⃣ Al montar, traemos la lista
   useEffect(() => {
-    fetch("/api/usuarios")
+    fetch(`${NEXT_PUBLIC_API_URL}/usuarios/view`)
       .then((r) => r.json())
       .then((data) => {
-        if (Array.isArray(data)) return setUsuarios(data);
-        if (Array.isArray(data.data)) return setUsuarios(data.data);
-        if (Array.isArray(data.usuarios)) return setUsuarios(data.usuarios);
-        return setUsuarios([]);
+
+        setUsuarios(data.data.usuarios);
       })
       .catch((err) => {
         console.error('Error cargando usuarios:', err);
@@ -29,46 +30,62 @@ export default function UsuariosPage() {
       .finally(() => setLoading(false));
   }, []);
 
+  useEffect(() => {
+    fetch(`${NEXT_PUBLIC_API_URL}/roles`)
+      .then((r) => r.json())
+      .then((data) => {
+        setRoles(data.data.roles);
+      })
+      .catch((err) => {
+        console.error('Error cargando roles:', err);
+        setRoles([]);
+      })
+      .finally(() => setLoading(false));
+  }, []);
+
+
+
   if (loading) {
     return <div className="p-6 text-center">Cargando usuarios…</div>;
   }
 
   // 2️⃣ Crear usuario via API
   const handleAgregar = async () => {
-    if (!nuevoUsuario.nombre.trim()) return;
-    setLoading(true);
+    if (!nuevoUsuario.nombre.trim()) {
+      alert("El nombre no puede estar vacío");
+      return;
+    }
+
     try {
-      const res = await fetch("/api/usuarios", {
+      const res = await fetch(`${NEXT_PUBLIC_API_URL}/usuarios`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(nuevoUsuario),
       });
-      if (!res.ok) throw new Error("Falló creación");
-  const creado = await res.json();
-  setUsuarios((prev) => (Array.isArray(prev) ? [...prev, creado] : [creado])); // ✅ añadimos al state
-      setNuevoUsuario({ nombre: "", rol: "capturista" });
-    } catch (err) {
-      console.error(err);
-      alert("No se pudo agregar");
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  // 3️⃣ Cambiar rol via API
-  const cambiarRol = async (id, rol) => {
-    try {
-      const res = await fetch(`/api/usuarios/${id}`, {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ rol }),
-      });
       if (!res.ok) throw new Error();
-  setUsuarios((prev) => (Array.isArray(prev) ? prev.map((u) => (u.id === id ? { ...u, rol } : u)) : prev));
-    } catch {
-      alert("Error actualizando rol");
+      const data = await res.json();
+      setUsuarios((prev) => (Array.isArray(prev) ? [...prev, data.data.usuario] : [data.data.usuario]));
+      setNuevoUsuario({ nombre: "", rol: "capturista" });
+    } catch (error) {
+      console.error('Error agregando usuario:', error);
+      alert("Error agregando usuario");
     }
-  };
+  }
+
+  // // 3️⃣ Cambiar rol via API
+  // const cambiarRol = async (id, rol) => {
+  //   try {
+  //     const res = await fetch(`/api/usuarios/${id}`, {
+  //       method: "PUT",
+  //       headers: { "Content-Type": "application/json" },
+  //       body: JSON.stringify({ rol }),
+  //     });
+  //     if (!res.ok) throw new Error();
+  //     setUsuarios((prev) => (Array.isArray(prev) ? prev.map((u) => (u.id === id ? { ...u, rol } : u)) : prev));
+  //   } catch {
+  //     alert("Error actualizando rol");
+  //   }
+  // };
 
   // 4️⃣ Eliminar usuario via API
   const eliminarUsuario = async (id) => {
@@ -76,7 +93,7 @@ export default function UsuariosPage() {
     try {
       const res = await fetch(`/api/usuarios/${id}`, { method: "DELETE" });
       if (!res.ok) throw new Error();
-  setUsuarios((prev) => (Array.isArray(prev) ? prev.filter((u) => u.id !== id) : prev));
+      setUsuarios((prev) => (Array.isArray(prev) ? prev.filter((u) => u.id !== id) : prev));
     } catch {
       alert("No se pudo eliminar");
     }
@@ -94,18 +111,18 @@ export default function UsuariosPage() {
             min-w-full 
             border border-gray-400 bg-white 
             dark:border-gray-700 dark:bg-gray-800 
-            border-collapse
+            border-collapse text-center
           "
         >
           <thead className="bg-gray-200 dark:bg-gray-800">
             <tr>
-              {["ID", "Nombre", "Rol", "Acciones"].map((h) => (
+              {["ID", "Nombre(s)", "Apellido(s)", "Correo", "Rol", "Estatus", "Acciones"].map((h) => (
                 <th
                   key={h}
                   className="
                     px-4 py-2 
                     border border-gray-400 dark:border-gray-700 
-                    text-left 
+                    text-center 
                     font-medium 
                     text-gray-700 dark:text-gray-300
                   "
@@ -116,7 +133,7 @@ export default function UsuariosPage() {
             </tr>
           </thead>
           <tbody>
-            {listaUsuarios.map((u, i) => (
+            {usuarios.map((u, i) => (
               <tr
                 key={u.id}
                 className={`
@@ -130,32 +147,35 @@ export default function UsuariosPage() {
                 <td className="px-4 py-2 border border-gray-400 dark:border-gray-700 text-gray-800 dark:text-gray-200">
                   {u.nombre}
                 </td>
-                <td className="px-4 py-2 border border-gray-400 dark:border-gray-700">
-                  <select
-                    value={u.rol}
-                    onChange={(e) => cambiarRol(u.id, e.target.value)}
-                    className="
-                      w-full 
-                      bg-white dark:bg-gray-700 
-                      border border-gray-300 dark:border-gray-600 
-                      rounded px-2 py-1 
-                      text-gray-800 dark:text-gray-100
-                    "
-                  >
-                    {roles.map((r) => (
-                      <option key={r} value={r}>
-                        {r}
-                      </option>
-                    ))}
-                  </select>
+                <td className="px-4 py-2 border border-gray-400 dark:border-gray-700 text-gray-800 dark:text-gray-200">
+                  {u.apellidos}
                 </td>
-                <td className="px-4 py-2 border border-gray-400 dark:border-gray-700">
-                  <button
+                <td className="px-4 py-2 border border-gray-400 dark:border-gray-700 text-gray-800 dark:text-gray-200">
+                  {u.email}
+                </td>
+                <td className="px-4 py-2 border border-gray-400 dark:border-gray-700 text-gray-800 dark:text-gray-200">
+                  {u.roles}
+                </td>
+                <td className="px-4 py-2 border border-gray-400 dark:border-gray-700 text-gray-800 dark:text-gray-200">
+                  {u.activo === 1 ? (
+                    <span className="text-green-600 italic">Activo</span>
+                  ) : (
+                    <span className="text-gray-500 italic">Inactivo</span>
+                  )}
+                </td>
+                <td className="flex justify-center py-2 border border-gray-400 dark:border-gray-700">
+                  <a
                     onClick={() => eliminarUsuario(u.id)}
-                    className="text-red-600 hover:underline"
+                    className="text-white bg-yellow-900 px-2 rounded cursor-pointer mr-2"
+                  >
+                    Editar
+                  </a>
+                  <a
+                    onClick={() => eliminarUsuario(u.id)}
+                    className="text-white bg-red-800 px-2 rounded cursor-pointer"
                   >
                     Eliminar
-                  </button>
+                  </a>
                 </td>
               </tr>
             ))}
@@ -163,43 +183,116 @@ export default function UsuariosPage() {
         </table>
       </div>
 
-      <div className="bg-white dark:bg-gray-800 border border-gray-400 dark:border-gray-700 p-6 rounded-lg">
+      {/* AGREGAR UN USUARIO */}
+      <div className="mt-6 p-4 border border-gray-400 dark:border-gray-700 rounded bg-gray-50 dark:bg-gray-800">
         <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">
-          Agregar Usuario
+          Agregar Nuevo Usuario
         </h2>
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-          <input
-            type="text"
-            name="nombre"
-            value={nuevoUsuario.nombre}
-            onChange={(e) =>
-              setNuevoUsuario((prev) => ({ ...prev, nombre: e.target.value }))
-            }
-            placeholder="Nombre"
-            className="col-span-2 p-2 border border-gray-400 dark:border-gray-600 rounded bg-white dark:bg-gray-700 text-gray-800 dark:text-gray-100"
-          />
-          <select
-            name="rol"
-            value={nuevoUsuario.rol}
-            onChange={(e) =>
-              setNuevoUsuario((prev) => ({ ...prev, rol: e.target.value }))
-            }
-            className="p-2 border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-700 text-gray-800 dark:text-gray-100"
-          >
-            {roles.map((r) => (
-              <option key={r} value={r}>
-                {r}
-              </option>
-            ))}
-          </select>
+        <div className="flex flex-col md:flex-row md:items-end gap-4">
+          <div className="flex-1">
+            <label className="block mb-1 text-gray-700 dark:text-gray-300">
+              Nombre(s)
+            </label>
+            <input
+              type="text"
+              value={nuevoUsuario.nombre}
+              onChange={(e) =>
+                setNuevoUsuario((prev) => ({ ...prev, nombre: e.target.value }))
+              }
+              className="
+                w-full
+                bg-white dark:bg-gray-700
+                border border-gray-300 dark:border-gray-600
+                rounded px-3 py-2
+                text-gray-800 dark:text-gray-100
+                focus:outline-none focus:ring-2 focus:ring-blue-500
+              "
+              placeholder="Nombre del usuario"
+            />
+
+            <label className="block mb-1 text-gray-700 dark:text-gray-300">
+              Correo Eletrónico
+            </label>
+            <input
+              type="email"
+              value={nuevoUsuario.email}
+              onChange={(e) =>
+                setNuevoUsuario((prev) => ({ ...prev, email: e.target.value }))
+              }
+              className="
+                w-full
+                bg-white dark:bg-gray-700
+                border border-gray-300 dark:border-gray-600
+                rounded px-3 py-2
+                text-gray-800 dark:text-gray-100
+                focus:outline-none focus:ring-2 focus:ring-blue-500
+              "
+              placeholder="Correo electrónico del usuario"
+            />
+          </div>
+          <div className="w-64 flex-shrink-0">
+            <label className="block mb-1 text-gray-700 dark:text-gray-300">
+              Apellido(s)
+            </label>
+            <input
+              type="text"
+              value={nuevoUsuario.apellidos}
+              onChange={(e) =>
+                setNuevoUsuario((prev) => ({ ...prev, apellidos: e.target.value }))
+              }
+              className="
+                w-full
+                bg-white dark:bg-gray-700
+                border border-gray-300 dark:border-gray-600
+                rounded px-3 py-2
+                text-gray-800 dark:text-gray-100
+                focus:outline-none focus:ring-2 focus:ring-blue-500
+              "
+              placeholder="Apellido(s) del usuario"
+            />
+
+            <label className="block mb-1 text-gray-700 dark:text-gray-300">
+              Rol
+            </label>
+            <select
+              value={nuevoUsuario.rol}
+              onChange={(e) =>
+                setNuevoUsuario((prev) => ({ ...prev, rol: e.target.value }))
+              }
+              className="
+                w-full
+                bg-white dark:bg-gray-700
+                border border-gray-300 dark:border-gray-600
+                rounded px-3 py-2
+                text-gray-800 dark:text-gray-100
+                focus:outline-none focus:ring-2 focus:ring-blue-500
+              "
+            >
+              {roles.map((r) => (
+                <option key={r.id} value={r.name}>
+                  {r.name}
+                </option>
+              ))}
+            </select>
+          </div>
+          <div>
+            <button
+              onClick={handleAgregar}
+              className="
+                bg-blue-600 hover:bg-blue-700
+                text-white
+                px-4 py-2
+                rounded
+                focus:outline-none focus:ring-2 focus:ring-blue-500
+                transition
+              "
+            >
+              Agregar Usuario
+            </button>
+          </div>
         </div>
-        <button
-          onClick={handleAgregar}
-          className="mt-4 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded"
-        >
-          Agregar
-        </button>
       </div>
     </div>
   );
 }
+
