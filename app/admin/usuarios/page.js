@@ -1,6 +1,8 @@
 "use client";
 import { useEffect, useState } from "react";
 import NEXT_PUBLIC_API_URL from "@/config";
+import Paginacion from "@/app/admin/components/Paginacion";
+import Swal from "sweetalert2";
 
 
 export default function UsuariosPage() {
@@ -14,21 +16,25 @@ export default function UsuariosPage() {
     rol: "",
     activo: 1,
   });
+  const [paginaActual, setPaginaActual] = useState(1);
+  const [totalPaginas, setTotalPaginas] = useState(1);
 
-  // 1️⃣ Al montar, traemos la lista
+
   useEffect(() => {
-    fetch(`${NEXT_PUBLIC_API_URL}/usuarios/view`)
+    setLoading(true);
+    fetch(`${NEXT_PUBLIC_API_URL}/usuarios/view?page=${paginaActual}`)
       .then((r) => r.json())
       .then((data) => {
-
-        setUsuarios(data.data.usuarios);
+        setUsuarios(data.data.usuarios || []);
+        setTotalPaginas(data.data.pagination?.pages || 1);
       })
       .catch((err) => {
         console.error('Error cargando usuarios:', err);
         setUsuarios([]);
       })
       .finally(() => setLoading(false));
-  }, []);
+  }, [paginaActual]);
+
 
   useEffect(() => {
     fetch(`${NEXT_PUBLIC_API_URL}/roles`)
@@ -49,54 +55,105 @@ export default function UsuariosPage() {
     return <div className="p-6 text-center">Cargando usuarios…</div>;
   }
 
-  // 2️⃣ Crear usuario via API
   const handleAgregar = async () => {
-    if (!nuevoUsuario.nombre.trim()) {
-      alert("El nombre no puede estar vacío");
-      return;
-    }
+    // Validaciones básicas
+    if (!nuevoUsuario.nombre.trim()) return alert("El nombre no puede estar vacío");
+    if (!nuevoUsuario.apellidos.trim()) return alert("El apellido no puede estar vacío");
+    if (!nuevoUsuario.email.trim()) return alert("El correo electrónico no puede estar vacío");
+    if (!nuevoUsuario.password.trim()) return alert("La contraseña no puede estar vacía");
 
     try {
-      const res = await fetch(`${NEXT_PUBLIC_API_URL}/usuarios`, {
+      // 1. Crear nuevo usuario
+      const crearRes = await fetch(`${NEXT_PUBLIC_API_URL}/usuarios`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(nuevoUsuario),
       });
-      if (!res.ok) throw new Error();
-      const data = await res.json();
-      setUsuarios((prev) => (Array.isArray(prev) ? [...prev, data.data.usuario] : [data.data.usuario]));
-      setNuevoUsuario({ nombre: "", rol: "capturista" });
-    } catch (error) {
-      console.error('Error agregando usuario:', error);
-      alert("Error agregando usuario");
-    }
-  }
 
-  // // 3️⃣ Cambiar rol via API
-  // const cambiarRol = async (id, rol) => {
-  //   try {
-  //     const res = await fetch(`/api/usuarios/${id}`, {
-  //       method: "PUT",
-  //       headers: { "Content-Type": "application/json" },
-  //       body: JSON.stringify({ rol }),
-  //     });
-  //     if (!res.ok) throw new Error();
-  //     setUsuarios((prev) => (Array.isArray(prev) ? prev.map((u) => (u.id === id ? { ...u, rol } : u)) : prev));
-  //   } catch {
-  //     alert("Error actualizando rol");
-  //   }
-  // };
+      if (!crearRes.ok) {
+        const errorData = await crearRes.json();
+        throw new Error(errorData?.message || "No se pudo crear el usuario");
+      }
+
+
+      // 4. Limpiar formulario
+      setNuevoUsuario({
+        nombre: "",
+        apellidos: "",
+        email: "",
+        password: "",
+        rol: "",
+      });
+
+      // 5. Mostrar éxito por unos segundos y al terminar recargar la página
+      Swal.fire({
+        icon: 'success',
+        title: 'Usuario agregado',
+        text: 'El usuario ha sido agregado exitosamente.',
+        timer: 2000,
+        showConfirmButton: false,
+      }).then(() => {
+        setPaginaActual(1);
+
+        fetch(`${NEXT_PUBLIC_API_URL}/usuarios/view?page=1`)
+          .then((r) => r.json())
+          .then((data) => {
+            setUsuarios(data.data.usuarios || []);
+            setTotalPaginas(data.data.pagination?.pages || 1);
+          })
+          .catch((err) => {
+            console.error('Error cargando usuarios:', err);
+            setUsuarios([]);
+          });
+      });
+
+    } catch (error) {
+      console.error("Error al agregar usuario:", error);
+      Swal.fire({
+        icon: 'error',
+        title: 'Error',
+        text: error.message || 'No se pudo agregar el usuario.',
+      });
+    }
+  };
 
   // 4️⃣ Eliminar usuario via API
   const eliminarUsuario = async (id) => {
-    if (!confirm("¿Seguro que deseas eliminar?")) return;
-    try {
-      const res = await fetch(`/api/usuarios/${id}`, { method: "DELETE" });
-      if (!res.ok) throw new Error();
-      setUsuarios((prev) => (Array.isArray(prev) ? prev.filter((u) => u.id !== id) : prev));
-    } catch {
-      alert("No se pudo eliminar");
-    }
+    Swal.fire({
+      title: '¿Estás seguro?',
+      text: "Esta acción no se puede deshacer.",
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonColor: '#d33',
+      cancelButtonColor: '#3085d6',
+      confirmButtonText: 'Sí, eliminar',
+      cancelButtonText: 'Cancelar'
+    }).then((result) => {
+      if (!result.isConfirmed) return;
+      fetch(`${NEXT_PUBLIC_API_URL}/usuarios/${id}`, {
+        method: "DELETE",
+      })
+        .then((res) => {
+          if (!res.ok) throw new Error("No se pudo eliminar el usuario");
+          setUsuarios((prev) => prev.filter((u) => u.id !== id));
+          Swal.fire({
+            icon: 'success',
+            title: 'Usuario eliminado',
+            text: 'El usuario ha sido eliminado exitosamente.',
+            timer: 2000,
+            showConfirmButton: false,
+          });
+        })
+        .catch((err) => {
+          console.error("Error al eliminar usuario:", err);
+          Swal.fire({
+            icon: 'error',
+            title: 'Error',
+            text: err.message || 'No se pudo eliminar el usuario.',
+          });
+        });
+    });
+
   };
 
   return (
@@ -181,117 +238,108 @@ export default function UsuariosPage() {
             ))}
           </tbody>
         </table>
+        <Paginacion
+          paginaActual={paginaActual}
+          totalPaginas={totalPaginas}
+          onPageChange={setPaginaActual}
+        />
+
       </div>
 
       {/* AGREGAR UN USUARIO */}
-      <div className="mt-6 p-4 border border-gray-400 dark:border-gray-700 rounded bg-gray-50 dark:bg-gray-800">
-        <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">
+      <div className="mt-6 p-6 border border-gray-400 dark:border-gray-700 rounded bg-gray-50 dark:bg-gray-800">
+        <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-6">
           Agregar Nuevo Usuario
         </h2>
-        <div className="flex flex-col md:flex-row md:items-end gap-4">
-          <div className="flex-1">
-            <label className="block mb-1 text-gray-700 dark:text-gray-300">
-              Nombre(s)
-            </label>
+
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 items-end">
+          {/* Nombre */}
+          <div className="flex flex-col max-w-sm">
+            <label className="mb-1 text-gray-700 dark:text-gray-300">Nombre(s)</label>
             <input
               type="text"
               value={nuevoUsuario.nombre}
               onChange={(e) =>
                 setNuevoUsuario((prev) => ({ ...prev, nombre: e.target.value }))
               }
-              className="
-                w-full
-                bg-white dark:bg-gray-700
-                border border-gray-300 dark:border-gray-600
-                rounded px-3 py-2
-                text-gray-800 dark:text-gray-100
-                focus:outline-none focus:ring-2 focus:ring-blue-500
-              "
-              placeholder="Nombre del usuario"
-            />
-
-            <label className="block mb-1 text-gray-700 dark:text-gray-300">
-              Correo Eletrónico
-            </label>
-            <input
-              type="email"
-              value={nuevoUsuario.email}
-              onChange={(e) =>
-                setNuevoUsuario((prev) => ({ ...prev, email: e.target.value }))
-              }
-              className="
-                w-full
-                bg-white dark:bg-gray-700
-                border border-gray-300 dark:border-gray-600
-                rounded px-3 py-2
-                text-gray-800 dark:text-gray-100
-                focus:outline-none focus:ring-2 focus:ring-blue-500
-              "
-              placeholder="Correo electrónico del usuario"
+              className="bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded px-3 py-2 text-gray-800 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              placeholder="Nombre"
             />
           </div>
-          <div className="w-64 flex-shrink-0">
-            <label className="block mb-1 text-gray-700 dark:text-gray-300">
-              Apellido(s)
-            </label>
+
+          {/* Apellidos */}
+          <div className="flex flex-col max-w-sm">
+            <label className="mb-1 text-gray-700 dark:text-gray-300">Apellido(s)</label>
             <input
               type="text"
               value={nuevoUsuario.apellidos}
               onChange={(e) =>
                 setNuevoUsuario((prev) => ({ ...prev, apellidos: e.target.value }))
               }
-              className="
-                w-full
-                bg-white dark:bg-gray-700
-                border border-gray-300 dark:border-gray-600
-                rounded px-3 py-2
-                text-gray-800 dark:text-gray-100
-                focus:outline-none focus:ring-2 focus:ring-blue-500
-              "
-              placeholder="Apellido(s) del usuario"
+              className="bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded px-3 py-2 text-gray-800 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              placeholder="Apellidos"
             />
+          </div>
 
-            <label className="block mb-1 text-gray-700 dark:text-gray-300">
-              Rol
-            </label>
+          {/* Correo */}
+          <div className="flex flex-col max-w-sm">
+            <label className="mb-1 text-gray-700 dark:text-gray-300">Correo Electrónico</label>
+            <input
+              type="email"
+              value={nuevoUsuario.email}
+              onChange={(e) =>
+                setNuevoUsuario((prev) => ({ ...prev, email: e.target.value }))
+              }
+              className="bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded px-3 py-2 text-gray-800 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              placeholder="Correo"
+            />
+          </div>
+
+          {/* Contraseña */}
+          <div className="flex flex-col max-w-sm">
+            <label className="mb-1 text-gray-700 dark:text-gray-300">Contraseña</label>
+            <input
+              type="text"
+              value={nuevoUsuario.password}
+              onChange={(e) =>
+                setNuevoUsuario((prev) => ({ ...prev, password: e.target.value }))
+              }
+              className="bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded px-3 py-2 text-gray-800 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              placeholder="Contraseña"
+            />
+          </div>
+
+          {/* Rol */}
+          <div className="flex flex-col max-w-sm">
+            <label className="mb-1 text-gray-700 dark:text-gray-300">Rol</label>
             <select
               value={nuevoUsuario.rol}
               onChange={(e) =>
                 setNuevoUsuario((prev) => ({ ...prev, rol: e.target.value }))
               }
-              className="
-                w-full
-                bg-white dark:bg-gray-700
-                border border-gray-300 dark:border-gray-600
-                rounded px-3 py-2
-                text-gray-800 dark:text-gray-100
-                focus:outline-none focus:ring-2 focus:ring-blue-500
-              "
+              className="bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded px-3 py-2 text-gray-800 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500"
             >
+              <option value="">Selecciona un rol</option>
               {roles.map((r) => (
-                <option key={r.id} value={r.name}>
-                  {r.name}
+                <option key={r.id} value={r.id}>
+                  {r.descripcion}
                 </option>
               ))}
             </select>
           </div>
-          <div>
+
+          {/* Botón */}
+          <div className="flex justify-start md:justify-end">
             <button
               onClick={handleAgregar}
-              className="
-                bg-blue-600 hover:bg-blue-700
-                text-white
-                px-4 py-2
-                rounded
-                focus:outline-none focus:ring-2 focus:ring-blue-500
-                transition
-              "
+              className="bg-blue-600 hover:bg-blue-700 text-white px-5 py-2 rounded focus:outline-none focus:ring-2 focus:ring-blue-500 transition"
             >
               Agregar Usuario
             </button>
           </div>
         </div>
       </div>
+
     </div>
   );
 }
