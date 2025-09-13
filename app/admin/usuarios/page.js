@@ -44,6 +44,7 @@ export default function UsuariosPage() {
         }
 >>>>>>> Stashed changes
       })
+      
       .catch((err) => {
         console.error('Error cargando usuarios:', err);
         setUsuarios([]);
