@@ -64,7 +64,6 @@ export default function Sidebar() {
         const transcript = event.results[0][0].transcript;
         setGlobalSearch(transcript);
         setIsListening(false);
-        // Ejecuta búsqueda automáticamente
         router.push(`/dashboard/busqueda?query=${encodeURIComponent(transcript)}`);
       };
       recognitionRef.current.onend = () => setIsListening(false);
@@ -72,16 +71,17 @@ export default function Sidebar() {
     }
   }, [router, setGlobalSearch]);
 
-  const toggleMenu = (menu) => {
-    setOpenMenus((prev) =>
-      prev.includes(menu) ? prev.filter((m) => m !== menu) : [...prev, menu]
-    );
-  };
+ // ...existing code...
+const toggleMenu = (menu) => {
+  setOpenMenus((prev) =>
+    prev.includes(menu) ? [] : [menu]
+  );
+};
+// ...existing code...
 
   const toggleUserInfo = () => {
     setUserInfoOpen(!isUserInfoOpen);
   };
-
 
   const handleLogoutClick = () => {
     Swal.fire({
@@ -186,7 +186,48 @@ export default function Sidebar() {
     workArea: "Contraloría",
   };
 
-  // Render mínimo cuando está contraído: muestra iconos + mantiene el botón de expandir existente
+  // Botón único para expandir/contraer, centrado verticalmente y con estilo de pestaña
+  const toggleButton = (
+    <button
+      onClick={() => setCollapsed((prev) => !prev)}
+      aria-label={collapsed ? "Expandir sidebar" : "Contraer sidebar"}
+      title={collapsed ? "Expandir sidebar" : "Contraer sidebar"}
+      className={styles.toggleButton}
+      style={{
+        position: 'absolute',
+        left: '96%',
+        top: '50%',
+        transform: 'translate(-50%, -50%)',
+        zIndex: 10,
+        width: '1px',
+        height: '8px',
+        background: darkMode ? 'linear-gradient(90deg, #23395d 80%, #1e293b 100%)' : '#e0e7ff',
+        borderRadius: '0 12px 12px 0',
+        border: darkMode ? '1px solid #23395d' : '1px solid #b6c2e1',
+        boxShadow: darkMode ? '2px 0 8px #0a1120' : '2px 0 8px #b6c2e1',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        padding: 0,
+        cursor: 'pointer',
+        transition: 'background .2s, border .2s',
+      }}
+    >
+      <span
+        style={{
+          fontSize: '2rem',
+          color: darkMode ? '#fff' : '#23395d',
+          fontWeight: 'bold',
+          transition: 'color .2s',
+          lineHeight: '1',
+        }}
+      >
+        {collapsed ? '›' : '‹'}
+      </span>
+    </button>
+  );
+
+  // Render mínimo cuando está contraído: muestra iconos + botón único
   const collapsedAside = (
     <aside
       className={`${styles.sidebar} ${darkMode ? 'bg-gradient-to-br from-[#0a1120] via-[#1e293b] to-[#23395d] border-r border-blue-900 text-blue-100 shadow-2xl' : 'bg-blue-50 border-r border-blue-200 text-blue-900 shadow-lg'} transition-all duration-300`}
@@ -202,29 +243,17 @@ export default function Sidebar() {
         paddingBottom: '12px',
       }}
     >
-      {/* Conserva el control para expandir (el mismo que usas) */}
-      <button
-        onClick={() => setCollapsed(false)}
-        aria-label="Expandir sidebar"
-        title="Expandir sidebar"
-        className={styles.toggleButton}
-        style={{ position: 'absolute', left: '50%', transform: 'translateX(-50%)', top: '12px' }}
-      >
-        <span className={styles.toggleIcon}>{'›'}</span>
-      </button>
-
-      <div className="flex flex-col items-center gap-4 mt-8">
-        {/* Logo pequeño */}
+      {toggleButton}
+      <div className="flex flex-col items-center gap-8 mt-8">
         <Image
-          src="/api-dark23.png"
+          src={collapsed ? "/api_logo.png" : "/api-dark23.png"}
           alt="Logo"
-          width={40}
-          height={40}
+          width={collapsed ? 40 : 350}
+          height={collapsed ? 40 : 120}
           className="object-contain invert"
           priority
         />
 
-        {/* Lista vertical de iconos del menú */}
         <nav aria-label="Menú iconos" className="flex flex-col items-center w-full">
           {filteredMenus.map(menu => (
             <div key={menu.key} className="w-full flex justify-center relative">
@@ -243,7 +272,6 @@ export default function Sidebar() {
                 />
               </button>
 
-              {/* Panel flotante de submenú */}
               {openMenus.includes(menu.key) && menu.sub.length > 0 && (
                 <div
                   role="dialog"
@@ -270,12 +298,11 @@ export default function Sidebar() {
           ))}
         </nav>
 
-        {/* Botón de cerrar sesión como icono */}
-        <div className="mt-6 w-full flex flex-col items-center">
+        <div className={`${styles["logout-bottom"]} w-full flex flex-col items-center`}>
           <button
             onClick={handleLogoutClick}
             title="Cerrar sesión"
-            className={`w-12 h-12 rounded-lg flex items-center justify-center transition-colors ${darkMode ? 'text-blue-200 hover:text-red-400 bg-[#1e293b] hover:bg-red-900 border border-blue-900' : 'text-gray-500 hover:text-red-700'}`}
+            className={`w-12 h-12 rounded-lg flex items-center justify-center transition-colors ${darkMode ? 'text-blue-200 hover:text-red-400 bg-[#1e293b] hover:bg-red-900 border border-blue-400' : 'text-gray-500 hover:text-red-700'}`}
           >
             <FontAwesomeIcon icon={faSignOutAlt} className={darkMode ? "text-blue-600" : "text-red-500"} />
           </button>
@@ -284,7 +311,7 @@ export default function Sidebar() {
     </aside>
   );
 
-  // Render completo cuando está expandido
+  // Render completo cuando está expandido: muestra el mismo botón
   const expandedAside = (
     <aside
       className={`${styles.sidebar} ${darkMode ? 'bg-gradient-to-br from-[#0a1120] via-[#1e293b] to-[#23395d] border-r border-blue-900 text-blue-100 shadow-2xl' : 'bg-blue-50 border-r border-blue-200 text-blue-900 shadow-lg'} transition-all duration-300`}
@@ -292,30 +319,52 @@ export default function Sidebar() {
       aria-label="Menú principal"
       style={{ width: collapsed ? '76px' : undefined, position: 'relative', overflowY: 'auto' }}
     >
-      {/* Pestaña simple para contraer/expandir */}
-      <button
-        onClick={() => setCollapsed(true)}
-        aria-label={collapsed ? "Expandir sidebar" : "Contraer sidebar"}
-        title={collapsed ? "Expandir sidebar" : "Contraer sidebar"}
-        className={styles.toggleButton}
-      >
-        <span className={styles.toggleIcon}>{collapsed ? '›' : '‹'}</span>
-      </button>
-
+      {toggleButton}
       <div className="sidebar-logo flex flex-col items-center justify-center w-full">
         <Image
           src="/api-dark23.png"
           alt="Logo institucional modo oscuro"
-          width={collapsed ? 56 : 450}
+          width={collapsed ? 56 : 350}
           height={collapsed ? 56 : 120}
           className="object-contain invert"
           style={{ filter: "drop-shadow(0 0 32px rgba(37,99,235,0.35)) drop-shadow(0 4px 16px rgba(0,0,0,0.18))", transition: 'width .18s, height .18s' }}
           priority
         />
         <div className="mt-6 text-center">
-          <h1 className={`text-2xl font-sans font-bold ${darkMode ? 'text-blue-200' : 'text-blue-900'} tracking-wide leading-relaxed`}>
+          <h1
+            className="
+              text-1xl
+              font-extrabold
+              font-sans
+              tracking-wide
+              leading-tight
+              text-transparent
+              bg-clip-text
+              bg-gradient-to-r
+              from-blue-300
+              via-blue-600
+              to-blue-900
+              drop-shadow-lg
+              mb-2
+            "
+            style={{
+              letterSpacing: '1px',
+              textShadow: '0 2px 8px rgba(37,99,235,0.18)',
+            }}
+          >
             {!collapsed && "Sistema de Gestión Documental LEA-BCS 2025"}
           </h1>
+          {!collapsed && (
+            <div
+              style={{
+                width: '60%',
+                margin: '0 auto',
+                borderBottom: '2px solid #3b82f6',
+                opacity: 0.18,
+                borderRadius: '2px',
+              }}
+            />
+          )}
         </div>
       </div>
 

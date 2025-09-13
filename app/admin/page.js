@@ -58,7 +58,7 @@ export default function AdminHome() {
         <h1 className="text-4xl font-bold text-gray-900 dark:text-white mb-2">
           Panel del Administrador
         </h1>
-        <p className="text-base text-gray-700 dark:text-gray-400">
+        <p className="text-base text-gray-700 dark:text-gray-200">
           Bienvenido al sistema de gestión documental.
         </p>
       </div>

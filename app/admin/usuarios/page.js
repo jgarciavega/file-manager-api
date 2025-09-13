@@ -20,13 +20,29 @@ export default function UsuariosPage() {
   const [totalPaginas, setTotalPaginas] = useState(1);
 
 
+<<<<<<< Updated upstream
+=======
+  // 1️⃣ Al montar, traemos la lista de usuarios
+>>>>>>> Stashed changes
   useEffect(() => {
     setLoading(true);
     fetch(`${NEXT_PUBLIC_API_URL}/usuarios/view?page=${paginaActual}`)
       .then((r) => r.json())
       .then((data) => {
+<<<<<<< Updated upstream
         setUsuarios(data.data.usuarios || []);
         setTotalPaginas(data.data.pagination?.pages || 1);
+=======
+        // Verifica la estructura antes de acceder
+        if (data && data.data && Array.isArray(data.data.usuarios)) {
+          setUsuarios(data.data.usuarios);
+        } else if (data && Array.isArray(data.usuarios)) {
+          setUsuarios(data.usuarios);
+        } else {
+          console.error('La respuesta no contiene usuarios:', data);
+          setUsuarios([]);
+        }
+>>>>>>> Stashed changes
       })
       .catch((err) => {
         console.error('Error cargando usuarios:', err);
@@ -36,11 +52,27 @@ export default function UsuariosPage() {
   }, [paginaActual]);
 
 
+  // 2️⃣ Al montar, traemos la lista de roles
   useEffect(() => {
     fetch(`${NEXT_PUBLIC_API_URL}/roles`)
       .then((r) => r.json())
       .then((data) => {
-        setRoles(data.data.roles);
+        let rolesArr = [];
+        if (data && data.data && Array.isArray(data.data.roles)) {
+          rolesArr = data.data.roles;
+        } else if (data && Array.isArray(data.roles)) {
+          rolesArr = data.data.roles;
+        } else {
+          console.error('La respuesta no contiene roles:', data);
+        }
+        setRoles(rolesArr);
+        // Inicializa el rol del nuevo usuario con el primer rol disponible
+        if (rolesArr.length > 0) {
+          setNuevoUsuario((prev) => ({
+            ...prev,
+            rol: rolesArr[0].name || rolesArr[0].id || "",
+          }));
+        }
       })
       .catch((err) => {
         console.error('Error cargando roles:', err);
@@ -49,12 +81,14 @@ export default function UsuariosPage() {
       .finally(() => setLoading(false));
   }, []);
 
-
-
   if (loading) {
     return <div className="p-6 text-center">Cargando usuarios…</div>;
   }
 
+<<<<<<< Updated upstream
+=======
+  // 3️⃣ Crear usuario via API
+>>>>>>> Stashed changes
   const handleAgregar = async () => {
     // Validaciones básicas
     if (!nuevoUsuario.nombre.trim()) return alert("El nombre no puede estar vacío");
@@ -69,6 +103,7 @@ export default function UsuariosPage() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(nuevoUsuario),
       });
+<<<<<<< Updated upstream
 
       if (!crearRes.ok) {
         const errorData = await crearRes.json();
@@ -154,6 +189,45 @@ export default function UsuariosPage() {
         });
     });
 
+=======
+      if (!res.ok) throw new Error();
+      const data = await res.json();
+      // Verifica la estructura antes de agregar
+      let usuarioCreado = null;
+      if (data && data.data && data.data.usuario) {
+        usuarioCreado = data.data.usuario;
+      } else if (data && data.usuario) {
+        usuarioCreado = data.usuario;
+      }
+      if (usuarioCreado) {
+        setUsuarios((prev) => (Array.isArray(prev) ? [...prev, usuarioCreado] : [usuarioCreado]));
+        setNuevoUsuario({
+          nombre: "",
+          apellidos: "",
+          email: "",
+          rol: roles.length > 0 ? roles[0].name || roles[0].id || "" : "",
+          activo: 1,
+        });
+      } else {
+        alert("No se pudo agregar el usuario");
+      }
+    } catch (error) {
+      console.error('Error agregando usuario:', error);
+      alert("Error agregando usuario");
+    }
+  }
+
+  // 4️⃣ Eliminar usuario via API
+  const eliminarUsuario = async (id) => {
+    if (!confirm("¿Seguro que deseas eliminar?")) return;
+    try {
+      const res = await fetch(`${NEXT_PUBLIC_API_URL}/usuarios/${id}`, { method: "DELETE" });
+      if (!res.ok) throw new Error();
+      setUsuarios((prev) => (Array.isArray(prev) ? prev.filter((u) => u.id !== id) : prev));
+    } catch {
+      alert("No se pudo eliminar");
+    }
+>>>>>>> Stashed changes
   };
 
   return (
@@ -211,7 +285,12 @@ export default function UsuariosPage() {
                   {u.email}
                 </td>
                 <td className="px-4 py-2 border border-gray-400 dark:border-gray-700 text-gray-800 dark:text-gray-200">
-                  {u.roles}
+                  {/* Si el usuario tiene un array de roles, muestra el nombre del primer rol */}
+                  {Array.isArray(u.roles)
+                    ? u.roles.length > 0
+                      ? u.roles[0].name || u.roles[0].id || ""
+                      : ""
+                    : u.rol || u.roles || ""}
                 </td>
                 <td className="px-4 py-2 border border-gray-400 dark:border-gray-700 text-gray-800 dark:text-gray-200">
                   {u.activo === 1 ? (
@@ -222,7 +301,7 @@ export default function UsuariosPage() {
                 </td>
                 <td className="flex justify-center py-2 border border-gray-400 dark:border-gray-700">
                   <a
-                    onClick={() => eliminarUsuario(u.id)}
+                    // Aquí deberías abrir un modal o formulario de edición
                     className="text-white bg-yellow-900 px-2 rounded cursor-pointer mr-2"
                   >
                     Editar
@@ -262,8 +341,40 @@ export default function UsuariosPage() {
               onChange={(e) =>
                 setNuevoUsuario((prev) => ({ ...prev, nombre: e.target.value }))
               }
+<<<<<<< Updated upstream
               className="bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded px-3 py-2 text-gray-800 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500"
               placeholder="Nombre"
+=======
+              className="
+                w-full
+                bg-white dark:bg-gray-700
+                border border-gray-300 dark:border-gray-600
+                rounded px-3 py-2
+                text-gray-800 dark:text-gray-100
+                focus:outline-none focus:ring-2 focus:ring-blue-500
+              "
+              placeholder="Nombre del usuario"
+            />
+
+            <label className="block mb-1 text-gray-700 dark:text-gray-300">
+              Correo Electrónico
+            </label>
+            <input
+              type="email"
+              value={nuevoUsuario.email}
+              onChange={(e) =>
+                setNuevoUsuario((prev) => ({ ...prev, email: e.target.value }))
+              }
+              className="
+                w-full
+                bg-white dark:bg-gray-700
+                border border-gray-300 dark:border-gray-600
+                rounded px-3 py-2
+                text-gray-800 dark:text-gray-100
+                focus:outline-none focus:ring-2 focus:ring-blue-500
+              "
+              placeholder="Correo electrónico del usuario"
+>>>>>>> Stashed changes
             />
           </div>
 
@@ -321,8 +432,13 @@ export default function UsuariosPage() {
             >
               <option value="">Selecciona un rol</option>
               {roles.map((r) => (
+<<<<<<< Updated upstream
                 <option key={r.id} value={r.id}>
                   {r.descripcion}
+=======
+                <option key={r.id} value={r.name || r.id}>
+                  {r.name || r.id}
+>>>>>>> Stashed changes
                 </option>
               ))}
             </select>
