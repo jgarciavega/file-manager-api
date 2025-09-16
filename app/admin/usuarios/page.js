@@ -19,29 +19,32 @@ export default function UsuariosPage() {
   const [paginaActual, setPaginaActual] = useState(1);
   const [totalPaginas, setTotalPaginas] = useState(1);
 
-  // 1️⃣ Al montar, traemos la lista de usuarios
-  useEffect(() => {
-    setLoading(true);
-    fetch(`${NEXT_PUBLIC_API_URL}/usuarios/view?page=${paginaActual}`)
-      .then((r) => r.json())
-      .then((data) => {
-        if (data && data.data && Array.isArray(data.data.usuarios)) {
-          setUsuarios(data.data.usuarios);
-          setTotalPaginas(data.data.pagination?.pages || 1);
-        } else if (data && Array.isArray(data.usuarios)) {
-          setUsuarios(data.usuarios);
-          setTotalPaginas(1);
-        } else {
-          console.error("La respuesta no contiene usuarios:", data);
-          setUsuarios([]);
-        }
-      })
-      .catch((err) => {
-        console.error("Error cargando usuarios:", err);
+
+// 1️⃣ Al montar, traemos la lista de usuarios
+useEffect(() => {
+  setLoading(true);
+  fetch(`${NEXT_PUBLIC_API_URL}/usuarios/view?page=${paginaActual}`)
+    .then((r) => r.json())
+    .then((data) => {
+      // Verifica la estructura antes de acceder
+      if (data && data.data && Array.isArray(data.data.usuarios)) {
+        setUsuarios(data.data.usuarios);
+        setTotalPaginas(data.data.pagination?.pages || 1);
+      } else if (data && Array.isArray(data.usuarios)) {
+        setUsuarios(data.usuarios);
+        setTotalPaginas(data.pagination?.pages || 1);
+      } else {
+        console.error('La respuesta no contiene usuarios:', data);
         setUsuarios([]);
-      })
-      .finally(() => setLoading(false));
-  }, [paginaActual]);
+      }
+    })
+    .catch((err) => {
+      console.error('Error cargando usuarios:', err);
+      setUsuarios([]);
+    })
+    .finally(() => setLoading(false));
+}, [paginaActual]);
+
 
   // 2️⃣ Al montar, traemos la lista de roles
   useEffect(() => {
@@ -77,113 +80,105 @@ export default function UsuariosPage() {
     return <div className="p-6 text-center">Cargando usuarios…</div>;
   }
 
-  // 3️⃣ Crear usuario via API
-  const handleAgregar = async () => {
-    if (!nuevoUsuario.nombre.trim()) return alert("El nombre no puede estar vacío");
-    if (!nuevoUsuario.apellidos.trim()) return alert("El apellido no puede estar vacío");
-    if (!nuevoUsuario.email.trim()) return alert("El correo electrónico no puede estar vacío");
-    if (!nuevoUsuario.password?.trim()) return alert("La contraseña no puede estar vacía");
+// 3️⃣ Crear usuario via API
+const handleAgregar = async () => {
+  // Validaciones básicas
+  if (!nuevoUsuario.nombre.trim()) return alert("El nombre no puede estar vacío");
+  if (!nuevoUsuario.apellidos.trim()) return alert("El apellido no puede estar vacío");
+  if (!nuevoUsuario.email.trim()) return alert("El correo electrónico no puede estar vacío");
+  if (!nuevoUsuario.password.trim()) return alert("La contraseña no puede estar vacía");
 
-    try {
-      const crearRes = await fetch(`${NEXT_PUBLIC_API_URL}/usuarios`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(nuevoUsuario),
-      });
+  try {
+    // 1. Crear nuevo usuario
+    const crearRes = await fetch(`${NEXT_PUBLIC_API_URL}/usuarios`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(nuevoUsuario),
+    });
 
-      if (!crearRes.ok) {
-        const errorData = await crearRes.json();
-        throw new Error(errorData?.message || "No se pudo crear el usuario");
-      }
-
-      // Reset del formulario
-      setNuevoUsuario({
-        nombre: "",
-        apellidos: "",
-        email: "",
-        password: "",
-        rol: roles.length > 0 ? roles[0].name || roles[0].id || "" : "",
-        activo: 1,
-      });
-
-      // Notificación y recargar usuarios
-      Swal.fire({
-        icon: "success",
-        title: "Usuario agregado",
-        text: "El usuario ha sido agregado exitosamente.",
-        timer: 2000,
-        showConfirmButton: false,
-      }).then(() => {
-        setPaginaActual(1);
-        fetch(`${NEXT_PUBLIC_API_URL}/usuarios/view?page=1`)
-          .then((r) => r.json())
-          .then((data) => {
-            if (data && data.data && Array.isArray(data.data.usuarios)) {
-              setUsuarios(data.data.usuarios);
-              setTotalPaginas(data.data.pagination?.pages || 1);
-            } else {
-              setUsuarios([]);
-            }
-          })
-          .catch((err) => {
-            console.error("Error cargando usuarios:", err);
-            setUsuarios([]);
-          });
-      });
-    } catch (error) {
-      console.error("Error al agregar usuario:", error);
-      Swal.fire({
-        icon: "error",
-        title: "Error",
-        text: error.message || "No se pudo agregar el usuario.",
-      });
+    if (!crearRes.ok) {
+      const errorData = await crearRes.json();
+      throw new Error(errorData?.message || "No se pudo crear el usuario");
     }
-  };
 
-  // 4️⃣ Eliminar usuario via API
-  const eliminarUsuario = async (id) => {
+    // 4. Limpiar formulario
+    setNuevoUsuario({
+      nombre: "",
+      apellidos: "",
+      email: "",
+      password: "",
+      rol: "",
+    });
+
+    // 5. Mostrar éxito por unos segundos y al terminar recargar la página
     Swal.fire({
-      title: "¿Estás seguro?",
-      text: "Esta acción no se puede deshacer.",
-      icon: "warning",
-      showCancelButton: true,
-      confirmButtonColor: "#d33",
-      cancelButtonColor: "#3085d6",
-      confirmButtonText: "Sí, eliminar",
-      cancelButtonText: "Cancelar",
-    }).then((result) => {
-      if (!result.isConfirmed) return;
-      fetch(`${NEXT_PUBLIC_API_URL}/usuarios/${id}`, {
-        method: "DELETE",
-      })
-        .then((res) => {
-          if (!res.ok) throw new Error("No se pudo eliminar el usuario");
-          setUsuarios((prev) => prev.filter((u) => u.id !== id));
-          Swal.fire({
-            icon: "success",
-            title: "Usuario eliminado",
-            text: "El usuario ha sido eliminado exitosamente.",
-            timer: 2000,
-            showConfirmButton: false,
-          });
+      icon: 'success',
+      title: 'Usuario agregado',
+      text: 'El usuario ha sido agregado exitosamente.',
+      timer: 2000,
+      showConfirmButton: false,
+    }).then(() => {
+      setPaginaActual(1);
+
+      fetch(`${NEXT_PUBLIC_API_URL}/usuarios/view?page=1`)
+        .then((r) => r.json())
+        .then((data) => {
+          setUsuarios(data.data.usuarios || []);
+          setTotalPaginas(data.data.pagination?.pages || 1);
         })
         .catch((err) => {
-          console.error("Error al eliminar usuario:", err);
-          Swal.fire({
-            icon: "error",
-            title: "Error",
-            text: err.message || "No se pudo eliminar el usuario.",
-          });
+          console.error('Error cargando usuarios:', err);
+          setUsuarios([]);
         });
     });
-  };
 
-  //modal de editar usuario
-  const editarUsuario = (id) => {
-    // Aquí abrir un modal o formulario de edición
-    alert(`Editar usuario con ID: ${id}`);
+  } catch (error) {
+    console.error("Error al agregar usuario:", error);
+    Swal.fire({
+      icon: 'error',
+      title: 'Error',
+      text: error.message || 'No se pudo agregar el usuario.',
+    });
   }
+};
 
+// 4️⃣ Eliminar usuario via API
+const eliminarUsuario = async (id) => {
+  Swal.fire({
+    title: '¿Estás seguro?',
+    text: "Esta acción no se puede deshacer.",
+    icon: 'warning',
+    showCancelButton: true,
+    confirmButtonColor: '#d33',
+    cancelButtonColor: '#3085d6',
+    confirmButtonText: 'Sí, eliminar',
+    cancelButtonText: 'Cancelar'
+  }).then((result) => {
+    if (!result.isConfirmed) return;
+    fetch(`${NEXT_PUBLIC_API_URL}/usuarios/${id}`, {
+      method: "DELETE",
+    })
+      .then((res) => {
+        if (!res.ok) throw new Error("No se pudo eliminar el usuario");
+        setUsuarios((prev) => prev.filter((u) => u.id !== id));
+        Swal.fire({
+          icon: 'success',
+          title: 'Usuario eliminado',
+          text: 'El usuario ha sido eliminado exitosamente.',
+          timer: 2000,
+          showConfirmButton: false,
+        });
+      })
+      .catch((err) => {
+        console.error("Error al eliminar usuario:", err);
+        Swal.fire({
+          icon: 'error',
+          title: 'Error',
+          text: err.message || 'No se pudo eliminar el usuario.',
+        });
+      });
+  });
+};
 
   return (
     <div className="p-6 space-y-8">
@@ -293,10 +288,12 @@ export default function UsuariosPage() {
             <input
               type="text"
               value={nuevoUsuario.nombre}
-              onChange={(e) => setNuevoUsuario((prev) => ({ ...prev, nombre: e.target.value }))}
-              className="bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded px-3 py-2 text-gray-800 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500"
-              placeholder="Nombre"
-            />
+              onChange={(e) =>
+                setNuevoUsuario((prev) => ({ ...prev, nombre: e.target.value }))
+              }
+  className="bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded px-3 py-2 text-gray-800 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500"
+  placeholder="Nombre"
+/>
           </div>
 
           {/* Apellidos */}
@@ -340,20 +337,20 @@ export default function UsuariosPage() {
           {/* Rol */}
           <div className="flex flex-col max-w-sm">
             <label className="mb-1 text-gray-700 dark:text-gray-300">Rol</label>
-            <select
-              value={nuevoUsuario.rol}
-              onChange={(e) =>
-                setNuevoUsuario((prev) => ({ ...prev, rol: e.target.value }))
-              }
-              className="bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded px-3 py-2 text-gray-800 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500"
-            >
-              <option value="">Selecciona un rol</option>
-              {roles.map((r) => (
-                <option key={r.id} value={r.name || r.id}>
-                  {r.descripcion}
-                </option>
-              ))}
-            </select>
+<select
+  value={nuevoUsuario.rol}
+  onChange={(e) =>
+    setNuevoUsuario((prev) => ({ ...prev, rol: e.target.value }))
+  }
+  className="bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded px-3 py-2 text-gray-800 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500"
+>
+  <option value="">Selecciona un rol</option>
+  {roles.map((r) => (
+    <option key={r.id} value={r.name || r.id}>
+      {r.name || r.id}
+    </option>
+  ))}
+</select>
           </div>
 
           {/* Botón */}
@@ -370,4 +367,5 @@ export default function UsuariosPage() {
     </div>
   );
 }
+
 

@@ -71,13 +71,11 @@ export default function Sidebar() {
     }
   }, [router, setGlobalSearch]);
 
- // ...existing code...
-const toggleMenu = (menu) => {
-  setOpenMenus((prev) =>
-    prev.includes(menu) ? [] : [menu]
-  );
-};
-// ...existing code...
+  const toggleMenu = (menu) => {
+    setOpenMenus((prev) =>
+      prev.includes(menu) ? [] : [menu]
+    );
+  };
 
   const toggleUserInfo = () => {
     setUserInfoOpen(!isUserInfoOpen);
@@ -244,15 +242,17 @@ const toggleMenu = (menu) => {
       }}
     >
       {toggleButton}
-      <div className="flex flex-col items-center gap-8 mt-8">
-        <Image
-          src={collapsed ? "/api_logo.png" : "/api-dark23.png"}
-          alt="Logo"
-          width={collapsed ? 40 : 350}
-          height={collapsed ? 40 : 120}
-          className="object-contain invert"
-          priority
-        />
+      <div className="flex flex-col items-center gap-12 mt-10">
+        {collapsed && (
+          <Image
+            src="/Designer.png"
+            alt="Logo"
+            width={76}
+            height={76}
+            priority
+            style={{ maxWidth: '65px' }}
+          />
+        )}
 
         <nav aria-label="Menú iconos" className="flex flex-col items-center w-full">
           {filteredMenus.map(menu => (
