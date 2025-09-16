@@ -22,6 +22,7 @@ import { CircularProgressbar, buildStyles } from 'react-circular-progressbar';
 import 'react-circular-progressbar/dist/styles.css';
 import avatarMap from '../../../lib/avatarMap';
 import Link from 'next/link';
+import NEXT_PUBLIC_API_URL from '@/config';
 
 export default function UploadNew() {
   const { data: session, status } = useSession();
@@ -403,8 +404,8 @@ export default function UploadNew() {
         setUploading(false);
       });
 
-      xhr.open('POST', '/api/upload');
-      xhr.send(formData);
+      xhr.open('POST', `${NEXT_PUBLIC_API_URL}/documentos`);
+      xhr.send(formData)
 
     } catch (error) {
       console.error('Error:', error);
