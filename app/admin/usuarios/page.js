@@ -14,6 +14,7 @@ export default function UsuariosPage() {
     email: "",
     password: "",
     rol: "",
+    departamento: "",
     activo: 1,
   });
   const [paginaActual, setPaginaActual] = useState(1);
@@ -82,32 +83,22 @@ useEffect(() => {
 
 // 3️⃣ Crear usuario via API
 const handleAgregar = async () => {
-  // Validaciones básicas
-  if (!nuevoUsuario.nombre.trim()) return alert("El nombre no puede estar vacío");
-  if (!nuevoUsuario.apellidos.trim()) return alert("El apellido no puede estar vacío");
-  if (!nuevoUsuario.email.trim()) return alert("El correo electrónico no puede estar vacío");
-  if (!nuevoUsuario.password.trim()) return alert("La contraseña no puede estar vacía");
-
   try {
-    // 1. Crear nuevo usuario
-    const crearRes = await fetch(`${NEXT_PUBLIC_API_URL}/usuarios`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(nuevoUsuario),
-    });
+    // Validaciones básicas
+    if (!nuevoUsuario.nombre.trim()) return alert("El nombre no puede estar vacío");
+    if (!nuevoUsuario.apellidos.trim()) return alert("El apellido no puede estar vacío");
+    if (!nuevoUsuario.email.trim()) return alert("El correo electrónico no puede estar vacío");
+    if (!nuevoUsuario.password.trim()) return alert("La contraseña no puede estar vacía");
 
-    if (!crearRes.ok) {
-      const errorData = await crearRes.json();
-      throw new Error(errorData?.message || "No se pudo crear el usuario");
-    }
-
-    // 4. Limpiar formulario
+    // Aquí iría la lógica para agregar el usuario (por ejemplo, llamada a la API)
+    // Después de agregar, puedes limpiar el formulario:
     setNuevoUsuario({
       nombre: "",
       apellidos: "",
       email: "",
       password: "",
       rol: "",
+      activo: 1,
     });
 
     // 5. Mostrar éxito por unos segundos y al terminar recargar la página
@@ -131,7 +122,6 @@ const handleAgregar = async () => {
           setUsuarios([]);
         });
     });
-
   } catch (error) {
     console.error("Error al agregar usuario:", error);
     Swal.fire({
@@ -197,7 +187,7 @@ const eliminarUsuario = async (id) => {
         >
           <thead className="bg-gray-200 dark:bg-gray-800">
             <tr>
-              {["ID", "Nombre(s)", "Apellido(s)", "Correo", "Rol", "Estatus", "Acciones"].map((h) => (
+              {["ID", "Nombre(s)", "Apellido(s)", "Correo", "Departamento", "Rol", "Estatus", "Acciones"].map((h) => (
                 <th
                   key={h}
                   className="
@@ -235,6 +225,9 @@ const eliminarUsuario = async (id) => {
                   {u.email}
                 </td>
                 <td className="px-4 py-2 border border-gray-400 dark:border-gray-700 text-gray-800 dark:text-gray-200">
+                  {u.departamento || "N/A"}
+                </td>
+                <td className="px-4 py-2 border border-gray-400 dark:border-gray-700 text-gray-800 dark:text-gray-200">
                   {
                     roles.find((r) => r.id === u.rol || r.name === u.rol)?.descripcion ||
                     u.rol ||
@@ -249,19 +242,23 @@ const eliminarUsuario = async (id) => {
                   )}
                 </td>
                 <td className="flex justify-center py-2 border border-gray-400 dark:border-gray-700">
-                  <a
-                    // Aquí abrir un modal o formulario de edición
+
+                  <button
                     onClick={() => editarUsuario(u.id)}
-                    className="text-white bg-yellow-900 px-2 rounded cursor-pointer mr-2"
+                    className="p-1 rounded cursor-pointer mr-2 flex items-center justify-center hover:bg-gray-200"
+                    title="Editar"
+                    style={{ background: 'none', border: 'none' }}
                   >
-                    Editar
-                  </a>
-                  <a
+                    <img src="/editar4.png" alt="Editar" className="w-5 h-5" />
+                  </button>
+                  <button
                     onClick={() => eliminarUsuario(u.id)}
-                    className="text-white bg-red-800 px-2 rounded cursor-pointer"
+                    className="p-1 rounded cursor-pointer flex items-center justify-center hover:bg-gray-200"
+                    title="Eliminar"
+                    style={{ background: 'none', border: 'none' }}
                   >
-                    Eliminar
-                  </a>
+                    <img src="/eliminar5.png" alt="Eliminar" className="w-5 h-5" />
+                  </button>
                 </td>
               </tr>
             ))}
@@ -334,23 +331,42 @@ const eliminarUsuario = async (id) => {
             />
           </div>
 
+
+          {/* Departamento */}
+          <div className="flex flex-col max-w-sm">
+            <label className="mb-1 text-gray-700 dark:text-gray-300">Departamento</label>
+            <select
+              value={nuevoUsuario.departamento}
+              onChange={(e) => setNuevoUsuario((prev) => ({ ...prev, departamento: e.target.value }))}
+              className="bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded px-3 py-2 text-gray-800 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500"
+            >
+              <option value="">Selecciona un departamento</option>
+              <option value="Administracion y finanzas">Administracion y finanzas</option>
+              <option value="contraloria e investigacion">contraloria e investigacion</option>
+              <option value="coordinacion general">coordinacion general</option>
+              <option value="informatica">informatica</option>
+              <option value="juridico">juridico</option>
+              <option value="operacion portuaria">operacion portuaria</option>
+              <option value="planeacion">planeacion</option>
+              <option value="recursos humanos">recursos humanos</option>
+            </select>
+          </div>
+
           {/* Rol */}
           <div className="flex flex-col max-w-sm">
             <label className="mb-1 text-gray-700 dark:text-gray-300">Rol</label>
-<select
-  value={nuevoUsuario.rol}
-  onChange={(e) =>
-    setNuevoUsuario((prev) => ({ ...prev, rol: e.target.value }))
-  }
-  className="bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded px-3 py-2 text-gray-800 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500"
->
-  <option value="">Selecciona un rol</option>
-  {roles.map((r) => (
-    <option key={r.id} value={r.name || r.id}>
-      {r.name || r.id}
-    </option>
-  ))}
-</select>
+            <select
+              value={nuevoUsuario.rol}
+              onChange={(e) => setNuevoUsuario((prev) => ({ ...prev, rol: e.target.value }))}
+              className="bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded px-3 py-2 text-gray-800 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500"
+            >
+              <option value="">Selecciona un rol</option>
+              {roles.map((r) => (
+                <option key={r.id} value={r.name || r.id}>
+                  {r.descripcion || r.id}
+                </option>
+              ))}
+            </select>
           </div>
 
           {/* Botón */}
