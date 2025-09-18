@@ -360,7 +360,7 @@ export default function UsuariosPage() {
               onChange={(e) => setNuevoUsuario((prev) => ({ ...prev, email: e.target.value }))}
               className="bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded px-3 py-2 text-gray-800 dark:text-gray-100 focus:outline-none              focus:ring-2 focus:ring-blue-500"
               placeholder="Correo electrónico"
-            />
+            />-
           </div>
 
           {/* Contraseña */}
