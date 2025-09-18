@@ -3,48 +3,51 @@ import { useEffect, useState } from "react";
 import NEXT_PUBLIC_API_URL from "@/config";
 import Paginacion from "@/app/admin/components/Paginacion";
 import Swal from "sweetalert2";
+import { Judson } from "next/font/google";
 
 export default function UsuariosPage() {
   const [usuarios, setUsuarios] = useState([]);
   const [roles, setRoles] = useState([]);
+  const [departamentos, setDepartamentos] = useState([])
   const [loading, setLoading] = useState(true);
   const [nuevoUsuario, setNuevoUsuario] = useState({
     nombre: "",
     apellidos: "",
     email: "",
+    departamentos_id: "",
     password: "",
-    rol: "",
-    departamento: "",
     activo: 1,
+    role_tipo: "",
   });
   const [paginaActual, setPaginaActual] = useState(1);
   const [totalPaginas, setTotalPaginas] = useState(1);
 
 
-// 1️⃣ Al montar, traemos la lista de usuarios
-useEffect(() => {
-  setLoading(true);
-  fetch(`${NEXT_PUBLIC_API_URL}/usuarios/view?page=${paginaActual}`)
-    .then((r) => r.json())
-    .then((data) => {
-      // Verifica la estructura antes de acceder
-      if (data && data.data && Array.isArray(data.data.usuarios)) {
-        setUsuarios(data.data.usuarios);
-        setTotalPaginas(data.data.pagination?.pages || 1);
-      } else if (data && Array.isArray(data.usuarios)) {
-        setUsuarios(data.usuarios);
-        setTotalPaginas(data.pagination?.pages || 1);
-      } else {
-        console.error('La respuesta no contiene usuarios:', data);
+  // 1️⃣ Al montar, traemos la lista de usuarios
+  useEffect(() => {
+    setLoading(true);
+    fetch(`${NEXT_PUBLIC_API_URL}/usuarios/view?page=${paginaActual}`)
+      .then((r) => r.json())
+      .then((data) => {
+        // Verifica la estructura antes de acceder
+        if (data && data.data && Array.isArray(data.data.usuarios)) {
+          setUsuarios(data.data.usuarios);
+          setTotalPaginas(data.data.pagination?.pages || 1);
+          console.log(data.data.usuarios);
+        } else if (data && Array.isArray(data.usuarios)) {
+          setUsuarios(data.usuarios);
+          setTotalPaginas(data.pagination?.pages || 1);
+        } else {
+          console.error('La respuesta no contiene usuarios:', data);
+          setUsuarios([]);
+        }
+      })
+      .catch((err) => {
+        console.error('Error cargando usuarios:', err);
         setUsuarios([]);
-      }
-    })
-    .catch((err) => {
-      console.error('Error cargando usuarios:', err);
-      setUsuarios([]);
-    })
-    .finally(() => setLoading(false));
-}, [paginaActual]);
+      })
+      .finally(() => setLoading(false));
+  }, [paginaActual]);
 
 
   // 2️⃣ Al montar, traemos la lista de roles
@@ -77,98 +80,152 @@ useEffect(() => {
       .finally(() => setLoading(false));
   }, []);
 
+  // 2.1️⃣ Al montar, traemos la lista de departamentos
+  useEffect(() => {
+    fetch(`${NEXT_PUBLIC_API_URL}/departamentos`)
+      .then((r) => r.json())
+      .then((data) => {
+        let departamentosArr = [];
+        if (data && data.data && Array.isArray(data.data.departamentos)) {
+          departamentosArr = data.data.departamentos;
+        } else if (data && Array.isArray(data.departamentos)) {
+          departamentosArr = data.departamentos;
+        } else {
+          console.error("La respuesta no contiene departamentos:", data);
+        }
+        setDepartamentos(departamentosArr);
+      })
+      .catch((err) => {
+        console.error("Error cargando departamentos:", err);
+        setDepartamentos([]);
+      })
+      .finally(() => setLoading(false));
+  }, []);
+
+
   if (loading) {
     return <div className="p-6 text-center">Cargando usuarios…</div>;
   }
 
-// 3️⃣ Crear usuario via API
-const handleAgregar = async () => {
-  try {
-    // Validaciones básicas
-    if (!nuevoUsuario.nombre.trim()) return alert("El nombre no puede estar vacío");
-    if (!nuevoUsuario.apellidos.trim()) return alert("El apellido no puede estar vacío");
-    if (!nuevoUsuario.email.trim()) return alert("El correo electrónico no puede estar vacío");
-    if (!nuevoUsuario.password.trim()) return alert("La contraseña no puede estar vacía");
+  // 3️⃣ Crear usuario via API
+  const handleAgregar = async () => {
+    try {
+      // Validaciones básicas
+      if (!nuevoUsuario.nombre.trim()) return alert("El nombre no puede estar vacío");
+      if (!nuevoUsuario.apellidos.trim()) return alert("El apellido no puede estar vacío");
+      if (!nuevoUsuario.email.trim()) return alert("El correo electrónico no puede estar vacío");
+      if (!nuevoUsuario.password.trim()) return alert("La contraseña no puede estar vacía");
+      if (!nuevoUsuario.role_tipo) return alert("Debes seleccionar un rol");
+      if (!nuevoUsuario.departamentos_id) return alert("Debes seleccionar un departamento");
 
-    // Aquí iría la lógica para agregar el usuario (por ejemplo, llamada a la API)
-    // Después de agregar, puedes limpiar el formulario:
-    setNuevoUsuario({
-      nombre: "",
-      apellidos: "",
-      email: "",
-      password: "",
-      rol: "",
-      activo: 1,
-    });
+      // 3.1️⃣ Construir el objeto a enviar
+      const usuarioAEnviar = {
+        nombre: nuevoUsuario.nombre.trim(),
+        apellidos: nuevoUsuario.apellidos.trim(),
+        email: nuevoUsuario.email.trim(),
+        password: nuevoUsuario.password,
+        role_tipo: nuevoUsuario.role_tipo,
+        departamentos_id: nuevoUsuario.departamentos_id,
+        activo: nuevoUsuario.activo,
+      };
 
-    // 5. Mostrar éxito por unos segundos y al terminar recargar la página
+      // 3.2️⃣ Enviar la petición
+      const res = await fetch(`${NEXT_PUBLIC_API_URL}/usuarios`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(usuarioAEnviar),
+      });
+
+      if (!res.ok) {
+        const errorData = await res.json();
+        throw new Error(errorData.message || "No se pudo agregar el usuario");
+      }
+
+      const data = await res.json();
+      console.log("Usuario agregado:", data);
+
+      // 4. Limpiar el formulario
+
+      setNuevoUsuario({
+        nombre: "",
+        apellidos: "",
+        email: "",
+        password: "",
+        departamentos_id: "",
+        role_tipo: "",
+        activo: 1,
+      });
+
+      // 5. Mostrar éxito por unos segundos y al terminar recargar la página
+      Swal.fire({
+        icon: 'success',
+        title: 'Usuario agregado',
+        text: 'El usuario ha sido agregado exitosamente.',
+        timer: 2000,
+        showConfirmButton: false,
+      }).then(() => {
+        setPaginaActual(1);
+
+        fetch(`${NEXT_PUBLIC_API_URL}/usuarios/view?page=1`)
+          .then((r) => r.json())
+          .then((data) => {
+            setUsuarios(data.data.usuarios || []);
+            setTotalPaginas(data.data.pagination?.pages || 1);
+          })
+          .catch((err) => {
+            console.error('Error cargando usuarios:', err);
+            setUsuarios([]);
+          });
+      });
+    } catch (error) {
+      console.error("Error al agregar usuario:", error);
+      Swal.fire({
+        icon: 'error',
+        title: 'Error',
+        text: error.message || 'No se pudo agregar el usuario.',
+      });
+    }
+  };
+
+  // 4️⃣ Eliminar usuario via API
+  const eliminarUsuario = async (id) => {
     Swal.fire({
-      icon: 'success',
-      title: 'Usuario agregado',
-      text: 'El usuario ha sido agregado exitosamente.',
-      timer: 2000,
-      showConfirmButton: false,
-    }).then(() => {
-      setPaginaActual(1);
-
-      fetch(`${NEXT_PUBLIC_API_URL}/usuarios/view?page=1`)
-        .then((r) => r.json())
-        .then((data) => {
-          setUsuarios(data.data.usuarios || []);
-          setTotalPaginas(data.data.pagination?.pages || 1);
+      title: '¿Estás seguro?',
+      text: "Esta acción no se puede deshacer.",
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonColor: '#d33',
+      cancelButtonColor: '#3085d6',
+      confirmButtonText: 'Sí, eliminar',
+      cancelButtonText: 'Cancelar'
+    }).then((result) => {
+      if (!result.isConfirmed) return;
+      fetch(`${NEXT_PUBLIC_API_URL}/usuarios/${id}`, {
+        method: "DELETE",
+      })
+        .then((res) => {
+          if (!res.ok) throw new Error("No se pudo eliminar el usuario");
+          setUsuarios((prev) => prev.filter((u) => u.id !== id));
+          Swal.fire({
+            icon: 'success',
+            title: 'Usuario eliminado',
+            text: 'El usuario ha sido eliminado exitosamente.',
+            timer: 2000,
+            showConfirmButton: false,
+          });
         })
         .catch((err) => {
-          console.error('Error cargando usuarios:', err);
-          setUsuarios([]);
+          console.error("Error al eliminar usuario:", err);
+          Swal.fire({
+            icon: 'error',
+            title: 'Error',
+            text: err.message || 'No se pudo eliminar el usuario.',
+          });
         });
     });
-  } catch (error) {
-    console.error("Error al agregar usuario:", error);
-    Swal.fire({
-      icon: 'error',
-      title: 'Error',
-      text: error.message || 'No se pudo agregar el usuario.',
-    });
-  }
-};
-
-// 4️⃣ Eliminar usuario via API
-const eliminarUsuario = async (id) => {
-  Swal.fire({
-    title: '¿Estás seguro?',
-    text: "Esta acción no se puede deshacer.",
-    icon: 'warning',
-    showCancelButton: true,
-    confirmButtonColor: '#d33',
-    cancelButtonColor: '#3085d6',
-    confirmButtonText: 'Sí, eliminar',
-    cancelButtonText: 'Cancelar'
-  }).then((result) => {
-    if (!result.isConfirmed) return;
-    fetch(`${NEXT_PUBLIC_API_URL}/usuarios/${id}`, {
-      method: "DELETE",
-    })
-      .then((res) => {
-        if (!res.ok) throw new Error("No se pudo eliminar el usuario");
-        setUsuarios((prev) => prev.filter((u) => u.id !== id));
-        Swal.fire({
-          icon: 'success',
-          title: 'Usuario eliminado',
-          text: 'El usuario ha sido eliminado exitosamente.',
-          timer: 2000,
-          showConfirmButton: false,
-        });
-      })
-      .catch((err) => {
-        console.error("Error al eliminar usuario:", err);
-        Swal.fire({
-          icon: 'error',
-          title: 'Error',
-          text: err.message || 'No se pudo eliminar el usuario.',
-        });
-      });
-  });
-};
+  };
 
   return (
     <div className="p-6 space-y-8">
@@ -187,7 +244,7 @@ const eliminarUsuario = async (id) => {
         >
           <thead className="bg-gray-200 dark:bg-gray-800">
             <tr>
-              {["ID", "Nombre(s)", "Apellido(s)", "Correo", "Departamento", "Rol", "Estatus", "Acciones"].map((h) => (
+              {["ID", "Nombre(s)", "Apellido(s)", "Correo", "Departamento", "Rol", "Acciones"].map((h) => (
                 <th
                   key={h}
                   className="
@@ -225,21 +282,10 @@ const eliminarUsuario = async (id) => {
                   {u.email}
                 </td>
                 <td className="px-4 py-2 border border-gray-400 dark:border-gray-700 text-gray-800 dark:text-gray-200">
-                  {u.departamento || "N/A"}
+                  {u.departamento}
                 </td>
                 <td className="px-4 py-2 border border-gray-400 dark:border-gray-700 text-gray-800 dark:text-gray-200">
-                  {
-                    roles.find((r) => r.id === u.rol || r.name === u.rol)?.descripcion ||
-                    u.rol ||
-                    "N/A"
-                  }
-                </td>
-                <td className="px-4 py-2 border border-gray-400 dark:border-gray-700 text-gray-800 dark:text-gray-200">
-                  {u.activo === 1 ? (
-                    <span className="text-green-600 italic">Activo</span>
-                  ) : (
-                    <span className="text-gray-500 italic">Inactivo</span>
-                  )}
+                  {u.rol}
                 </td>
                 <td className="flex justify-center py-2 border border-gray-400 dark:border-gray-700">
 
@@ -288,9 +334,9 @@ const eliminarUsuario = async (id) => {
               onChange={(e) =>
                 setNuevoUsuario((prev) => ({ ...prev, nombre: e.target.value }))
               }
-  className="bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded px-3 py-2 text-gray-800 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500"
-  placeholder="Nombre"
-/>
+              className="bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded px-3 py-2 text-gray-800 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              placeholder="Nombre"
+            />
           </div>
 
           {/* Apellidos */}
@@ -336,19 +382,16 @@ const eliminarUsuario = async (id) => {
           <div className="flex flex-col max-w-sm">
             <label className="mb-1 text-gray-700 dark:text-gray-300">Departamento</label>
             <select
-              value={nuevoUsuario.departamento}
-              onChange={(e) => setNuevoUsuario((prev) => ({ ...prev, departamento: e.target.value }))}
+              value={nuevoUsuario.departamentos_id}
+              onChange={(e) => setNuevoUsuario((prev) => ({ ...prev, departamentos_id: e.target.value }))}
               className="bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded px-3 py-2 text-gray-800 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500"
             >
               <option value="">Selecciona un departamento</option>
-              <option value="Administracion y finanzas">Administracion y finanzas</option>
-              <option value="contraloria e investigacion">contraloria e investigacion</option>
-              <option value="coordinacion general">coordinacion general</option>
-              <option value="informatica">informatica</option>
-              <option value="juridico">juridico</option>
-              <option value="operacion portuaria">operacion portuaria</option>
-              <option value="planeacion">planeacion</option>
-              <option value="recursos humanos">recursos humanos</option>
+              {departamentos.map((d) => (
+                <option key={d.id} value={d.nombre}>
+                  {d.nombre}
+                </option>
+              ))}
             </select>
           </div>
 
@@ -356,14 +399,14 @@ const eliminarUsuario = async (id) => {
           <div className="flex flex-col max-w-sm">
             <label className="mb-1 text-gray-700 dark:text-gray-300">Rol</label>
             <select
-              value={nuevoUsuario.rol}
-              onChange={(e) => setNuevoUsuario((prev) => ({ ...prev, rol: e.target.value }))}
+              value={nuevoUsuario.role_tipo}
+              onChange={(e) => setNuevoUsuario((prev) => ({ ...prev, role_tipo: e.target.value }))}
               className="bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded px-3 py-2 text-gray-800 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500"
             >
               <option value="">Selecciona un rol</option>
               {roles.map((r) => (
-                <option key={r.id} value={r.name || r.id}>
-                  {r.descripcion || r.id}
+                <option key={r.id} value={r.tipo}>
+                  {r.descripcion}
                 </option>
               ))}
             </select>
@@ -383,5 +426,3 @@ const eliminarUsuario = async (id) => {
     </div>
   );
 }
-
-
