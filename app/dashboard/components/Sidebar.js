@@ -330,22 +330,19 @@ export default function Sidebar() {
           style={{ filter: "drop-shadow(0 0 32px rgba(37,99,235,0.35)) drop-shadow(0 4px 16px rgba(0,0,0,0.18))", transition: 'width .18s, height .18s' }}
           priority
         />
-        <div className="mt-6 text-center">
+        <div className="mt-12 text-center">
           <h1
             className="
-              text-1xl
+              text-ms
               font-extrabold
               font-sans
               tracking-wide
               leading-tight
               text-transparent
               bg-clip-text
-              bg-gradient-to-r
-              from-blue-300
-              via-blue-600
-              to-blue-900
+              text-yellow-200
               drop-shadow-lg
-              mb-2
+              mb-8
             "
             style={{
               letterSpacing: '1px',
