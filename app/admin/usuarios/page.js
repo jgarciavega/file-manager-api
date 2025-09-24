@@ -5,6 +5,9 @@ import Paginacion from "@/app/admin/components/Paginacion";
 import Swal from "sweetalert2";
 import { Judson } from "next/font/google";
 
+const token = localStorage.getItem("token");
+
+
 export default function UsuariosPage() {
   const [usuarios, setUsuarios] = useState([]);
   const [roles, setRoles] = useState([]);
@@ -23,10 +26,14 @@ export default function UsuariosPage() {
   const [totalPaginas, setTotalPaginas] = useState(1);
 
 
+
+
   // 1️⃣ Al montar, traemos la lista de usuarios
   useEffect(() => {
     setLoading(true);
-    fetch(`${NEXT_PUBLIC_API_URL}/usuarios/view?page=${paginaActual}`)
+    fetch(`${NEXT_PUBLIC_API_URL}/usuarios/view?page=${paginaActual}`,
+      { headers: { Authorization: `Bearer ${token}` } }
+    )
       .then((r) => r.json())
       .then((data) => {
         // Verifica la estructura antes de acceder
@@ -52,7 +59,9 @@ export default function UsuariosPage() {
 
   // 2️⃣ Al montar, traemos la lista de roles
   useEffect(() => {
-    fetch(`${NEXT_PUBLIC_API_URL}/roles`)
+    fetch(`${NEXT_PUBLIC_API_URL}/roles`,
+      { headers: { Authorization: `Bearer ${token}` } }
+    )
       .then((r) => r.json())
       .then((data) => {
         let rolesArr = [];
@@ -82,7 +91,9 @@ export default function UsuariosPage() {
 
   // 2.1️⃣ Al montar, traemos la lista de departamentos
   useEffect(() => {
-    fetch(`${NEXT_PUBLIC_API_URL}/departamentos`)
+    fetch(`${NEXT_PUBLIC_API_URL}/departamentos`,
+      { headers: { Authorization: `Bearer ${token}` } }
+    )
       .then((r) => r.json())
       .then((data) => {
         let departamentosArr = [];
@@ -134,6 +145,7 @@ export default function UsuariosPage() {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
         },
         body: JSON.stringify(usuarioAEnviar),
       });
@@ -168,7 +180,9 @@ export default function UsuariosPage() {
       }).then(() => {
         setPaginaActual(1);
 
-        fetch(`${NEXT_PUBLIC_API_URL}/usuarios/view?page=1`)
+        fetch(`${NEXT_PUBLIC_API_URL}/usuarios/view?page=1`, {
+          headers: { Authorization: `Bearer ${token}` },
+        })
           .then((r) => r.json())
           .then((data) => {
             setUsuarios(data.data.usuarios || []);
@@ -204,6 +218,9 @@ export default function UsuariosPage() {
       if (!result.isConfirmed) return;
       fetch(`${NEXT_PUBLIC_API_URL}/usuarios/${id}`, {
         method: "DELETE",
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
       })
         .then((res) => {
           if (!res.ok) throw new Error("No se pudo eliminar el usuario");
@@ -360,7 +377,7 @@ export default function UsuariosPage() {
               onChange={(e) => setNuevoUsuario((prev) => ({ ...prev, email: e.target.value }))}
               className="bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded px-3 py-2 text-gray-800 dark:text-gray-100 focus:outline-none              focus:ring-2 focus:ring-blue-500"
               placeholder="Correo electrónico"
-            />-
+            />
           </div>
 
           {/* Contraseña */}
