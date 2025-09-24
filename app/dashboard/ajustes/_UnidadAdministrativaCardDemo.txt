@@ -1,0 +1,24 @@
+import UnidadAdministrativaCard from "components/UnidadAdministrativaCard";
+// ...existing code...
+<main className="max-w-4xl mx-auto mt-10 flex flex-col md:flex-row gap-10 items-start">
+  <div className="w-full md:w-1/2 lg:w-2/5 xl:w-1/3 flex-shrink-0">
+    <UnidadAdministrativaCard
+      nombreUnidad="Dirección de Recursos Humanos"
+      claveInstitucional="DRH-2025"
+      responsableArchivo="Lic. Ana Torres"
+      seriesDocumentales={[
+        { nombre: "Oficios internos", descripcion: "Correspondencia y comunicaciones internas de la unidad." },
+        { nombre: "Solicitudes ciudadanas", descripcion: "Peticiones y trámites realizados por ciudadanos." },
+        { nombre: "Informes mensuales", descripcion: "Reportes periódicos de actividades y resultados." }
+      ]}
+      docCapturados={128}
+      docTramite={7}
+      docTransferidos={54}
+      onReportError={() => alert("Gracias por reportar un error. El área de archivos revisará la información.")}
+    />
+  </div>
+  <div className="flex-1 min-w-0">
+    {/* ...contenido de preferencias y panel lateral aquí... */}
+  </div>
+</main>
+// ...existing code...
