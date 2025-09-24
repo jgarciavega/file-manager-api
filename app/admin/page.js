@@ -1,22 +1,38 @@
 "use client";
-import React, { useEffect } from "react";
-import { useSession } from "next-auth/react";
+import React, { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 
 export default function AdminHome() {
-  const { data: session, status } = useSession();
   const router = useRouter();
+  const [user, setUser] = useState(null);
+  const [loading, setLoading] = useState(true);
 
   // Protección: solo admins pueden acceder
   useEffect(() => {
-    if (status === "loading") return;
+    const token = localStorage.getItem("token");
+    const userData = localStorage.getItem("user");
 
-    if (!session || session.user.role !== "admin") {
-      router.push("/unauthorized"); // Puedes cambiarlo a "/home" si lo prefieres
+    if (!token || !userData) {
+      router.push("/unauthorized");
+      return;
     }
-  }, [status, session, router]);
 
-  if (status === "loading") {
+    try {
+      const parsedUser = JSON.parse(userData);
+      if (parsedUser.role_id !== 1) {
+        router.push("/unauthorized");
+      } else {
+        setUser(parsedUser);
+      }
+    } catch (err) {
+      console.error("Error parsing user from localStorage:", err);
+      router.push("/unauthorized");
+    } finally {
+      setLoading(false);
+    }
+  }, [router]);
+
+  if (loading) {
     return <p className="text-white text-center mt-10">Cargando sesión...</p>;
   }
 
@@ -127,13 +143,12 @@ export default function AdminHome() {
                   <td className="px-4 py-2">{doc.clasificacion}</td>
                   <td className="px-4 py-2">{doc.fecha}</td>
                   <td
-                    className={`px-4 py-2 font-semibold ${
-                      doc.estado === "Aprobado"
+                    className={`px-4 py-2 font-semibold ${doc.estado === "Aprobado"
                         ? "text-green-500"
                         : doc.estado === "En revisión"
-                        ? "text-yellow-500"
-                        : "text-red-500"
-                    }`}
+                          ? "text-yellow-500"
+                          : "text-red-500"
+                      }`}
                   >
                     {doc.estado}
                   </td>

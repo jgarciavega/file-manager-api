@@ -2,36 +2,45 @@
 
 import { useState } from "react";
 import { useForm } from "react-hook-form";
-import { signIn } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
+import NEXT_PUBLIC_API_URL from "@/config"; // Asegúrate de que esté bien definido
 
 export default function LoginPage() {
   const {
     register,
     handleSubmit,
-    setError,
     formState: { errors },
   } = useForm();
   const router = useRouter();
   const [loginError, setLoginError] = useState("");
   const [attempts, setAttempts] = useState(0);
 
-  // Regex para la validación del correo
   const EMAIL_REGEX = /^[a-zA-Z0-9._-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,6}$/;
 
   const onSubmit = async (data) => {
     try {
-      const result = await signIn("credentials", {
-        redirect: false,
-        email: data.email,
-        password: data.password,
+      const res = await fetch(`${NEXT_PUBLIC_API_URL}/auth/login`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          email: data.email,
+          password: data.password,
+        }),
       });
 
-      console.log("📌 Respuesta del login:", result);
+      const result = await res.json();
+      console.log("🔐 Respuesta del login completa:", result);
 
-      if (result?.error) {
-        console.log("🚨 Error en el login:", result.error);
+      // ⚠️ Validación segura del formato de respuesta
+      if (
+        !result.success ||
+        !result.data ||
+        !result.data.token ||
+        !result.data.user
+      ) {
         setLoginError("Credenciales incorrectas");
         setAttempts((prev) => prev + 1);
         if (attempts + 1 >= 3) {
@@ -45,26 +54,33 @@ export default function LoginPage() {
         return;
       }
 
-      // ✅ Si el login es exitoso
-      console.log("✅ Inicio de sesión exitoso, redirigiendo...");
+      const { token, user } = result.data;
 
-      // Obtener la sesión para conocer el rol
-      const res = await fetch("/api/auth/session");
-      const session = await res.json();
+      if (typeof user.role_id !== "number") {
+        setLoginError("Error inesperado. Datos de usuario incompletos.");
+        return;
+      }
 
-      console.log("🧾 Sesión actual:", session);
+      // ✅ Guardar en localStorage
+      localStorage.removeItem("token");
+      localStorage.removeItem("user");
+      localStorage.setItem("token", token);
+      localStorage.setItem("user", JSON.stringify(user));
 
-      // Redirigir según el rol del usuario
-      if (session?.user?.role === "admin") {
+      console.log("✅ Token y usuario guardados:", { token, user });
+
+      setLoginError("");
+      setAttempts(0);
+
+      // ✅ Redireccionar según rol
+      if (user.role_id === 1) {
         router.push("/admin");
       } else {
         router.push("/home");
       }
 
-      setLoginError("");
-      setAttempts(0);
     } catch (error) {
-      console.error("Error durante el login:", error);
+      console.error("❌ Error en login:", error);
       setLoginError("Error al intentar iniciar sesión");
     }
   };

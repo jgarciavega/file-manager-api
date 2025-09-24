@@ -93,7 +93,10 @@ export default function Sidebar() {
       cancelButtonText: "Cancelar",
     }).then((result) => {
       if (result.isConfirmed) {
+        localStorage.removeItem("token");
+        localStorage.removeItem("user");
         router.push("/");
+
       }
     });
   };
