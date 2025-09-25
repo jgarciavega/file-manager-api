@@ -1,114 +1,218 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import Link from "next/link";
-import Image from "next/image";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faArrowLeft } from "@fortawesome/free-solid-svg-icons";
+import { faSearch, faDownload } from "@fortawesome/free-solid-svg-icons";
+import NEXT_PUBLIC_API_URL from "@/config";
+import Paginacion from "../components/Paginacion"; // ajusta la ruta según tu estructura
 
 export default function ArchivosAdmin() {
   const [documentos, setDocumentos] = useState([]);
   const [loading, setLoading] = useState(true);
-  const listaDocumentos = Array.isArray(documentos) ? documentos : [];
+  const [busqueda, setBusqueda] = useState("");
+  const [pagina, setPagina] = useState(1);
+  const [totalPaginas, setTotalPaginas] = useState(1);
+  const limite = 10;
+
+  // El token debería obtenerse dentro del useEffect para evitar problemas con SSR
+  const [token, setToken] = useState(null);
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      setToken(localStorage.getItem("token"));
+    }
+  }, []);
 
   useEffect(() => {
-    const fetchDocs = async () => {
+    if (!token) return;
+
+    const fetchData = async () => {
+      setLoading(true);
       try {
-        const res = await fetch("/api/documentos");
-        const data = await res.json();
-        console.log("Respuesta de la API:", data);
-        // Normalizar diferentes formas de respuesta
-        if (Array.isArray(data)) setDocumentos(data);
-        else if (Array.isArray(data.data)) setDocumentos(data.data);
-        else if (Array.isArray(data.documentos)) setDocumentos(data.documentos);
-        else setDocumentos([]);
+        const resDocs = await fetch(
+          `${NEXT_PUBLIC_API_URL}/documentos?page=${pagina}&limit=${limite}`,
+          {
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${token}`,
+            },
+          }
+        );
+        const dataDocs = await resDocs.json();
+
+        let docs = [];
+        let pagination = { pages: 1 };
+        if (dataDocs && dataDocs.data && Array.isArray(dataDocs.data.documentos)) {
+          docs = dataDocs.data.documentos;
+          pagination = dataDocs.data.pagination || { pages: 1 };
+        }
+
+        const resTipos = await fetch(`${NEXT_PUBLIC_API_URL}/tipos-documentos`, {
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+        });
+        const dataTipos = await resTipos.json();
+
+        let tiposMap = {};
+        if (
+          dataTipos &&
+          dataTipos.data &&
+          Array.isArray(dataTipos.data.tiposDocumentos)
+        ) {
+          dataTipos.data.tiposDocumentos.forEach((tipo) => {
+            tiposMap[tipo.id] = tipo.tipo;
+          });
+        }
+
+        const documentosConTipo = docs.map((doc) => ({
+          ...doc,
+          tipo_documento_text: tiposMap[doc.tipos_documentos_id] || "Desconocido",
+        }));
+
+        setDocumentos(documentosConTipo);
+        setTotalPaginas(pagination.pages);
       } catch (error) {
-        console.error("Error al cargar documentos:", error);
+        console.error("Error al cargar datos:", error);
         setDocumentos([]);
+        setTotalPaginas(1);
       } finally {
         setLoading(false);
       }
     };
-    fetchDocs();
-  }, []);
+
+    fetchData();
+  }, [pagina, token]);
+
+  const documentosFiltrados = documentos.filter((doc) =>
+    doc.nombre?.toLowerCase().includes(busqueda.toLowerCase())
+  );
 
   return (
-    <div className="min-h-screen p-6 bg-gray-50 dark:bg-[#0d1b2a] text-gray-900 dark:text-white">
-      {/* ——— Cabecera ——— */}
-      <div className="flex justify-between items-start mb-6">
-        <Image src="/api-dark23.png" alt="Logo" width={300} height={60} />
-        <Link
-          href="/admin"
-          className="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded"
-        >
-          <FontAwesomeIcon icon={faArrowLeft} /> Inicio
-        </Link>
+    <div className="space-y-8">
+      <div className="flex justify-between items-center">
+        <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100 text-center flex-1">
+          Gestión de Archivos
+        </h1>
+        <div className="w-32" />
       </div>
 
-      <h1 className="text-2xl font-bold mb-4 text-blue-600 dark:text-blue-400 text-center">
-        Gestor de Archivos
-      </h1>
+      <div className="flex justify-end">
+        <div className="relative w-full max-w-md">
+          <span className="absolute inset-y-0 left-0 flex items-center pl-3 text-gray-500 dark:text-gray-400">
+            <FontAwesomeIcon icon={faSearch} />
+          </span>
+          <input
+            type="text"
+            placeholder="Buscar por nombre de documento..."
+            value={busqueda}
+            onChange={(e) => setBusqueda(e.target.value)}
+            className="w-full pl-10 pr-4 py-2 rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
+          />
+        </div>
+      </div>
 
       {loading ? (
-        <p className="text-center">Cargando documentos...</p>
+        <div className="p-6 text-center">Cargando documentos…</div>
       ) : (
-        <div className="overflow-x-auto">
-          <table className="min-w-full border-collapse border border-gray-300 dark:border-gray-600 text-sm">
-            <thead>
-              <tr className="bg-gray-200 dark:bg-gray-700 text-left">
-                <th className="px-4 py-2 border">Nombre</th>
-                <th className="px-4 py-2 border">Descripción</th>
-                <th className="px-4 py-2 border">Tipo</th>
-                <th className="px-4 py-2 border">Usuario</th>
-                <th className="px-4 py-2 border">Fecha</th>
-                {/* — Nueva columna para descarga — */}
-                <th className="px-4 py-2 border text-center">Descargar</th>
-              </tr>
-            </thead>
-            <tbody>
-              {(!Array.isArray(documentos) || listaDocumentos.length === 0) ? (
+        <>
+          <div className="overflow-x-auto">
+            <table
+              className="
+                min-w-full 
+                border border-gray-400 bg-white 
+                dark:border-gray-700 dark:bg-gray-800 
+                border-collapse text-center
+              "
+            >
+              <thead className="bg-gray-200 dark:bg-gray-800">
                 <tr>
-                  <td colSpan={6} className="p-4 text-center text-gray-500 dark:text-gray-400">
-                    No hay documentos disponibles.
-                  </td>
+                  {[
+                    "Nombre",
+                    "Descripción",
+                    "Tipo",
+                    "Usuario",
+                    "Fecha",
+                    "Acciones",
+                  ].map((h) => (
+                    <th
+                      key={h}
+                      className="
+                      px-4 py-2 
+                      border border-gray-400 dark:border-gray-700 
+                      text-center 
+                      text-sm
+                      uppercase
+                      font-black 
+                      text-gray-700 dark:text-gray-300
+                    "
+                    >
+                      {h}
+                    </th>
+                  ))}
                 </tr>
-              ) : (
-                listaDocumentos.map((doc) => (
-                  <tr
-                    key={doc.id}
-                    className="hover:bg-gray-100 dark:hover:bg-gray-800"
-                  >
-                    <td className="px-4 py-2 border">{doc.nombre}</td>
-                    <td className="px-4 py-2 border">{doc.descripcion}</td>
-                    {/* 🔧 Ajuste: mostramos el tipo real */}
-                    <td className="px-4 py-2 border">
-                      {doc.tipos_documentos?.tipo || "-"}
-                    </td>
-                    {/* 🔧 Ajuste: mostramos el nombre del usuario */}
-                    <td className="px-4 py-2 border">
-                      {doc.usuarios?.nombre || "-"}
-                    </td>
-                    <td className="px-4 py-2 border">
-                      {new Date(doc.fecha_subida).toLocaleDateString()}
-                    </td>
-                    {/* 🔧 Enlace de descarga */}
-                    <td className="px-4 py-2 border text-center">
-                      <a
-                        href={doc.ruta}
-                        download
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="text-blue-600 hover:underline"
-                      >
-                        📥
-                      </a>
+              </thead>
+              <tbody>
+                {documentosFiltrados.length === 0 ? (
+                  <tr>
+                    <td
+                      colSpan={6}
+                      className="p-4 text-gray-700 dark:text-gray-300"
+                    >
+                      No se encontraron documentos.
                     </td>
                   </tr>
-                ))
-              )}
-            </tbody>
-          </table>
-        </div>
+                ) : (
+                  documentosFiltrados.map((doc, i) => (
+                    <tr
+                      key={doc.id}
+                      className={`
+    transition-colors duration-150
+    hover:bg-gray-200 dark:hover:bg-gray-600
+    ${i % 2 === 0 ? "bg-white dark:bg-gray-900" : "bg-gray-50 dark:bg-gray-800"}
+  `}
+                    >
+                      <td className="px-4 py-2 border border-gray-400 dark:border-gray-700 text-gray-800 dark:text-gray-200">
+                        {doc.nombre}
+                      </td>
+                      <td className="px-4 py-2 border border-gray-400 dark:border-gray-700 text-gray-800 dark:text-gray-200">
+                        {doc.descripcion}
+                      </td>
+                      <td className="px-4 py-2 border border-gray-400 dark:border-gray-700 text-gray-800 dark:text-gray-200">
+                        {doc.tipo_documento_text || `ID: ${doc.tipos_documentos_id}` || "-"}
+                      </td>
+                      <td className="px-4 py-2 border border-gray-400 dark:border-gray-700 text-gray-800 dark:text-gray-200">
+                        {doc.usuarios?.nombre || "-"}
+                      </td>
+                      <td className="px-4 py-2 border border-gray-400 dark:border-gray-700 text-gray-800 dark:text-gray-200">
+                        {doc.fecha_subida ? new Date(doc.fecha_subida).toLocaleDateString() : "-"}
+                      </td>
+                      <td className="flex justify-center py-2 border border-gray-400 dark:border-gray-700">
+                        <a
+                          href={doc.ruta}
+                          download
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="p-2 rounded hover:bg-gray-200 dark:hover:bg-gray-700 transition text-blue-600 dark:text-blue-400"
+                          title="Descargar documento"
+                        >
+                          <FontAwesomeIcon icon={faDownload} size="lg" />
+                        </a>
+                      </td>
+                    </tr>
+
+                  ))
+                )}
+              </tbody>
+            </table>
+          </div>
+
+          <Paginacion
+            pagina={pagina}
+            totalPaginas={totalPaginas}
+            onChangePagina={setPagina}
+          />
+        </>
       )}
     </div>
   );

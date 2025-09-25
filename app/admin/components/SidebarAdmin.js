@@ -8,6 +8,16 @@ import avatarMap from "../../../lib/avatarMap";
 import admMap from "../../../lib/admMap";
 import profesionMap from "../../../lib/profesionMap";
 
+import {
+  FiHome,
+  FiUsers,
+  FiFileText,
+  FiSettings,
+  FiLogOut,
+  FiFolder,
+  FiCheckCircle,
+} from "react-icons/fi";
+
 export default function SidebarAdminLayout({ children }) {
   const [userData, setUserData] = useState(null);
 
@@ -37,59 +47,73 @@ export default function SidebarAdminLayout({ children }) {
   const title = profesionMap[email] || userData.nombre || "Usuario";
   const position = admMap[email] || "000";
 
+  const navItems = [
+    { href: "/admin", label: "Inicio", icon: <FiHome /> },
+    { href: "/admin/archivos", label: "Archivos", icon: <FiFolder /> },
+    { href: "/admin/reportes", label: "Reportes", icon: <FiFileText /> },
+    { href: "/admin/usuarios", label: "Usuarios", icon: <FiUsers /> },
+    { href: "/admin/verificacion-lea", label: "Verificación LEA", icon: <FiCheckCircle /> },
+    { href: "/admin/configuracion", label: "Configuración", icon: <FiSettings /> },
+  ];
+
   return (
     <>
-      {/* Sidebar fija */}
-      <aside className="fixed top-0 left-0 w-64 h-full bg-gray-900 text-white p-6 flex flex-col overflow-hidden">
-        {/* Menú */}
-        <div className="flex-1 overflow-y-auto">
-          <h2 className="text-xl font-bold mb-4 border-b border-gray-700 pb-2">Admin</h2>
-          <ul className="space-y-3">
-            <li><Link href="/admin" className="hover:text-blue-400">Inicio</Link></li>
-            <li><Link href="/admin/archivos" className="hover:text-blue-400">Archivos</Link></li>
-            <li><Link href="/admin/reportes" className="hover:text-blue-400">Reportes</Link></li>
-            <li><Link href="/admin/usuarios" className="hover:text-blue-400">Usuarios</Link></li>
-            <li><Link href="/admin/verificacion-lea" className="hover:text-blue-400">Verificación de LEA-BCS</Link></li>
-            <li><Link href="/admin/configuracion" className="hover:text-blue-400">Configuración</Link></li>
-          </ul>
+      {/* Sidebar */}
+      <aside className="fixed top-0 left-0 w-72 h-screen bg-gray-900 text-white flex flex-col justify-between shadow-lg z-50">
+        <div className="p-6">
+          {/* Encabezado */}
+          <h2 className="text-2xl font-bold mb-6 text-blue-400 tracking-wide">Panel Admin</h2>
+
+          {/* Navegación */}
+          <nav className="space-y-2">
+            {navItems.map((item) => (
+              <Link
+                key={item.href}
+                href={item.href}
+                className="flex items-center gap-3 px-3 py-2 rounded hover:bg-gray-800 hover:text-blue-300 transition-colors text-md"
+              >
+                <span className="text-lg">{item.icon}</span>
+                <span>{item.label}</span>
+              </Link>
+            ))}
+          </nav>
         </div>
 
         {/* Perfil */}
-        <div className="flex flex-col items-center mt-4">
-          <Image
-            src={avatar}
-            alt="Avatar"
-            width={80}
-            height={80}
-            className="rounded-full border mb-2 object-cover bg-gray-700"
-          />
+        <div className="p-6 border-t border-gray-700">
+          <div className="flex flex-col items-center">
+            <Image
+              src={avatar}
+              alt="Avatar"
+              width={72}
+              height={72}
+              className="rounded-full border-2 border-gray-700 mb-3 object-cover"
+            />
+            <p className="font-semibold text-sm text-center">{title}</p>
+            <p className="text-xs text-gray-400 italic text-center mb-2">ADM: {position}</p>
 
-          <p className="font-semibold text-sm">{title}</p>
+            <button
+              onClick={() => {
+                localStorage.removeItem("token");
+                localStorage.removeItem("user");
+                window.location.href = "/";
+              }}
+              className="flex items-center gap-2 text-sm bg-red-600 hover:bg-red-700 px-4 py-1 rounded transition w-full justify-center"
+            >
+              <FiLogOut className="text-base" />
+              Cerrar sesión
+            </button>
 
-          <p className="text-xs text-gray-300 mb-4 italic">
-            ADM: {position}
-          </p>
-
-          <button
-            onClick={() => {
-              localStorage.removeItem("token");
-              localStorage.removeItem("user");
-              window.location.href = "/";
-            }}
-            className="text-sm bg-red-600 hover:bg-red-700 px-4 py-1 rounded"
-          >
-            Cerrar sesión
-          </button>
-
-          <div className="mt-4">
-            <DarkModeToggle />
+            <div className="mt-4">
+              <DarkModeToggle />
+            </div>
           </div>
         </div>
       </aside>
 
-      {/* Contenido */}
+      {/* Contenido principal */}
       <main
-        className="ml-48 min-h-screen p-8 bg-gray-100 dark:bg-gray-800 overflow-auto"
+        className="ml-64 min-h-screen p-8 bg-gray-100 dark:bg-gray-900 transition-all"
         style={{ maxWidth: "calc(100vw - 16rem)" }}
       >
         {children}

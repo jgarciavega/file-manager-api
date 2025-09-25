@@ -11,7 +11,3 @@ export default function AdminLayout({ children }) {
     </div>
   );
 }
-const currentUser = {
-  nombre: 'Jorge',
-  rol: 'admin', 
-};

@@ -14,15 +14,24 @@
   }
 }
 
+html,
+body {
+  height: 100%;
+  margin: 0;
+  padding: 0;
+}
+
+
 body {
   color: var(--foreground);
   background: var(--background);
   font-family: Arial, Helvetica, sans-serif;
   margin: 0;
   padding: 0;
-  
+
 }
-*{
+
+* {
   box-sizing: border-box;
 }
 
@@ -82,21 +91,30 @@ body {
 
 /* Moved the styles for .dark-logo and .light-logo to valid CSS */
 .dark-logo {
-  filter: brightness(3) contrast(1.0); /* Hace el logo más claro */
-  background-color: #1a1a2e; /* Fondo azul oscuro */
-  padding: 10px; /* Opcional: un margen interior para separarlo del fondo */
-  border-radius: 5px; /* Opcional: esquinas redondeadas */
+  filter: brightness(3) contrast(1.0);
+  /* Hace el logo más claro */
+  background-color: #1a1a2e;
+  /* Fondo azul oscuro */
+  padding: 10px;
+  /* Opcional: un margen interior para separarlo del fondo */
+  border-radius: 5px;
+  /* Opcional: esquinas redondeadas */
 }
 
 .light-logo {
-  filter: brightness(1) contrast(1); /* Modo normal */
+  filter: brightness(1) contrast(1);
+  /* Modo normal */
 }
 
 /* Animación de onda para el título */
 @keyframes wave-bounce {
-  0%, 60%, 100% {
+
+  0%,
+  60%,
+  100% {
     transform: translateY(0) scale(1);
   }
+
   30% {
     transform: translateY(-15px) scale(1.15);
   }
@@ -158,7 +176,8 @@ body {
   box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
   border: 1px solid transparent;
   overflow: hidden;
-  text-decoration: none; /* Para quitar subrayado en enlaces */
+  text-decoration: none;
+  /* Para quitar subrayado en enlaces */
 }
 
 .btn-professional::before {
@@ -305,22 +324,28 @@ body {
   0% {
     transform: translate(0px, 0px) scale(1);
   }
+
   33% {
     transform: translate(30px, -50px) scale(1.1);
   }
+
   66% {
     transform: translate(-20px, 20px) scale(0.9);
   }
+
   100% {
     transform: translate(0px, 0px) scale(1);
   }
 }
 
 @keyframes gradient-x {
-  0%, 100% {
+
+  0%,
+  100% {
     background-size: 200% 200%;
     background-position: left center;
   }
+
   50% {
     background-size: 200% 200%;
     background-position: right center;
@@ -331,6 +356,7 @@ body {
   from {
     opacity: 0;
   }
+
   to {
     opacity: 1;
   }
@@ -341,6 +367,7 @@ body {
     opacity: 0;
     transform: scale(0.9);
   }
+
   to {
     opacity: 1;
     transform: scale(1);
@@ -352,6 +379,7 @@ body {
     opacity: 0;
     transform: translateX(-50px);
   }
+
   to {
     opacity: 1;
     transform: translateX(0);
@@ -363,6 +391,7 @@ body {
     opacity: 0;
     transform: translateX(50px);
   }
+
   to {
     opacity: 1;
     transform: translateX(0);
