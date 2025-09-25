@@ -11,17 +11,13 @@ export default function DarkModeToggle() {
     // Lee el valor guardado y respeta la preferencia del sistema
     const stored = typeof window !== "undefined" ? localStorage.getItem("theme") : null;
     const prefersDark =
-      stored === "dark" ||
-      stored === "midnight" ||
-      (!stored && typeof window !== "undefined" && window.matchMedia("(prefers-color-scheme: dark)").matches);
+      stored === "dark" || (!stored && typeof window !== "undefined" && window.matchMedia("(prefers-color-scheme: dark)").matches);
 
     setDarkMode(!!prefersDark);
 
     const root = document.documentElement;
     // Usar la clase dark para que Tailwind funcione
-    root.classList.toggle("dark", !!prefersDark);
-    // Clase semántica opcional (por si quieres variables CSS)
-    root.classList.toggle("midnight", !!prefersDark);
+  root.classList.toggle("dark", !!prefersDark);
   }, []);
 
   const toggleTheme = () => {
@@ -30,10 +26,8 @@ export default function DarkModeToggle() {
 
     const root = document.documentElement;
     root.classList.toggle("dark", newMode);
-    root.classList.toggle("midnight", newMode);
-
-    // Guarda "midnight" cuando está oscuro (semántico), "light" cuando no
-    localStorage.setItem("theme", newMode ? "midnight" : "light");
+    // Guarda 'dark' o 'light'
+    localStorage.setItem("theme", newMode ? "dark" : "light");
   };
 
   return (
@@ -41,7 +35,7 @@ export default function DarkModeToggle() {
       onClick={toggleTheme}
       className="p-2 rounded-full bg-gray-200 dark:bg-[#19223a] hover:scale-110 transition border border-gray-300 dark:border-[#25304d]"
       aria-label="Cambiar tema"
-      title={darkMode ? "Cambiar a modo claro" : "Cambiar a modo midnight"}
+  title={darkMode ? "Cambiar a modo claro" : "Cambiar a modo oscuro"}
     >
       {darkMode ? (
         <FaSun className="text-yellow-400" />

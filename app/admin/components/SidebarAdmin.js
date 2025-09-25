@@ -57,27 +57,27 @@ export default function SidebarAdminLayout({ children }) {
   ];
 
   return (
-    <>
-      {/* Sidebar */}
-      <aside className="fixed top-0 left-0 w-72 h-screen bg-gray-900 text-white flex flex-col justify-between shadow-lg z-50">
-        <div className="p-6">
-          {/* Encabezado */}
-          <h2 className="text-2xl font-bold mb-6 text-blue-400 tracking-wide">Panel Admin</h2>
+<>
+  {/* Sidebar */}
+  <aside className="fixed top-0 left-0 w-72 h-screen bg-gray-900 text-white flex flex-col justify-between shadow-lg z-50">
+    <div className="p-6">
+      {/* Encabezado */}
+      <h2 className="text-2xl font-bold mb-6 text-blue-400 tracking-wide">Panel Admin</h2>
 
-          {/* Navegación */}
-          <nav className="space-y-2">
-            {navItems.map((item) => (
-              <Link
-                key={item.href}
-                href={item.href}
-                className="flex items-center gap-3 px-3 py-2 rounded hover:bg-gray-800 hover:text-blue-300 transition-colors text-md"
-              >
-                <span className="text-lg">{item.icon}</span>
-                <span>{item.label}</span>
-              </Link>
-            ))}
-          </nav>
-        </div>
+      {/* Navegación */}
+      <nav className="space-y-2">
+        {navItems.map((item) => (
+          <Link
+            key={item.href}
+            href={item.href}
+            className="flex items-center gap-3 px-3 py-2 rounded hover:bg-gray-800 hover:text-blue-300 transition-colors text-md"
+          >
+            <span className="text-lg">{item.icon}</span>
+            <span>{item.label}</span>
+          </Link>
+        ))}
+      </nav>
+    </div>
 
         {/* Perfil */}
         <div className="p-6 border-t border-gray-700">

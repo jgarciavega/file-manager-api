@@ -1,14 +1,37 @@
 "use client";
 import { useEffect, useState } from "react";
 import Image from "next/image";
-import { FaSun, FaMoon } from "react-icons/fa";
+import ThemeToggle from "../../../app/components/ThemeToggle";
 
 export default function DashboardHeader({ title = "Dashboard", avatarUrl }) {
   const [isDark, setIsDark] = useState(false);
 
   useEffect(() => {
     const root = document.documentElement;
-    setIsDark(root.classList.contains("dark"));
+    // Inicializar desde localStorage, si existe, sino desde la clase actual o preferencia CSS
+    let stored = null;
+    try {
+      stored = localStorage.getItem("theme");
+    } catch (e) {
+      stored = null;
+    }
+    if (stored === "dark") {
+      root.classList.add("dark");
+      setIsDark(true);
+    } else if (stored === "light") {
+      root.classList.remove("dark");
+      setIsDark(false);
+    } else {
+      // Si no hay preferencia guardada, respetar la clase actual o la preferencia del sistema
+      const prefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+      if (root.classList.contains('dark') || prefersDark) {
+        root.classList.add('dark');
+        setIsDark(true);
+      } else {
+        root.classList.remove('dark');
+        setIsDark(false);
+      }
+    }
 
     const observer = new MutationObserver(() => {
       setIsDark(root.classList.contains("dark"));
@@ -23,8 +46,18 @@ export default function DashboardHeader({ title = "Dashboard", avatarUrl }) {
     const newMode = !isDark;
     setIsDark(newMode);
     document.documentElement.classList.toggle("dark", newMode);
-    document.documentElement.classList.toggle("midnight", newMode);
-    localStorage.setItem("theme", newMode ? "midnight" : "light");
+    // Guardar la preferencia de forma consistente: 'dark' o 'light'
+    try {
+      localStorage.setItem("theme", newMode ? "dark" : "light");
+    } catch (e) {
+      // localStorage puede fallar en entornos restringidos; ignorar silenciosamente
+    }
+    // Emitir evento global para sincronizar otras vistas de forma inmediata
+    try {
+      window.dispatchEvent(new CustomEvent('themechange', { detail: { theme: newMode ? 'dark' : 'light' } }));
+    } catch (e) {
+      // Entornos muy restrictivos pueden fallar; no bloquear
+    }
   };
 
   return (
@@ -34,7 +67,7 @@ export default function DashboardHeader({ title = "Dashboard", avatarUrl }) {
         <Image
           src={isDark ? "/api-dark23.png" : "/api_logos.jpg"}
           alt="Logo"
-          width={140}
+          width={200}
           height={90}
           className="rounded"
           priority
@@ -48,18 +81,7 @@ export default function DashboardHeader({ title = "Dashboard", avatarUrl }) {
 
       {/* Botón de tema y avatar a la derecha */}
       <div className="flex items-center gap-4 min-w-[90px] justify-end">
-        <button
-          onClick={toggleTheme}
-          className="p-2 rounded-full bg-gray-200 dark:bg-[#19223a] hover:scale-110 transition border border-gray-300 dark:border-[#25304d]"
-          aria-label="Cambiar tema"
-          title={isDark ? "Cambiar a modo claro" : "Cambiar a modo midnight"}
-        >
-          {isDark ? (
-            <FaSun className="text-yellow-400" />
-          ) : (
-            <FaMoon className="text-[#7bb0ff]" />
-          )}
-        </button>
+        <ThemeToggle />
 
         <Image
           src={avatarUrl || "/login.jpg"}

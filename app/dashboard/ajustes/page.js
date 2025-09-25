@@ -1,21 +1,5 @@
-  // Clases dinámicas para bloques y selects según tema
-  const sectionNormativa = theme === "light"
-    ? "p-8 rounded-2xl shadow-xl flex flex-col gap-6 border-l-8 bg-white border-blue-300 text-blue-900"
-    : "p-8 rounded-2xl shadow-xl flex flex-col gap-6 border-l-8 bg-gradient-to-br from-blue-900/80 via-blue-800/80 to-blue-900/90 border-blue-500 text-blue-100";
-  const sectionPrefs = theme === "light"
-    ? "p-8 rounded-2xl shadow-xl flex flex-col gap-6 border-l-8 bg-white border-blue-200 text-blue-900"
-    : "p-8 rounded-2xl shadow-xl flex flex-col gap-6 border-l-8 bg-[#181f2a]/90 border-blue-400 text-blue-100";
-  const cardPrincipio = theme === "light"
-    ? "bg-blue-50 border border-blue-200 text-blue-900"
-    : "bg-blue-800/60 border-l-4 border-blue-400 text-blue-100";
-  const selectClass = theme === "light"
-    ? "rounded-lg px-3 py-2 font-semibold border focus:outline-none focus:ring-2 focus:ring-blue-400/40 bg-white text-blue-900 border-blue-300"
-    : "rounded-lg px-3 py-2 font-semibold border focus:outline-none focus:ring-2 focus:ring-blue-400/40 bg-blue-900 text-blue-100 border-blue-700";
-  const modalAccessibility = theme === "light"
-    ? "rounded-2xl border border-blue-200 bg-white p-8 max-w-2xl w-full text-center shadow-2xl relative animate-fadein text-blue-900"
-    : "rounded-2xl border border-blue-200 bg-gradient-to-br from-blue-700 via-blue-600 to-blue-500 p-8 max-w-2xl w-full text-center shadow-2xl relative animate-fadein text-blue-100";
-
 "use client";
+
 import { useState, useEffect } from "react";
 import DashboardHeader from "../components/DashboardHeader";
 import BackToHomeButton from "components/BackToHomeButton";
@@ -31,31 +15,75 @@ export default function AjustesPage() {
   const [showHelp, setShowHelp] = useState(false);
   const [showAccessibility, setShowAccessibility] = useState(false);
   // Preferencias globales
-  const [theme, setTheme] = useState(() => typeof window !== "undefined" ? localStorage.getItem("theme") || "midnight" : "midnight");
+  const [theme, setTheme] = useState(() => {
+    if (typeof window !== "undefined") {
+      const t = localStorage.getItem("theme");
+      if (t === "dark" || t === "light") return t;
+    }
+    return "light";
+  });
   const [lang, setLang] = useState(() => typeof window !== "undefined" ? localStorage.getItem("lang") || "es" : "es");
   const [fontSize, setFontSize] = useState(() => typeof window !== "undefined" ? localStorage.getItem("fontSize") || "md" : "md");
+
+  // Clases dinámicas para bloques y selects según tema
+  const sectionNormativa = theme === "light"
+    ? "p-8 rounded-2xl shadow-lg flex flex-col gap-6 bg-white text-blue-900 font-sans"
+    : "p-8 rounded-2xl shadow-lg flex flex-col gap-6 bg-[#1a2332] text-blue-100 font-sans";
+  const sectionPrefs = theme === "light"
+    ? "p-8 rounded-2xl shadow-lg flex flex-col gap-6 bg-white text-blue-900 font-sans"
+    : "p-8 rounded-2xl shadow-lg flex flex-col gap-6 bg-[#1a2332] text-blue-100 font-sans";
+  const cardPrincipio = theme === "light"
+    ? "bg-blue-100 text-blue-900 rounded-lg shadow p-4"
+    : "bg-blue-900/60 text-blue-100 rounded-lg shadow p-4";
+  const selectClass = theme === "light"
+    ? "rounded-lg px-3 py-2 font-semibold border focus:outline-none focus:ring-2 focus:ring-blue-400/40 bg-white text-blue-900 border-blue-300"
+    : "rounded-lg px-3 py-2 font-semibold border focus:outline-none focus:ring-2 focus:ring-blue-400/40 bg-blue-900 text-blue-100 border-blue-700";
+  const modalAccessibility = theme === "light"
+    ? "rounded-2xl border border-blue-200 bg-white p-8 max-w-2xl w-full text-center shadow-2xl relative animate-fadein text-blue-900"
+    : "rounded-2xl border border-blue-200 bg-gradient-to-br from-blue-700 via-blue-600 to-blue-500 p-8 max-w-2xl w-full text-center shadow-2xl relative animate-fadein text-blue-100";
 
   // Aplicar preferencias globales
   useEffect(() => {
     if (typeof window !== "undefined") {
-      document.documentElement.classList.remove("light", "dark", "midnight");
-      document.documentElement.classList.add(theme);
+      // Aplicar solo 'dark' o 'light' en <html>
+      document.documentElement.classList.remove("dark");
+      if (theme === "dark") document.documentElement.classList.add("dark");
+
       // Ajusta el fondo y color del body para mejor contraste
       if (theme === "light") {
         document.body.style.background = "#f8fafc";
         document.body.style.color = "#1e293b";
-      } else if (theme === "dark") {
-        document.body.style.background = "#181f2a";
-        document.body.style.color = "#e2e8f0";
       } else {
-        document.body.style.background = "#0a1120";
-        document.body.style.color = "#e0e7ff";
+        document.body.style.background = "#0f1724"; // fondo oscuro más neutro
+        document.body.style.color = "#e6eef8";
       }
       localStorage.setItem("theme", theme);
       localStorage.setItem("lang", lang);
       localStorage.setItem("fontSize", fontSize);
     }
   }, [theme, lang, fontSize]);
+
+  // Sincronizar el estado `theme` si otra parte de la app cambia la clase 'dark' en <html>
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const root = document.documentElement;
+    const obs = new MutationObserver(() => {
+      const nowDark = root.classList.contains("dark");
+      setTheme(nowDark ? "dark" : "light");
+    });
+    obs.observe(root, { attributes: true, attributeFilter: ["class"] });
+    // Además escuchar eventos explícitos emitidos por otros componentes (ej. DashboardHeader)
+    const onThemeChange = (e) => {
+      const t = e?.detail?.theme;
+      if (t === 'dark' || t === 'light') setTheme(t);
+    };
+    window.addEventListener('themechange', onThemeChange);
+
+    return () => {
+      obs.disconnect();
+      window.removeEventListener('themechange', onThemeChange);
+    };
+  }, []);
 
   // Determinar clases de fondo y texto según el tema
   const themeBg = theme === "light"
@@ -117,30 +145,30 @@ export default function AjustesPage() {
 
 
 
-      <main className="max-w-2xl mx-auto mt-10 flex flex-col gap-10">
-        {/* Bloque normativo y de cultura archivística */}
-        <section className={sectionNormativa}>
-          <h2 className={theme === "light" ? "text-2xl font-extrabold text-blue-900 tracking-tight mb-2 flex items-center gap-2" : "text-2xl font-extrabold text-blue-100 tracking-tight mb-2 flex items-center gap-2"}>
+  <main className="max-w-5xl mx-auto mt-10 grid grid-cols-1 md:grid-cols-2 gap-8 items-start">
+  {/* Bloque normativo y de cultura archivística */}
+  <section className={sectionNormativa + ' w-full'}>
+          <h2 className={theme === "light" ? "text-3xl font-bold text-blue-900 mb-4 flex items-center gap-2" : "text-3xl font-bold text-blue-100 mb-4 flex items-center gap-2"}>
             <span className={theme === "light" ? "text-blue-700" : "text-blue-200"}>📚</span> Principios rectores de la gestión documental
           </h2>
           <ul className="grid grid-cols-1 md:grid-cols-2 gap-4 text-base font-medium">
-            <li className={`rounded-xl p-4 flex flex-col gap-1 shadow ${cardPrincipio}`}>
+            <li className={cardPrincipio}>
               <span className="font-bold">Organización homogénea</span>
               <span>Todos los documentos deben clasificarse y ordenarse bajo criterios uniformes institucionales.</span>
             </li>
-            <li className={`rounded-xl p-4 flex flex-col gap-1 shadow ${cardPrincipio}`}>
+            <li className={cardPrincipio}>
               <span className="font-bold">Conservación</span>
               <span>La información debe preservarse íntegra y legible durante todo su ciclo de vida.</span>
             </li>
-            <li className={`rounded-xl p-4 flex flex-col gap-1 shadow ${cardPrincipio}`}>
+            <li className={cardPrincipio}>
               <span className="font-bold">Disponibilidad</span>
               <span>Los archivos deben estar accesibles para su consulta y uso institucional en todo momento.</span>
             </li>
-            <li className={`rounded-xl p-4 flex flex-col gap-1 shadow ${cardPrincipio}`}>
+            <li className={cardPrincipio}>
               <span className="font-bold">Integridad</span>
               <span>Se debe garantizar que los documentos no sean alterados ni manipulados indebidamente.</span>
             </li>
-            <li className={`rounded-xl p-4 flex flex-col gap-1 shadow ${cardPrincipio} md:col-span-2`}>
+            <li className={cardPrincipio + " md:col-span-2"}>
               <span className="font-bold">Acceso expedito</span>
               <span>La consulta de archivos debe ser ágil, transparente y conforme a la ley.</span>
             </li>
@@ -151,9 +179,9 @@ export default function AjustesPage() {
           </div>
         </section>
 
-        {/* Preferencias globales */}
-        <section className={sectionPrefs}>
-          <h2 className={theme === "light" ? "text-2xl font-extrabold text-blue-900 tracking-tight mb-2 flex items-center gap-2" : "text-2xl font-extrabold text-blue-100 tracking-tight mb-2 flex items-center gap-2"}>
+  {/* Preferencias globales */}
+  <section className={sectionPrefs + ' w-full flex flex-col justify-between'}>
+          <h2 className={theme === "light" ? "text-3xl font-bold text-blue-900 mb-4 flex items-center gap-2" : "text-3xl font-bold text-blue-100 mb-4 flex items-center gap-2"}>
             <span className={theme === "light" ? "text-blue-700" : "text-blue-300"}>⚙️</span> Preferencias de usuario
           </h2>
           <div className="flex flex-col md:flex-row gap-6">
@@ -173,16 +201,15 @@ export default function AjustesPage() {
             {/* Selector de tema visual */}
             <div className="flex flex-col gap-2 flex-1">
               <label className="font-semibold">Modo visual</label>
-              <select
-                value={theme}
-                onChange={e => setTheme(e.target.value)}
-                className={selectClass}
-                aria-label="Seleccionar modo visual"
-              >
-                <option value="midnight">Midnight</option>
-                <option value="dark">Oscuro</option>
-                <option value="light">Claro</option>
-              </select>
+                <select
+                  value={theme}
+                  onChange={e => setTheme(e.target.value)}
+                  className={selectClass}
+                  aria-label="Seleccionar modo visual"
+                >
+                  <option value="light">Claro</option>
+                  <option value="dark">Oscuro</option>
+                </select>
             </div>
             {/* Selector de tamaño de fuente */}
             <div className="flex flex-col gap-2 flex-1">
@@ -200,17 +227,17 @@ export default function AjustesPage() {
             </div>
           </div>
           <div className={theme === "light" ? "text-xs text-blue-700 mt-2" : "text-xs text-blue-300 mt-2"}>Estas preferencias se aplican en toda la aplicación y se guardan en tu dispositivo.</div>
-        </section>
 
-        {/* Botón para mostrar aviso de accesibilidad y protección de datos */}
-        <div className="flex justify-center">
-          <button
-            className="mt-2 px-6 py-3 rounded-lg bg-blue-800 hover:bg-blue-700 text-blue-100 font-semibold shadow-lg border border-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-400"
-            onClick={() => setShowAccessibility(true)}
-          >
-            Ver aviso de accesibilidad y protección de datos
-          </button>
-        </div>
+          {/* Botón para mostrar aviso de accesibilidad y protección de datos alineado al fondo de la tarjeta */}
+          <div className="mt-6 flex justify-center">
+            <button
+              className="mt-2 px-6 py-3 rounded-lg bg-blue-700 hover:bg-blue-600 text-white font-semibold shadow-md border border-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-400"
+              onClick={() => setShowAccessibility(true)}
+            >
+              Ver aviso de accesibilidad y protección de datos
+            </button>
+          </div>
+        </section>
 
         {/* Modal de aviso de accesibilidad y protección de datos (formato visual de la captura) */}
         {showAccessibility && (
