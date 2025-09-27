@@ -14,6 +14,8 @@ import {
   faStar,
   faArrowLeft,
 } from "@fortawesome/free-solid-svg-icons";
+import DashboardHeader from '@/components/DashboardHeader';
+import BackToHomeButton from '@/components/BackToHomeButton';
 
 
 // Toast simple
@@ -27,70 +29,79 @@ function Toast({ message, onClose, duration = 3000 }) {
   if (!message) return null;
   return (
     <div className="fixed bottom-6 left-1/2 z-50 -translate-x-1/2 bg-blue-600 text-white px-6 py-3 rounded-xl shadow-lg flex items-center gap-2 animate-fade-in">
-      <span>{message}</span>
-      <button onClick={onClose} className="ml-2 text-white/80 hover:text-white font-bold">×</button>
+      {message}
     </div>
   );
 }
 
-// Modal de historial/bitácora
-function HistoryModal({ open, onClose, history }) {
+// Componente modal simple para mostrar historial
+function HistoryModal({ open, onClose, history = [] }) {
   if (!open) return null;
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
-      <div className="bg-white dark:bg-slate-900 rounded-xl shadow-xl max-w-lg w-full p-6 relative">
-        <button className="absolute top-2 right-3 text-2xl font-bold text-gray-500 hover:text-red-500" onClick={onClose} aria-label="Cerrar">×</button>
-        <h2 className="text-xl font-bold mb-4 text-blue-700 dark:text-blue-300">Historial / Bitácora</h2>
-        {history && history.length > 0 ? (
-          <ul className="space-y-2 max-h-72 overflow-y-auto">
-            {history.map((item, idx) => (
-              <li key={idx} className="border-b pb-2 text-sm">
-                <span className="font-semibold">{item.fecha}:</span> {item.accion}
-              </li>
-            ))}
-          </ul>
-        ) : (
-          <div className="text-gray-500 dark:text-gray-300">No hay historial disponible.</div>
-        )}
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm">
+      <div className="bg-white dark:bg-slate-900 rounded-2xl p-6 max-w-lg w-full shadow-2xl">
+        <div className="flex items-center justify-between mb-4">
+          <h3 className="text-lg font-bold">Historial</h3>
+          <button onClick={onClose} className="text-sm text-gray-500 hover:text-gray-700">Cerrar</button>
+        </div>
+        <div className="space-y-2 max-h-64 overflow-y-auto text-sm text-gray-700 dark:text-gray-200">
+          {history.length ? history.map((h, i) => (
+            <div key={i} className="p-2 rounded-lg bg-gray-50 dark:bg-slate-800">
+              <div className="font-medium">{h.accion}</div>
+              <div className="text-xs opacity-75">{h.fecha}</div>
+            </div>
+          )) : (
+            <div className="text-sm opacity-70">No hay historial disponible.</div>
+          )}
+        </div>
       </div>
     </div>
   );
 }
 
-export default FavoritosPage;
-function FavoritosPage() {
+export default function FavoritesPage() {
   const { data: session, status } = useSession();
-  const [toast, setToast] = useState("");
-  const [historyModal, setHistoryModal] = useState({ open: false, history: [] });
-  const csvLink = useRef(null);
+  const userId = session?.user?.id;
   const [darkMode, setDarkMode] = useState(false);
   const [search, setSearch] = useState("");
   const [favoritos, setFavoritos] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const [toast, setToast] = useState("");
+  const [historyModal, setHistoryModal] = useState({ open: false, history: [] });
+  const csvLink = useRef(null);
   const [page, setPage] = useState(1);
   const pageSize = 10;
-  const userId = session?.user?.id;
+  const [loading, setLoading] = useState(false);
 
-  // Cargar favoritos desde la base de datos
+  // Sincronizar el estado local de tema con la clase `dark` del root y con el evento global `themechange`
   useEffect(() => {
-    if (!userId) return;
-    const cargarFavoritos = async () => {
-      try {
-        setLoading(true);
-        const response = await fetch(`/api/favoritos-documentos?usuarioId=${userId}`);
-        if (response.ok) {
-          const data = await response.json();
-          setFavoritos(Array.isArray(data) ? data : (data?.favoritos || data?.data || []));
-        }
-      } catch (error) {
-        console.error('❌ Error al cargar favoritos:', error);
-      } finally {
-        setLoading(false);
-      }
+    const root = document.documentElement;
+    const readStored = () => {
+      try { return localStorage.getItem('theme'); } catch (e) { return null; }
     };
-    cargarFavoritos();
-  }, [userId]);
 
+    const stored = readStored();
+    if (stored === 'dark') setDarkMode(true);
+    else if (stored === 'light') setDarkMode(false);
+    else setDarkMode(root.classList.contains('dark') || (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches));
+
+    const onThemeChange = (e) => {
+      const t = e?.detail?.theme;
+      if (t === 'dark') setDarkMode(true);
+      else if (t === 'light') setDarkMode(false);
+      else setDarkMode(root.classList.contains('dark'));
+    };
+    window.addEventListener('themechange', onThemeChange);
+
+    const observer = new MutationObserver(() => {
+      setDarkMode(root.classList.contains('dark'));
+    });
+    observer.observe(root, { attributes: true, attributeFilter: ['class'] });
+
+    return () => {
+      window.removeEventListener('themechange', onThemeChange);
+      observer.disconnect();
+    };
+  }, []);
   const handleDownload = (file) => {
     if (file.ruta) {
       // Crear un enlace temporal para descargar
@@ -225,77 +236,12 @@ function FavoritosPage() {
   }
 
   return (
-    <div className={`min-h-screen transition-all duration-300 ${darkMode ? "bg-gradient-to-br from-slate-900 via-blue-900 to-slate-900 text-white" : "bg-gradient-to-br from-blue-50 via-white to-purple-50 text-gray-900"}`}>
-      {/* Header premium */}
-      <div className={`sticky top-0 z-40 border-b transition-all duration-300 flex items-center justify-between px-6 py-4 ${darkMode ? "bg-slate-900/95 border-slate-700 backdrop-blur-sm" : "bg-white/95 border-blue-200 backdrop-blur-sm"}`}>
-        {/* Logo premium */}
-        <Image
-          src="/api-dark23.png"
-          alt="API Logo"
-          width={300}
-          height={100}
-          className="transition-all duration-300 hover:scale-105 object-contain"
-          priority
-        />
-        {/* Título premium */}
-        <div className="flex-1 text-center px-4">
-          <h1
-            className={`relative text-4xl md:text-5xl font-extrabold tracking-tight text-center transition-all duration-500 transform hover:scale-105 hover:-translate-y-1 cursor-default overflow-hidden select-none`}
-            style={{ letterSpacing: '0.04em' }}
-          >
-            <span className={`relative z-10 ${darkMode ? "text-white drop-shadow-[0_2px_12px_rgba(0,0,0,0.7)]" : "text-blue-900 drop-shadow-[0_2px_8px_rgba(96,165,250,0.25)]"}`}>Mis Favoritos</span>
-            <span
-              className="absolute left-0 top-0 h-full w-full pointer-events-none animate-shine"
-              style={{
-                background: 'linear-gradient(120deg, transparent 0%, rgba(255,255,255,0.7) 50%, transparent 100%)',
-                WebkitBackgroundClip: 'text',
-                WebkitTextFillColor: 'transparent',
-                mixBlendMode: 'lighten',
-                opacity: 0.7,
-              }}
-            >
-              Mis Favoritos
-            </span>
-          </h1>
-
-
-          <div className={`text-sm font-medium mt-2 flex items-center justify-center gap-1 transition-all duration-300 hover:scale-105 ${darkMode ? "text-gray-300 hover:text-green-300" : "text-gray-600 hover:text-green-600"}`}>
-            <FontAwesomeIcon icon={faStar} className="text-yellow-400 text-base animate-bounce drop-shadow" />
-            <span className="hover:tracking-wider transition-all duration-300 font-semibold">Tus documentos favoritos siempre a la mano</span>
-          </div>
-        </div>
-
-        {/* Avatar y toggle */}
-        <div className="flex items-center gap-3">
-          <Image
-            src={
-              session?.user?.avatar
-                ? session.user.avatar
-                : avatarMap[session?.user?.rol] || "/blanca.jpeg"
-            }
-            alt="Avatar"
-            width={90}
-            height={90}
-            className="rounded-full border-3 border-blue-400 shadow-lg hover:scale-105 transition-all duration-300"
-          />
-          <button
-            onClick={() => setDarkMode(!darkMode)}
-            className={`p-3 rounded-lg transition-all duration-300 transform hover:scale-110 hover:rotate-12 hover:-translate-y-1 shadow-lg hover:shadow-xl ${darkMode ? "bg-slate-800 text-yellow-400 hover:bg-slate-700 hover:text-yellow-300 hover:shadow-yellow-400/30" : "bg-gray-100 text-gray-600 hover:bg-gray-200 hover:text-blue-600 hover:shadow-blue-400/30"}`}
-            title="Cambiar modo"
-          >
-            <FontAwesomeIcon icon={darkMode ? faSun : faMoon} className="text-lg transition-all duration-300 hover:scale-125" />
-          </button>
-        </div>
-      </div>
+  <div className="min-h-screen transition-colors duration-300 bg-gray-50 dark:bg-gray-900">
+      {/* Reemplazado por componente DashboardHeader */}
+      <DashboardHeader title="Mis Favoritos" avatarUrl={session?.user ? (session.user.avatar || avatarMap[session?.user?.email] || '/default-avatar.png') : '/default-avatar.png'} />
       {/* Botón Volver al Inicio y Exportar */}
       <div className="px-6 pt-4 flex flex-wrap gap-4 items-center justify-between">
-        <Link
-          href="/home"
-          className={`group inline-flex items-center gap-3 px-5 py-2.5 rounded-xl transition-all duration-300 shadow-lg hover:shadow-xl transform hover:-translate-y-1 hover:scale-105 ${darkMode ? "bg-gradient-to-r from-emerald-600 to-teal-600 border border-emerald-500 text-white hover:from-emerald-500 hover:to-teal-500 hover:shadow-emerald-500/30" : "bg-gradient-to-r from-indigo-600 to-purple-600 border border-indigo-500 text-white hover:from-indigo-500 hover:to-purple-500 hover:shadow-indigo-500/30"}`}
-        >
-          <FontAwesomeIcon icon={faArrowLeft} className="text-sm transition-all duration-300 group-hover:-translate-x-1 group-hover:scale-110" />
-          <span className="font-semibold text-sm tracking-wide group-hover:tracking-wider transition-all duration-300">Volver al Inicio</span>
-        </Link>
+        <BackToHomeButton href="/home" label="Volver al Inicio" darkMode={darkMode} />
         {/* Botón exportar */}
         <button
           className={`inline-flex items-center gap-2 px-5 py-2.5 rounded-xl font-semibold transition-all duration-300 shadow-lg hover:shadow-xl transform hover:-translate-y-1 hover:scale-105 ${darkMode ? "bg-gradient-to-r from-blue-700 to-purple-700 text-white hover:from-blue-600 hover:to-purple-600" : "bg-gradient-to-r from-blue-200 to-purple-200 text-blue-900 hover:from-blue-300 hover:to-purple-300"}`}
@@ -306,13 +252,7 @@ function FavoritosPage() {
         </button>
         <a ref={csvLink} style={{ display: 'none' }}>Descargar</a>
       </div>
-      {/* Advertencia confidencialidad */}
-      <div className={`max-w-7xl mx-auto px-4 mt-4 mb-2`}>
-        <div className={`rounded-lg p-3 flex items-center gap-3 text-sm font-semibold shadow-md border-2 ${darkMode ? "bg-yellow-900/30 text-yellow-100 border-yellow-700/60" : "bg-yellow-50 text-yellow-900 border-yellow-300/80"}`}>
-          <FontAwesomeIcon icon={faStar} className="text-yellow-400 animate-pulse" />
-          <span className="tracking-wide">Algunos documentos pueden ser confidenciales o restringidos. El acceso y descarga están sujetos a la Ley Estatal de Archivos y políticas internas.</span>
-        </div>
-      </div>
+      {/* (Advertencia movida abajo) */}
       {/* Buscador premium */}
       <div className="max-w-7xl mx-auto px-4 py-6">
         <div className="flex justify-end mb-6">
@@ -325,64 +265,66 @@ function FavoritosPage() {
             style={{ letterSpacing: '0.01em' }}
           />
         </div>
+
         {/* Tabla premium con nuevas columnas */}
         <div className={`rounded-xl border overflow-x-auto transition-all duration-300 shadow-xl ring-1 ring-blue-100/40 ${darkMode ? "bg-slate-900/90 border-slate-800 ring-0" : "bg-white/95 border-blue-100"}`}>
-      <style jsx global>{`
-        .premium-title-gradient-fav {
-          background: linear-gradient(90deg, #1e3a8a 0%, #60a5fa 40%, #a78bfa 60%, #fff 100%);
-          background-size: 200% auto;
-          background-clip: text;
-          -webkit-background-clip: text;
-          color: transparent;
-          -webkit-text-fill-color: transparent;
-          animation: premium-gradient-move 3.5s linear infinite;
-        }
-        .dark-premium-title-gradient-fav {
-          background: linear-gradient(90deg, #60a5fa 0%, #a78bfa 40%, #facc15 60%, #fff 100%);
-          background-size: 200% auto;
-          background-clip: text;
-          -webkit-background-clip: text;
-          color: transparent;
-          -webkit-text-fill-color: transparent;
-          animation: premium-gradient-move 3.5s linear infinite;
-        }
-        @keyframes premium-gradient-move {
-          0% { background-position: 0% 50%; }
-          100% { background-position: 200% 50%; }
-        }
-      `}</style>
-          <table className="w-full min-w-[1200px] table-auto text-sm border-collapse">
+          <style jsx global>{`
+            .premium-title-gradient-fav {
+              background: linear-gradient(90deg, #1e3a8a 0%, #60a5fa 40%, #a78bfa 60%, #fff 100%);
+              background-size: 200% auto;
+              background-clip: text;
+              -webkit-background-clip: text;
+              color: transparent;
+              -webkit-text-fill-color: transparent;
+              animation: premium-gradient-move 3.5s linear infinite;
+            }
+            .dark-premium-title-gradient-fav {
+              background: linear-gradient(90deg, #60a5fa 0%, #a78bfa 40%, #facc15 60%, #fff 100%);
+              background-size: 200% auto;
+              background-clip: text;
+              -webkit-background-clip: text;
+              color: transparent;
+              -webkit-text-fill-color: transparent;
+              animation: premium-gradient-move 3.5s linear infinite;
+            }
+            @keyframes premium-gradient-move {
+              0% { background-position: 0% 50%; }
+              100% { background-position: 200% 50%; }
+            }
+          `}</style>
+
+          <table className="w-full min-w-[1200px] table-auto text-sm border-collapse border border-blue-500 dark:border-blue-900">
             <thead className={darkMode ? "bg-gradient-to-r from-blue-900 via-slate-800 to-blue-900 text-blue-100" : "bg-gradient-to-r from-blue-100 via-white to-blue-100 text-blue-900"}>
-              <tr>
-                <th className="px-4 py-3 border-b font-semibold text-xs">Documento</th>
-                <th className="px-4 py-3 border-b font-semibold text-xs">Fecha</th>
-                <th className="px-4 py-3 border-b font-semibold text-xs">Responsable</th>
-                <th className="px-4 py-3 border-b font-semibold text-xs">Tipo</th>
-                <th className="px-4 py-3 border-b font-semibold text-xs">Clasificación</th>
-                <th className="px-4 py-3 border-b font-semibold text-xs">Vigencia</th>
-                <th className="px-4 py-3 border-b font-semibold text-xs">Área</th>
-                <th className="px-4 py-3 border-b font-semibold text-xs">Expediente</th>
-                <th className="px-4 py-3 border-b font-semibold text-xs">Estado</th>
-                <th className="px-4 py-3 border-b font-semibold text-xs">Hash/Folio</th>
-                <th className="px-4 py-3 border-b font-semibold text-xs">Historial</th>
-                <th className="px-4 py-3 border-b font-semibold text-xs">Acciones</th>
+              <tr className="border-b border-blue-500 dark:border-blue-900">
+                <th className="px-4 py-3 border-b border-blue-500 dark:border-blue-900 font-semibold text-xs">Documento</th>
+                <th className="px-4 py-3 border-b border-blue-500 dark:border-blue-900 font-semibold text-xs">Fecha</th>
+                <th className="px-4 py-3 border-b border-blue-500 dark:border-blue-900 font-semibold text-xs">Responsable</th>
+                <th className="px-4 py-3 border-b border-blue-500 dark:border-blue-900 font-semibold text-xs">Tipo</th>
+                <th className="px-4 py-3 border-b border-blue-500 dark:border-blue-900 font-semibold text-xs">Clasificación</th>
+                <th className="px-4 py-3 border-b border-blue-500 dark:border-blue-900 font-semibold text-xs">Vigencia</th>
+                <th className="px-4 py-3 border-b border-blue-500 dark:border-blue-900 font-semibold text-xs">Área</th>
+                <th className="px-4 py-3 border-b border-blue-500 dark:border-blue-900 font-semibold text-xs">Expediente</th>
+                <th className="px-4 py-3 border-b border-blue-500 dark:border-blue-900 font-semibold text-xs">Estado</th>
+                <th className="px-4 py-3 border-b border-blue-500 dark:border-blue-900 font-semibold text-xs">Hash/Folio</th>
+                <th className="px-4 py-3 border-b border-blue-500 dark:border-blue-900 font-semibold text-xs">Historial</th>
+                <th className="px-4 py-3 border-b border-blue-500 dark:border-blue-900 font-semibold text-xs">Acciones</th>
               </tr>
             </thead>
             <tbody>
               {paginatedFiles.length > 0 ? (
                 paginatedFiles.map((file) => (
-                  <tr key={file.id} className={`text-center transition-all duration-200 ${darkMode ? "hover:bg-blue-900/30" : "hover:bg-blue-50/60"}`} style={{ borderBottom: darkMode ? '1px solid #223' : '1px solid #e0e7ef' }}>
-                    <td className="px-4 py-3">{file.nombre}</td>
-                    <td className="px-4 py-3">{formatDate(file.fecha_subida)}</td>
-                    <td className="px-4 py-3">{file.responsable || 'N/A'}</td>
-                    <td className="px-4 py-3">{file.tipo}</td>
-                    <td className="px-4 py-3">{file.clasificacion || <span className="italic text-gray-400">No especificada</span>}</td>
-                    <td className="px-4 py-3">{file.vigencia || <span className="italic text-gray-400">N/A</span>}</td>
-                    <td className="px-4 py-3">{file.area || <span className="italic text-gray-400">N/A</span>}</td>
-                    <td className="px-4 py-3">{file.expediente || <span className="italic text-gray-400">N/A</span>}</td>
-                    <td className={`px-4 py-3 font-semibold ${statusColor(file.estado)}`}>{file.estado || <span className="italic text-gray-400">N/A</span>}</td>
-                    <td className="px-4 py-3">{file.hash || file.folio || <span className="italic text-gray-400">N/A</span>}</td>
-                    <td className="px-4 py-3">
+                  <tr key={file.id} className={`text-center transition-all duration-200 ${darkMode ? "hover:bg-blue-900/30" : "hover:bg-blue-50/60"} border-b border-blue-500 dark:border-blue-900`}>
+                    <td className="px-4 py-3 border-r border-blue-300 dark:border-blue-900">{file.nombre}</td>
+                    <td className="px-4 py-3 border-r border-blue-300 dark:border-blue-900">{formatDate(file.fecha_subida)}</td>
+                    <td className="px-4 py-3 border-r border-blue-300 dark:border-blue-900">{file.responsable || 'N/A'}</td>
+                    <td className="px-4 py-3 border-r border-blue-300 dark:border-blue-900">{file.tipo}</td>
+                    <td className="px-4 py-3 border-r border-blue-300 dark:border-blue-900">{file.clasificacion || <span className="italic text-gray-400">No especificada</span>}</td>
+                    <td className="px-4 py-3 border-r border-blue-300 dark:border-blue-900">{file.vigencia || <span className="italic text-gray-400">N/A</span>}</td>
+                    <td className="px-4 py-3 border-r border-blue-300 dark:border-blue-900">{file.area || <span className="italic text-gray-400">N/A</span>}</td>
+                    <td className="px-4 py-3 border-r border-blue-300 dark:border-blue-900">{file.expediente || <span className="italic text-gray-400">N/A</span>}</td>
+                    <td className={`px-4 py-3 border-r border-blue-300 dark:border-blue-900 font-semibold ${statusColor(file.estado)}`}>{file.estado || <span className="italic text-gray-400">N/A</span>}</td>
+                    <td className="px-4 py-3 border-r border-blue-300 dark:border-blue-900">{file.hash || file.folio || <span className="italic text-gray-400">N/A</span>}</td>
+                    <td className="px-4 py-3 border-r border-blue-300 dark:border-blue-900">
                       <button
                         className={`underline text-blue-500 hover:text-blue-700 dark:text-blue-300 dark:hover:text-blue-400 transition-all duration-200`}
                         title="Ver historial/bitácora"
@@ -392,8 +334,6 @@ function FavoritosPage() {
                         Ver
                       </button>
                     </td>
-      <Toast message={toast} onClose={() => setToast("")} />
-      <HistoryModal open={historyModal.open} onClose={() => setHistoryModal({ open: false, history: [] })} history={historyModal.history} />
                     <td className="px-4 py-3 flex justify-center gap-2">
                       <button
                         className={`p-2 rounded-lg transition-all duration-300 transform hover:scale-125 hover:-translate-y-1 hover:rotate-12 shadow-md hover:shadow-lg ${darkMode ? "text-blue-400 hover:bg-blue-900/50 hover:text-blue-300 hover:shadow-blue-400/30" : "text-blue-600 hover:bg-blue-50 hover:text-blue-700 hover:shadow-blue-400/30"}`}
@@ -421,6 +361,7 @@ function FavoritosPage() {
               )}
             </tbody>
           </table>
+
           {/* Paginación */}
           <div className="flex justify-center items-center gap-2 py-6">
             <button
@@ -439,26 +380,38 @@ function FavoritosPage() {
               Siguiente
             </button>
           </div>
-      <style jsx global>{`
-        @keyframes shine {
-          0% { left: -100%; }
-          100% { left: 100%; }
-        }
-        .animate-shine {
-          position: absolute;
-          top: 0;
-          left: -100%;
-          width: 100%;
-          height: 100%;
-          animation: shine 2.5s linear infinite;
-          background: linear-gradient(120deg, transparent 0%, rgba(255,255,255,0.7) 50%, transparent 100%);
-          background-clip: text;
-          -webkit-background-clip: text;
-          color: transparent;
-          pointer-events: none;
-          z-index: 20;
-        }
-      `}</style>
+
+          <style jsx global>{`
+            @keyframes shine {
+              0% { left: -100%; }
+              100% { left: 100%; }
+            }
+            .animate-shine {
+              position: absolute;
+              top: 0;
+              left: -100%;
+              width: 100%;
+              height: 100%;
+              animation: shine 2.5s linear infinite;
+              background: linear-gradient(120deg, transparent 0%, rgba(255,255,255,0.7) 50%, transparent 100%);
+              background-clip: text;
+              -webkit-background-clip: text;
+              color: transparent;
+              pointer-events: none;
+              z-index: 20;
+            }
+          `}</style>
+        </div>
+        {/* Toast y modal movidos fuera de la tabla */}
+        <Toast message={toast} onClose={() => setToast("")} />
+        <HistoryModal open={historyModal.open} onClose={() => setHistoryModal({ open: false, history: [] })} history={historyModal.history} />
+
+        {/* Advertencia confidencialidad (fuera del contenedor de la tabla) */}
+        <div className={`max-w-7xl mx-auto px-4 mt-8 mb-8`}>
+          <div className={`rounded-lg p-3 flex items-center gap-3 text-sm font-semibold shadow-md border-2 ${darkMode ? "bg-yellow-900/30 text-yellow-100 border-yellow-700/60" : "bg-yellow-50 text-yellow-900 border-yellow-300/80"}`}>
+            <FontAwesomeIcon icon={faStar} className="text-yellow-400 animate-pulse" />
+            <span className="tracking-wide">Algunos documentos pueden ser confidenciales o restringidos. El acceso y descarga están sujetos a la Ley Estatal de Archivos y políticas internas.</span>
+          </div>
         </div>
       </div>
     </div>

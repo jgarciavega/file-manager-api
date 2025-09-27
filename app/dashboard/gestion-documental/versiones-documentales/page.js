@@ -1,9 +1,9 @@
 "use client";
 
-import DashboardHeader from "../../components/DashboardHeader";
-import BackToHomeButton from "../../../../components/BackToHomeButton";
+import DashboardHeader from "@/components/DashboardHeader";
+import BackToHomeButton from "@/components/BackToHomeButton";
 import { useSession } from "next-auth/react";
-import avatarMap from "../../../../lib/avatarMap";
+import avatarMap from "@/lib/avatarMap";
 import { useState } from "react";
 
 export default function VersionesDocumentales() {

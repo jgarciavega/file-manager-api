@@ -1,9 +1,9 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import DashboardHeader from "../components/DashboardHeader";
-import BackToHomeButton from "components/BackToHomeButton";
-import avatarMap from "lib/avatarMap";
+import DashboardHeader from "@/components/DashboardHeader";
+import BackToHomeButton from "@/components/BackToHomeButton";
+import avatarMap from "@/lib/avatarMap";
 import { useSession } from "next-auth/react";
 
 

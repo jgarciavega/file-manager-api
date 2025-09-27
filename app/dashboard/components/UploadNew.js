@@ -22,7 +22,10 @@ import { CircularProgressbar, buildStyles } from 'react-circular-progressbar';
 import 'react-circular-progressbar/dist/styles.css';
 import avatarMap from '../../../lib/avatarMap';
 import Link from 'next/link';
+import BackToHomeButton from '@/components/BackToHomeButton'
 import NEXT_PUBLIC_API_URL from '@/config';
+import DashboardHeader from '@/components/DashboardHeader'
+
 
 export default function UploadNew() {
   const { data: session, status } = useSession();
@@ -199,6 +202,41 @@ export default function UploadNew() {
     // Cleanup al desmontar el componente
     return () => {
       document.removeEventListener('click', handleClickOutside);
+    };
+  }, []);
+
+  // Sincronizar darkMode local con el tema global (ThemeToggle)
+  useEffect(() => {
+    const root = document.documentElement;
+
+    const readTheme = () => {
+      try {
+        const stored = localStorage.getItem('theme');
+        if (stored === 'dark') return true;
+        if (stored === 'light') return false;
+      } catch (e) {}
+      return root.classList.contains('dark');
+    };
+
+    // Inicializar
+    setDarkMode(readTheme());
+
+    // Handler para evento custom 'themechange'
+    const onThemeChange = (e) => {
+      const theme = e?.detail?.theme;
+      if (theme) setDarkMode(theme === 'dark');
+      else setDarkMode(root.classList.contains('dark'));
+    };
+
+    window.addEventListener('themechange', onThemeChange);
+
+    // Observer para cambios directos en la clase del root
+    const observer = new MutationObserver(() => setDarkMode(root.classList.contains('dark')));
+    observer.observe(root, { attributes: true, attributeFilter: ['class'] });
+
+    return () => {
+      window.removeEventListener('themechange', onThemeChange);
+      observer.disconnect();
     };
   }, []);
 
@@ -420,99 +458,13 @@ export default function UploadNew() {
   };
 
   return (
-    <div className={`min-h-screen transition-colors duration-300 ${darkMode ? 'dark bg-gray-900' : 'bg-gray-50'}`}>
-      {/* Header reorganizado: Logo izquierda - Título centro - Avatar derecha */}
-      <div className="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 px-12 py-6">
-        <div className="w-full flex items-center">
-          {/* Logo más a la izquierda y aún más grande con imagen específica para modo oscuro */}
-          <div className="absolute left-12">
-            <Image 
-              src={darkMode ? "/api-dark23.png" : "/api.jpg"}
-              alt="Logo API" 
-              width={300} 
-              height={105} 
-              className="object-contain transition-opacity duration-300" 
-            />
-          </div>
-          
-          {/* Título al centro con estilo profesional y animación de ondas */}
-          <div className="w-full flex justify-center">
-            <div className="text-center">
-              <h1 className="text-4xl font-bold drop-shadow-2xl wave-container">
-                <span style={{animationDelay: '0.1s'}}>S</span>
-                <span style={{animationDelay: '0.2s'}}>u</span>
-                <span style={{animationDelay: '0.3s'}}>b</span>
-                <span style={{animationDelay: '0.4s'}}>i</span>
-                <span style={{animationDelay: '0.5s'}}>r</span>
-                <span style={{animationDelay: '0.6s'}} className="ml-3">D</span>
-                <span style={{animationDelay: '0.7s'}}>o</span>
-                <span style={{animationDelay: '0.8s'}}>c</span>
-                <span style={{animationDelay: '0.9s'}}>u</span>
-                <span style={{animationDelay: '1.0s'}}>m</span>
-                <span style={{animationDelay: '1.1s'}}>e</span>
-                <span style={{animationDelay: '1.2s'}}>n</span>
-                <span style={{animationDelay: '1.3s'}}>t</span>
-                <span style={{animationDelay: '1.4s'}}>o</span>
-                <span style={{animationDelay: '1.5s'}}>s</span>
-              </h1>
-              <div className="h-1 w-32 mx-auto mt-2 bg-gradient-to-r from-blue-500 to-purple-600 rounded-full animate-pulse"></div>
-            </div>
-          </div>
+    <div className={`min-h-screen transition-colors duration-300 bg-gray-50 dark:bg-gray-900`}>
+      {/* Usar componente global DashboardHeader */}
+      <DashboardHeader title="Subir Documentos" avatarUrl={session?.user ? avatarMap[session.user.email] || '/default-avatar.png' : '/default-avatar.png'} />
 
-          {/* Avatar y controles más a la derecha y más grandes */}
-          <div className="absolute right-12 flex items-center gap-6">
-            {/* Toggle modo oscuro más grande */}
-            <button
-              onClick={() => setDarkMode(!darkMode)}
-              className="p-4 rounded-xl bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 transition-all duration-300 hover:scale-110"
-              title="Cambiar tema"
-            >
-              <FontAwesomeIcon 
-                icon={darkMode ? faSun : faMoon} 
-                className="text-gray-600 dark:text-gray-300 text-xl" 
-              />
-            </button>
-
-            {/* Avatar del usuario más grande */}
-            {session?.user && (
-              <div className="flex items-center gap-4 p-3 rounded-xl bg-gradient-to-r from-blue-50 to-purple-50 dark:from-blue-900/20 dark:to-purple-900/20 border border-blue-200 dark:border-blue-700">
-                <div className="w-16 h-16 rounded-xl overflow-hidden shadow-lg">
-                  <Image 
-                    src="/blanca.jpeg" 
-                    alt="Avatar" 
-                    width={64} 
-                    height={64} 
-                    className="w-full h-full object-cover"
-                  />
-                </div>
-                <div className="hidden lg:block pr-2">
-                  <p className="text-base font-semibold text-gray-900 dark:text-white">
-                    {session.user.name}
-                  </p>
-                  <p className="text-sm text-gray-500 dark:text-gray-400">
-                    {session.user.email}
-                  </p>
-                </div>
-              </div>
-            )}
-          </div>
-        </div>
-      </div>
-
-      {/* Botón volver al inicio debajo del logo - Diseño ultra premium */}
-      <div className="bg-gradient-to-r from-gray-50 via-blue-50 to-gray-50 dark:from-gray-900 dark:via-blue-900/20 dark:to-gray-900 px-12 py-6 border-b border-gray-200 dark:border-gray-700">
-        <div className="flex justify-start">
-          <Link 
-            href="/home" 
-            className="group relative inline-flex items-center gap-3 px-6 py-3 bg-gradient-to-r from-indigo-600 via-blue-600 to-purple-600 hover:from-indigo-700 hover:via-blue-700 hover:to-purple-700 text-white font-bold rounded-xl shadow-lg hover:shadow-2xl transition-all duration-300 transform hover:scale-110 active:scale-95 border border-blue-400/30 overflow-hidden"
-          >
-            <div className="absolute inset-0 bg-gradient-to-r from-white/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
-            <div className="absolute inset-0 rounded-xl bg-gradient-to-r from-blue-400/30 to-purple-500/30 opacity-0 group-hover:opacity-100 transition-opacity duration-300 blur-sm"></div>
-            <FontAwesomeIcon icon={faArrowLeft} className="text-base relative z-10 group-hover:animate-bounce" />
-            <span className="text-base relative z-10 group-hover:text-blue-100">🏠 Volver al inicio</span>
-            <div className="absolute right-2 top-1/2 transform -translate-y-1/2 w-1 h-6 bg-white/30 rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
-          </Link>
-        </div>
+      {/* Botón volver al inicio (sin barra de fondo) */}
+      <div className="px-12 py-4">
+        <BackToHomeButton href="/home" label={"🏠 Volver al inicio"} size="lg" className="px-6 py-3" />
       </div>
 
       {/* Formulario principal sin caja */}

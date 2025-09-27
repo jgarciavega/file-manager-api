@@ -1,12 +1,24 @@
 "use client";
 import Image from "next/image";
-import { useState } from "react";
+import { useState, useEffect } from "react";
+
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faSun, faMoon } from "@fortawesome/free-solid-svg-icons";
 import BackToHomeButton from "../../../components/BackToHomeButton";
+import FiltrosInformes from "./FiltrosInformes";
+import TablaInformes from "./TablaInformes";
+import FooterLegal from "./FooterLegal";
 
 export default function InformesPage() {
+  // Detecta modo oscuro global leyendo la clase 'dark' en <html>
   const [darkMode, setDarkMode] = useState(false);
+  useEffect(() => {
+    const checkDark = () => setDarkMode(document.documentElement.classList.contains('dark'));
+    checkDark();
+    const observer = new MutationObserver(checkDark);
+    observer.observe(document.documentElement, { attributes: true, attributeFilter: ['class'] });
+    return () => observer.disconnect();
+  }, []);
   // Datos de ejemplo
   const [informes, setInformes] = useState([
     { fecha: "2025-07-12", usuario: "Jorge Vega", tipo: "Acceso", descripcion: "Consultó expediente 2025/001" },
@@ -25,19 +37,31 @@ export default function InformesPage() {
     (!typeFilter || ev.tipo === typeFilter)
   );
 
-  // Exportar CSV
+  // Feedback visual para exportación
+  const [exportMsg, setExportMsg] = useState("");
   const exportCSV = () => {
-    if (filtered.length === 0) return;
-    const headers = ["Fecha", "Usuario", "Tipo de Informe", "Descripción"];
-    const rows = filtered.map(ev => [ev.fecha, ev.usuario, ev.tipo, ev.descripcion]);
-    const csv = headers.join(",") + "\n" + rows.map(r => r.map(x => `"${x}"`).join(",")).join("\n");
-    const blob = new Blob([csv], { type: "text/csv" });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = `informes_${new Date().toISOString().slice(0, 10)}.csv`;
-    a.click();
-    setTimeout(() => URL.revokeObjectURL(url), 1000);
+    if (filtered.length === 0) {
+      setExportMsg("No hay datos para exportar.");
+      setTimeout(() => setExportMsg(""), 2500);
+      return;
+    }
+    try {
+      const headers = ["Fecha", "Usuario", "Tipo de Informe", "Descripción"];
+      const rows = filtered.map(ev => [ev.fecha, ev.usuario, ev.tipo, ev.descripcion]);
+      const csv = headers.join(",") + "\n" + rows.map(r => r.map(x => `"${x}"`).join(",")).join("\n");
+      const blob = new Blob([csv], { type: "text/csv" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `informes_${new Date().toISOString().slice(0, 10)}.csv`;
+      a.click();
+      setTimeout(() => URL.revokeObjectURL(url), 1000);
+      setExportMsg("Exportación exitosa. Archivo CSV generado.");
+      setTimeout(() => setExportMsg(""), 2500);
+    } catch (e) {
+      setExportMsg("Error al exportar. Intente de nuevo.");
+      setTimeout(() => setExportMsg(""), 2500);
+    }
   };
 
   return (
@@ -83,12 +107,27 @@ export default function InformesPage() {
             }
           `}</style>
         </h1>
-        {/* Toggle modo y avatar */}
+        {/* Botón sol/luna para alternar modo global */}
         <div className="flex items-center justify-end min-w-[60px] gap-5">
           <button
-            onClick={() => setDarkMode(!darkMode)}
+            type="button"
+            onClick={() => {
+              const isDark = document.documentElement.classList.contains('dark');
+              if (isDark) {
+                document.documentElement.classList.remove('dark');
+                localStorage.setItem('theme', 'light');
+                try { window.dispatchEvent(new CustomEvent('themechange', { detail: { theme: 'light' } })); } catch (e) {}
+              } else {
+                document.documentElement.classList.add('dark');
+                localStorage.setItem('theme', 'dark');
+                try { window.dispatchEvent(new CustomEvent('themechange', { detail: { theme: 'dark' } })); } catch (e) {}
+              }
+              setDarkMode(!isDark);
+            }}
             className={`p-4 rounded-xl text-2xl transition-all duration-300 transform hover:scale-110 hover:rotate-12 hover:-translate-y-1 shadow-lg hover:shadow-xl ${darkMode ? "bg-slate-800 text-yellow-400 hover:bg-slate-700 hover:text-yellow-300 hover:shadow-yellow-400/30" : "bg-gray-100 text-gray-600 hover:bg-gray-200 hover:text-blue-600 hover:shadow-blue-400/30"}`}
-            title="Cambiar modo"
+            title={darkMode ? "Cambiar a modo claro" : "Cambiar a modo oscuro"}
+            tabIndex={0}
+            aria-label={darkMode ? "Cambiar a modo claro" : "Cambiar a modo oscuro"}
           >
             <FontAwesomeIcon icon={darkMode ? faSun : faMoon} className="text-2xl transition-all duration-300 hover:scale-125" />
           </button>
@@ -99,102 +138,34 @@ export default function InformesPage() {
       {/* Botón volver pegado al borde izquierdo debajo del header */}
       <div className="w-full flex mt-4">
         <div className="flex items-start">
-          <BackToHomeButton darkMode={darkMode} />
+          <BackToHomeButton />
         </div>
       </div>
 
-      {/* Filtros premium */}
+      {/* Filtros y tabla modularizados */}
       <div className="max-w-7xl mx-auto mt-8 p-6 rounded-xl shadow-lg bg-blue/600 dark:bg-[#10172a] border border-blue-600 dark:border-[#10172a]">
-        <form className="flex flex-wrap gap-4 items-end justify-between mb-6" onSubmit={e => e.preventDefault()}>
-          <div className="flex flex-col">
-            <label htmlFor="dateStart" className="mb-1 text-xs font-bold text-blue-500 dark:text-yellow-400">Fecha inicial</label>
-            <input id="dateStart" type="date" value={dateStart} onChange={e => setDateStart(e.target.value)} className="px-3 py-2 rounded-lg border text-sm font-semibold focus:ring-2 focus:ring-blue-500 transition-all duration-300 shadow-sm bg-white dark:bg-[#232b47] border-blue-200 dark:border-[#232b47] text-blue-900 dark:text-blue-100 placeholder:text-blue-400 dark:placeholder:text-blue-400" />
+        <FiltrosInformes
+          dateStart={dateStart}
+          setDateStart={setDateStart}
+          dateEnd={dateEnd}
+          setDateEnd={setDateEnd}
+          userFilter={userFilter}
+          setUserFilter={setUserFilter}
+          typeFilter={typeFilter}
+          setTypeFilter={setTypeFilter}
+          exportCSV={exportCSV}
+          darkMode={darkMode}
+        />
+        {exportMsg && (
+          <div className={`my-2 px-4 py-2 rounded-lg text-center font-semibold text-sm transition-all duration-300 ${exportMsg.includes('exitosa') ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200' : 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200'}`} role="alert" aria-live="polite">
+            {exportMsg}
           </div>
-          <div className="flex flex-col">
-            <label htmlFor="dateEnd" className="mb-1 text-xs font-bold text-blue-400 dark:text-gray-400">Fecha final</label>
-            <input id="dateEnd" type="date" value={dateEnd} onChange={e => setDateEnd(e.target.value)} className="px-3 py-2 rounded-lg border text-sm font-semibold focus:ring-2 focus:ring-blue-500 transition-all duration-300 shadow-sm bg-white dark:bg-[#232b47] border-blue-200 dark:border-[#232b47] text-blue-900 dark:text-blue-100 placeholder:text-blue-400 dark:placeholder:text-blue-400" />
-          </div>
-          <div className="flex flex-col flex-1 min-w-[180px]">
-            <label htmlFor="userFilter" className="mb-1 text-xs font-bold text-blue-400 dark:text-gray-400">Usuario</label>
-            <input id="userFilter" type="text" value={userFilter} onChange={e => setUserFilter(e.target.value)} className="px-3 py-2 rounded-lg border text-sm font-semibold focus:ring-2 focus:ring-blue-500 transition-all duration-300 shadow-sm bg-white dark:bg-[#232b47] border-blue-200 dark:border-[#232b47] text-blue-900 dark:text-blue-100 placeholder:text-blue-400 dark:placeholder:text-blue-400" placeholder="Buscar por usuario..." />
-          </div>
-          <div className="flex flex-col min-w-[160px]">
-            <label htmlFor="typeFilter" className="mb-1 text-xs font-bold text-blue-400 dark:text-gray-400">Tipo de informe</label>
-            <select id="typeFilter" value={typeFilter} onChange={e => setTypeFilter(e.target.value)} className="px-3 py-2 rounded-lg border text-sm font-semibold focus:ring-2 focus:ring-blue-500 transition-all duration-300 shadow-sm bg-white dark:bg-[#232b47] border-blue-200 dark:border-[#232b47] text-blue-900 dark:text-blue-100">
-              <option value="">Todos</option>
-              <option value="Acceso">Accesos</option>
-              <option value="Descarga">Descargas</option>
-              <option value="Modificación">Modificaciones</option>
-              <option value="Eliminación">Eliminaciones</option>
-              <option value="Otro">Otros</option>
-            </select>
-          </div>
-          <div className="flex flex-col">
-            <label className="mb-1 text-xs font-bold text-transparent select-none">Exportar</label>
-            <button type="button" onClick={exportCSV} className="px-4 py-2 rounded-lg bg-gradient-to-r from-green-600 to-blue-500 text-white font-bold shadow-lg hover:from-green-700 hover:to-blue-600 transition-all dark:shadow-blue-900/40">Exportar CSV</button>
-          </div>
-        </form>
-
-        {/* Tabla de resultados premium */}
-        <div className="overflow-x-auto rounded-lg bg-white dark:bg-[#232b47]">
-          <table className="w-full min-w-[700px] text-sm border-separate border-spacing-0 table-fixed">
-            <colgroup>
-              <col style={{width: '120px'}} />
-              <col style={{width: '180px'}} />
-              <col style={{width: '160px'}} />
-              <col />
-            </colgroup>
-            <thead className={darkMode ? "bg-[#181f36] text-blue-100" : "bg-gradient-to-r from-blue-100 via-white to-blue-100 text-blue-900"}>
-              <tr>
-                <th className="px-4 py-3 border-b border-blue-800/60 dark:border-blue-900/80 font-semibold text-xs uppercase tracking-wider text-left align-middle">Fecha</th>
-                <th className="px-4 py-3 border-b border-blue-800/60 dark:border-blue-900/80 font-semibold text-xs uppercase tracking-wider text-left align-middle">Usuario</th>
-                <th className="px-4 py-3 border-b border-blue-800/60 dark:border-blue-900/80 font-semibold text-xs uppercase tracking-wider text-left align-middle">Tipo de Informe</th>
-                <th className="px-4 py-3 border-b border-blue-800/60 dark:border-blue-900/80 font-semibold text-xs uppercase tracking-wider text-left align-middle">Descripción</th>
-              </tr>
-            </thead>
-            <tbody>
-              {filtered.length === 0 ? (
-                <tr>
-                  <td colSpan={4} className="text-center py-8 text-lg font-semibold text-blue-700 dark:text-blue-200 bg-blue-50 dark:bg-slate-900/60 border-b border-blue-200 dark:border-blue-900/40">
-                    No hay resultados para los filtros seleccionados.
-                  </td>
-                </tr>
-              ) : (
-                filtered.map((ev, idx) => (
-                  <tr key={idx} className={darkMode ? (idx % 2 === 0 ? "bg-[#232b47] hover:bg-[#2d3657]" : "bg-[#181f36] hover:bg-[#232b47]") : (idx % 2 === 0 ? "bg-white hover:bg-blue-100/80" : "bg-blue-50/60 hover:bg-blue-100/80") }>
-                    <td className="px-4 py-3 border-b border-blue-900/30 dark:border-blue-900/60 align-middle whitespace-nowrap">{ev.fecha}</td>
-                    <td className="px-4 py-3 border-b border-blue-900/30 dark:border-blue-900/60 align-middle whitespace-nowrap">{ev.usuario}</td>
-                    <td className="px-4 py-3 border-b border-blue-900/30 dark:border-blue-900/60 align-middle whitespace-nowrap">{ev.tipo}</td>
-                    <td className="px-4 py-3 border-b border-blue-900/30 dark:border-blue-900/60 align-middle">{ev.descripcion}</td>
-                  </tr>
-                ))
-              )}
-            </tbody>
-          </table>
-        </div>
+        )}
+        <TablaInformes filtered={filtered} darkMode={darkMode} />
       </div>
 
-      {/* Aviso legal de informes al pie de la página */}
-      <footer className="w-full flex justify-center mt-10 mb-4">
-        <div
-          className={`max-w-3xl w-full mx-auto px-6 py-5 rounded-xl shadow border transition-colors duration-300 text-center flex flex-col items-center gap-2
-            ${darkMode
-              ? 'bg-slate-800/90 text-blue-100 border-blue-900/60'
-              : 'bg-blue-50 text-blue-900 border-blue-200'}
-          `}
-        >
-          <div className="flex items-center gap-2 mb-1">
-            <svg width="22" height="22" fill="none" viewBox="0 0 24 24" className="inline-block text-blue-700 dark:text-blue-300"><path fill="currentColor" d="M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20Zm0 18.2A8.2 8.2 0 1 1 12 3.8a8.2 8.2 0 0 1 0 16.4Zm0-12.2a1 1 0 0 1 1 1v3.5a1 1 0 0 1-2 0V9a1 1 0 0 1 1-1Zm0 7.2a1.2 1.2 0 1 1 0-2.4 1.2 1.2 0 0 1 0 2.4Z"/></svg>
-            <span className="font-extrabold text-base tracking-wide uppercase text-blue-700 dark:text-blue-200">Aviso de Informes y Protección de Datos</span>
-          </div>
-          <p className="text-sm leading-relaxed font-medium max-w-2xl mx-auto">
-            Esta sección permite generar y consultar informes conforme a la <b className="font-semibold text-blue-800 dark:text-blue-200">Ley Estatal de Archivos de Baja California Sur (LES-BCS)</b> y la <b className="font-semibold text-blue-800 dark:text-blue-200">Ley General de Archivos</b>.<br />
-            La información mostrada es <span className="font-bold text-red-700 dark:text-red-300">confidencial</span> y su uso está restringido a personal autorizado.<br />
-            Toda consulta queda registrada para fines de <span className="font-semibold text-blue-700 dark:text-blue-200">auditoría, transparencia y rendición de cuentas</span>.<br />
-            El uso indebido de esta información puede ser sancionado conforme a la legislación aplicable.
-          </p>
-        </div>
-      </footer>
+      {/* Aviso legal modularizado */}
+      <FooterLegal darkMode={darkMode} />
     </div>
   );
 }

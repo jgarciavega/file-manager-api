@@ -1,9 +1,9 @@
 "use client";
 
 import { useSession } from "next-auth/react";
-import DashboardHeader from "../../components/DashboardHeader";
-import avatarMap from "../../../../lib/avatarMap";
-import BackToHomeButton from "../../../../components/BackToHomeButton";
+import DashboardHeader from "@/components/DashboardHeader";
+import avatarMap from "@/lib/avatarMap";
+import BackToHomeButton from "@/components/BackToHomeButton";
 
 export default function Expedientes() {
   const { data: session } = useSession();

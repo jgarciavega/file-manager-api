@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import DarkModeToggle from "./../components/DarkModeToggle";
+import ThemeToggle from '@/components/ThemeToggle';
 import Link from "next/link";
 import Image from "next/image";
 import avatarMap from "../../../lib/avatarMap";
@@ -105,7 +105,7 @@ export default function SidebarAdminLayout({ children }) {
             </button>
 
             <div className="mt-4">
-              <DarkModeToggle />
+              <ThemeToggle />
             </div>
           </div>
         </div>

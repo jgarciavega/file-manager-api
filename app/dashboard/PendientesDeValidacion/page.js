@@ -31,6 +31,9 @@ import {
   faArrowLeft,
 } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import DashboardHeader from '@/components/DashboardHeader';
+import BackToHomeButton from '@/components/BackToHomeButton';
+import DashboardMenu from '@/components/DashboardMenu';
 
 export default function PendingDocumentsPage() {
   // Funciones de acción (simples para evitar errores de referencia)
@@ -56,6 +59,36 @@ export default function PendingDocumentsPage() {
   const userAvatar = avatarMap[userEmail] || "/default-avatar.png";
 
   const [darkMode, setDarkMode] = useState(false);
+  // Sincronizar el estado local de tema con la clase `dark` del root y con el evento global `themechange`
+  useEffect(() => {
+    const root = document.documentElement;
+    const readStored = () => {
+      try { return localStorage.getItem('theme'); } catch (e) { return null; }
+    };
+
+    const stored = readStored();
+    if (stored === 'dark') setDarkMode(true);
+    else if (stored === 'light') setDarkMode(false);
+    else setDarkMode(root.classList.contains('dark') || (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches));
+
+    const onThemeChange = (e) => {
+      const t = e?.detail?.theme;
+      if (t === 'dark') setDarkMode(true);
+      else if (t === 'light') setDarkMode(false);
+      else setDarkMode(root.classList.contains('dark'));
+    };
+    window.addEventListener('themechange', onThemeChange);
+
+    const observer = new MutationObserver(() => {
+      setDarkMode(root.classList.contains('dark'));
+    });
+    observer.observe(root, { attributes: true, attributeFilter: ['class'] });
+
+    return () => {
+      window.removeEventListener('themechange', onThemeChange);
+      observer.disconnect();
+    };
+  }, []);
   const [filterState, setFilterState] = useState("Todos");
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedDoc, setSelectedDoc] = useState(null);
@@ -135,43 +168,21 @@ export default function PendingDocumentsPage() {
 
   return (
     <div className={`p-6 min-h-screen transition-all ${darkMode ? "bg-[#0d1b2a] text-white" : "bg-gray-50 text-gray-900"}`}>
-      {/* Encabezado */}
-      <div className={`flex justify-between items-start mb-6 p-4 rounded-lg ${darkMode ? "bg-[#1a2b3c]" : "bg-white shadow"}`}>
-        <Image src={darkMode ? "/api-dark23.png" : "/api.jpg"} alt="Logo API" width={300} height={50} />
-        <div className="flex flex-col items-center gap-2">
-          <button onClick={() => setDarkMode(!darkMode)} className="text-xl" title="Cambiar modo">
-            <FontAwesomeIcon icon={darkMode ? faSun : faMoon} />
-          </button>
-          <div className="flex items-center gap-2">
-            <Image src={userAvatar} alt="Avatar" width={45} height={45} className="rounded-full border border-gray-300" />
-            <span className={`font-medium ${darkMode ? "text-white" : "text-gray-900"}`}>{userName}</span>
-          </div>
+  {/* Encabezado */}
+  <DashboardHeader title="Pendientes de Validación" avatarUrl={userAvatar} />
+
+      {/* Botón regreso y menú al mismo nivel */}
+      <div className="mb-8 px-6 flex items-center justify-between">
+        <div className="flex items-center">
+          <BackToHomeButton href="/home" label="Volver al Inicio" darkMode={darkMode} />
+        </div>
+
+        <div className="ml-4">
+          <DashboardMenu />
         </div>
       </div>
 
-      {/* Botón regreso  */}
-      <div className="mb-6 flex justify-start animate-fade-in-up delay-200">
-        <Link href="/home" legacyBehavior>
-          <a className="inline-flex items-center gap-2 px-6 py-2 rounded-full bg-gradient-to-r from-blue-500 via-blue-700 to-blue-500 text-white font-semibold shadow-lg hover:scale-105 hover:from-blue-600 hover:to-blue-700 transition-all duration-300 border border-blue-700/30 focus:outline-none focus:ring-2 focus:ring-blue-400">
-            <FontAwesomeIcon icon={faArrowLeft} className="text-lg" />
-            <span className="tracking-wide">Volver al Inicio</span>
-          </a>
-        </Link>
-      </div>
-
-      {/* Título premium, solo texto, arriba y con animación */}
-
-      <div className="flex flex-col items-center mt-[-4.5rem] mb-6">
-        <h1
-          className="text-3xl md:text-5xl font-extrabold tracking-tight text-center animate-title-slide-fade premium-title-gradient"
-          style={{ letterSpacing: '0.04em' }}
-        >
-          Pendientes de Validación
-        </h1>
-        <span className="block mt-6 text-base md:text-lg text-red-400 dark:text-gray-600 opacity-95 animate-fade-in-up delay-150 text-center max-w-2xl font-semibold">
-          Revisa, valida y gestiona documentos conforme a la LEA-BCS
-        </span> 
-      </div>
+      {/* Título removido por petición del usuario */}
 
 <style jsx global>{`
   @keyframes title-slide-fade {

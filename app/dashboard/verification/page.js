@@ -27,29 +27,48 @@ function Toast({ message, onClose, duration = 3000 }) {
 }
 
 export default function VerificacionLEA() {
-  // Modo oscuro manual
-  const [darkMode, setDarkMode] = useState(() => {
-    if (typeof window !== "undefined") {
-      const stored = localStorage.getItem("leaDarkMode");
-      if (stored !== null) return stored === "";
-      return false; // Siempre inicia en modo claro si no hay preferencia guardada
-    }
-    return false;
-  });
+  // Modo oscuro: usar la preferencia global (localStorage 'theme' + evento 'themechange')
+  const [darkMode, setDarkMode] = useState(false);
 
   useEffect(() => {
-    if (darkMode) {
-      document.documentElement.classList.add("dark");
-      document.body.classList.add("dark");
-    } else {
-      document.documentElement.classList.remove("dark");
-      document.body.classList.remove("dark");
-    }
-    localStorage.setItem("leaDarkMode", darkMode);
-  }, [darkMode]);
+    const root = document.documentElement;
+
+    const readTheme = () => {
+      try {
+        const stored = localStorage.getItem('theme');
+        if (stored === 'dark') return true;
+        if (stored === 'light') return false;
+      } catch (e) {}
+      return root.classList.contains('dark') || (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches);
+    };
+
+    // Inicializar
+    setDarkMode(readTheme());
+
+    const onThemeChange = (e) => {
+      const t = e?.detail?.theme;
+      if (t === 'dark') setDarkMode(true);
+      else if (t === 'light') setDarkMode(false);
+      else setDarkMode(root.classList.contains('dark'));
+    };
+    window.addEventListener('themechange', onThemeChange);
+
+    const observer = new MutationObserver(() => setDarkMode(root.classList.contains('dark')));
+    observer.observe(root, { attributes: true, attributeFilter: ['class'] });
+
+    return () => {
+      window.removeEventListener('themechange', onThemeChange);
+      observer.disconnect();
+    };
+  }, []);
 
   function toggleDarkMode() {
-    setDarkMode((prev) => !prev);
+    const newMode = !darkMode;
+    // aplicar en documentElement y persistir la preferencia de forma consistente
+    document.documentElement.classList.toggle('dark', newMode);
+    try { localStorage.setItem('theme', newMode ? 'dark' : 'light'); } catch (e) {}
+    try { window.dispatchEvent(new CustomEvent('themechange', { detail: { theme: newMode ? 'dark' : 'light' } })); } catch (e) {}
+    setDarkMode(newMode);
   }
   const { data: session, status } = useSession();
   const [toast, setToast] = useState("");
