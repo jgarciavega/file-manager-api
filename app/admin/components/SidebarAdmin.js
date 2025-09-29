@@ -50,6 +50,7 @@ export default function SidebarAdminLayout({ children }) {
   const navItems = [
     { href: "/admin", label: "Inicio", icon: <FiHome /> },
     { href: "/admin/archivos", label: "Archivos", icon: <FiFolder /> },
+    { href: "/admin/bitacora", label: "Bitácora", icon: <FiFileText /> },
     { href: "/admin/reportes", label: "Reportes", icon: <FiFileText /> },
     { href: "/admin/usuarios", label: "Usuarios", icon: <FiUsers /> },
     { href: "/admin/verificacion-lea", label: "Verificación LEA", icon: <FiCheckCircle /> },

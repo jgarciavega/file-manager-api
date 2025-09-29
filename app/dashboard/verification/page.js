@@ -9,6 +9,8 @@ import Link from "next/link";
 import avatarMap from "../../../lib/avatarMap";
 import admMap from "../../../lib/admMap";
 import { useState, useEffect } from "react";
+import DashboardHeader from '@/components/DashboardHeader';
+import BackToHomeButton from '@/components/BackToHomeButton';
 
 // Toast simple reutilizable
 function Toast({ message, onClose, duration = 3000 }) {
@@ -145,50 +147,12 @@ export default function VerificacionLEA() {
 
   return (
     <div className="min-h-screen p-6 bg-gray-50 dark:bg-[#0a1120] text-gray-800 dark:text-gray-100 transition" id="verificacion-lea-root">
-      {/* Encabezado premium */}
-      <div className="flex justify-between items-start mb-6 p-4 rounded-lg bg-white dark:bg-[#181f2a] shadow">
-        <Image src="/api-dark23.png" alt="Logo" width={350} height={60} />
-        <div className="flex items-center gap-4">
-          <button
-            onClick={toggleDarkMode}
-            aria-label={darkMode ? "Cambiar a modo claro" : "Cambiar a modo oscuro"}
-            className="p-2 rounded-full border border-blue-200 dark:border-blue-700 bg-white dark:bg-[#232b3b] text-blue-700 dark:text-yellow-300 shadow hover:scale-110 transition-all"
-            style={{ fontSize: 22 }}
-          >
-            <FontAwesomeIcon icon={darkMode ? faSun : faMoon} />
-          </button>
-          <Image
-            src={userAvatar}
-            alt={`Avatar de ${userName}`}
-            width={50}
-            height={50}
-            className="rounded-full border-2 border-white"
-          />
-          <span className="font-semibold">{userName}</span>
-        </div>
-      </div>
+      {/* Reemplazado por componente compartido DashboardHeader */}
+      <DashboardHeader title="Verificación de LEA-BCS" avatarUrl={userAvatar} />
 
-      {/* Botón regreso premium */}
+      {/* Botón regreso premium (reemplazado por componente reutilizable) */}
       <div className="mb-6 flex justify-start animate-fade-in-up delay-200">
-        <Link href="/home" legacyBehavior>
-          <a className="inline-flex items-center gap-2 px-6 py-2 rounded-full bg-gradient-to-r from-blue-500 via-blue-700 to-blue-500 text-white font-semibold shadow-lg hover:scale-105 hover:from-blue-600 hover:to-blue-700 transition-all duration-300 border border-blue-700/30 focus:outline-none focus:ring-2 focus:ring-blue-400">
-            <FontAwesomeIcon icon={faArrowLeft} className="text-lg" />
-            <span className="tracking-wide">Volver al Inicio</span>
-          </a>
-        </Link>
-      </div>
-
-      {/* Título premium animado */}
-      <div className="flex flex-col items-center mt-[-3rem] mb-14">
-        <h1
-          className="text-3xl md:text-5xl font-extrabold tracking-tight text-center animate-title-slide-fade premium-title-gradient"
-          style={{ letterSpacing: '0.04em' }}
-        >
-          Verificación de LEA-BCS
-        </h1>
-        <span className="block mt-4 text-base md:text-lg text-blue-900 dark:text-blue-200 opacity-95 animate-fade-in-up delay-150 text-center max-w-2xl font-semibold">
-          Revisa y valida el cumplimiento de la LEA-BCS para cada documento.
-        </span>
+        <BackToHomeButton href="/home" label="Volver al Inicio" darkMode={darkMode} />
       </div>
 
       {/* Filtros y búsqueda */}
