@@ -1,9 +1,9 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import DashboardHeader from "../components/DashboardHeader";
-import BackToHomeButton from "components/BackToHomeButton";
-import avatarMap from "lib/avatarMap";
+import DashboardHeader from "@/components/DashboardHeader";
+import BackToHomeButton from "@/components/BackToHomeButton";
+import avatarMap from "@/lib/avatarMap";
 import { useSession } from "next-auth/react";
 
 
@@ -22,7 +22,6 @@ export default function AjustesPage() {
     }
     return "light";
   });
-  const [lang, setLang] = useState(() => typeof window !== "undefined" ? localStorage.getItem("lang") || "es" : "es");
   const [fontSize, setFontSize] = useState(() => typeof window !== "undefined" ? localStorage.getItem("fontSize") || "md" : "md");
 
   // Clases dinámicas para bloques y selects según tema
@@ -58,10 +57,9 @@ export default function AjustesPage() {
         document.body.style.color = "#e6eef8";
       }
       localStorage.setItem("theme", theme);
-      localStorage.setItem("lang", lang);
       localStorage.setItem("fontSize", fontSize);
     }
-  }, [theme, lang, fontSize]);
+  }, [theme, fontSize]);
 
   // Sincronizar el estado `theme` si otra parte de la app cambia la clase 'dark' en <html>
   useEffect(() => {
@@ -106,6 +104,7 @@ export default function AjustesPage() {
           className="mr-auto"
           shadow
         />
+        
         <button
           className="ml-4 flex items-center gap-2 px-4 py-2 rounded-lg bg-blue-900 hover:bg-blue-800 text-blue-100 font-semibold shadow-lg border border-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-400"
           title="¿Por qué personalizar la experiencia?"
@@ -113,6 +112,17 @@ export default function AjustesPage() {
         >
           <span className="text-blue-300 text-xl">ℹ️</span>
           Ayuda
+        </button>
+        <button
+          type="button"
+          onClick={() => setShowAccessibility(true)}
+          title="Aviso de accesibilidad y protección de datos"
+          aria-label="Abrir aviso de accesibilidad y protección de datos"
+          className="ml-3 inline-flex items-center justify-center p-2 rounded-lg bg-blue-50 hover:bg-blue-100 dark:bg-transparent dark:hover:bg-slate-800 transition"
+        >
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" className="text-blue-700 dark:text-blue-200">
+            <path fill="currentColor" d="M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20Zm0 18.2A8.2 8.2 0 1 1 12 3.8a8.2 8.2 0 0 1 0 16.4Zm0-12.2a1 1 0 0 1 1 1v3.5a1 1 0 0 1-2 0V9a1 1 0 0 1 1-1Zm0 7.2a1.2 1.2 0 1 1 0-2.4 1.2 1.2 0 0 1 0 2.4Z"/>
+          </svg>
         </button>
       </div>
 
@@ -173,10 +183,7 @@ export default function AjustesPage() {
               <span>La consulta de archivos debe ser ágil, transparente y conforme a la ley.</span>
             </li>
           </ul>
-          <div className={theme === "light" ? "mt-4 text-sm text-blue-700" : "mt-4 text-sm text-blue-200"}>
-            <b>Recuerda:</b> El cumplimiento de estos principios es responsabilidad de todos los usuarios del sistema.<br/>
-            Consulta la <a href="https://www.cbcs.gob.mx/index.php/cmply/6728-ley-de-archivos-para-el-estado-de-baja-california-sur" target="_blank" className={theme === "light" ? "underline text-blue-800 hover:text-blue-600" : "underline text-blue-300 hover:text-blue-100"}>Ley Estatal de Archivos de BCS</a> y los <a href="/manual-organizacion" className={theme === "light" ? "underline text-blue-800 hover:text-blue-600" : "underline text-blue-300 hover:text-blue-100"}>manuales institucionales</a> para más información.
-          </div>
+          
         </section>
 
   {/* Preferencias globales */}
@@ -185,19 +192,6 @@ export default function AjustesPage() {
             <span className={theme === "light" ? "text-blue-700" : "text-blue-300"}>⚙️</span> Preferencias de usuario
           </h2>
           <div className="flex flex-col md:flex-row gap-6">
-            {/* Selector de idioma */}
-            <div className="flex flex-col gap-2 flex-1">
-              <label className="font-semibold">Idioma de la aplicación</label>
-              <select
-                value={lang}
-                onChange={e => setLang(e.target.value)}
-                className={selectClass}
-                aria-label="Seleccionar idioma"
-              >
-                <option value="es">Español</option>
-                <option value="en">English</option>
-              </select>
-            </div>
             {/* Selector de tema visual */}
             <div className="flex flex-col gap-2 flex-1">
               <label className="font-semibold">Modo visual</label>
@@ -229,33 +223,41 @@ export default function AjustesPage() {
           <div className={theme === "light" ? "text-xs text-blue-700 mt-2" : "text-xs text-blue-300 mt-2"}>Estas preferencias se aplican en toda la aplicación y se guardan en tu dispositivo.</div>
 
           {/* Botón para mostrar aviso de accesibilidad y protección de datos alineado al fondo de la tarjeta */}
-          <div className="mt-6 flex justify-center">
-            <button
-              className="mt-2 px-6 py-3 rounded-lg bg-blue-700 hover:bg-blue-600 text-white font-semibold shadow-md border border-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-400"
-              onClick={() => setShowAccessibility(true)}
-            >
-              Ver aviso de accesibilidad y protección de datos
-            </button>
-          </div>
+            <div className="mt-6 flex justify-center">
+              {/* icon moved to header */}
+            </div>
         </section>
 
         {/* Modal de aviso de accesibilidad y protección de datos (formato visual de la captura) */}
         {showAccessibility && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60">
-            <div className={modalAccessibility}>
-              <button
-                className={theme === "light" ? "absolute top-3 right-3 text-2xl text-blue-700 hover:text-red-600 font-bold" : "absolute top-3 right-3 text-2xl text-blue-100 hover:text-red-200 font-bold"}
-                onClick={() => setShowAccessibility(false)}
-                aria-label="Cerrar aviso"
-              >
-                ×
-              </button>
-              <h2 className={theme === "light" ? "text-xl md:text-2xl font-extrabold mb-2 text-blue-900" : "text-xl md:text-2xl font-extrabold mb-2 text-blue-100"}>Aviso de Accesibilidad y Protección de Datos</h2>
-              <p className={theme === "light" ? "text-base md:text-lg text-blue-900 font-medium" : "text-base md:text-lg text-blue-100 font-medium"}>
-                Esta sección cumple con la <b>Ley Estatal de Archivos de Baja California Sur (LEA-BCS)</b>.<br />
-                Tus preferencias de accesibilidad e idioma están protegidas y solo se usan para mejorar tu experiencia.<br />
-                Para ejercer tus derechos de acceso, rectificación, cancelación u oposición, contacta a la Unidad de Transparencia institucional.
-              </p>
+          <div className="fixed inset-0 z-50 flex items-center justify-center">
+            <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" onClick={() => setShowAccessibility(false)} aria-hidden="true" />
+            <div className={`relative z-10 max-w-2xl w-full mx-4 rounded-2xl shadow-2xl overflow-hidden transition-transform transform ${theme === "light" ? 'bg-white text-blue-900' : 'bg-slate-900 text-blue-100'}`} role="dialog" aria-modal="true" aria-label="Aviso de accesibilidad y protección de datos">
+              <div className={`px-6 py-4 border-b ${theme === "light" ? 'border-blue-100' : 'border-slate-700'}`}>
+                <div className="flex items-center justify-between gap-4">
+                  <div className="flex items-center gap-3">
+                    <svg width="28" height="28" viewBox="0 0 24 24" fill="none" className="text-blue-700 dark:text-blue-300">
+                      <path fill="currentColor" d="M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20Zm0 18.2A8.2 8.2 0 1 1 12 3.8a8.2 8.2 0 0 1 0 16.4Zm0-12.2a1 1 0 0 1 1 1v3.5a1 1 0 0 1-2 0V9a1 1 0 0 1 1-1Zm0 7.2a1.2 1.2 0 1 1 0-2.4 1.2 1.2 0 0 1 0 2.4Z"/>
+                    </svg>
+                    <h3 className="text-lg font-extrabold">Aviso de Accesibilidad y Protección de Datos</h3>
+                  </div>
+                  <button onClick={() => setShowAccessibility(false)} className={`text-sm px-3 py-1 rounded-md ${theme === "light" ? 'bg-slate-100 hover:bg-slate-200' : 'bg-slate-800 hover:bg-slate-700'} transition`}>Cerrar</button>
+                </div>
+              </div>
+              <div className="p-6 max-h-[60vh] overflow-auto space-y-4 text-sm leading-relaxed">
+                <p>
+                  Esta sección cumple con la <b>Ley Estatal de Archivos de Baja California Sur (LEA-BCS)</b>.
+                </p>
+                <p>
+                  Tus preferencias de accesibilidad e idioma están protegidas y solo se usan para mejorar tu experiencia.
+                </p>
+                <p>
+                  Para ejercer tus derechos de acceso, rectificación, cancelación u oposición, contacta a la Unidad de Transparencia institucional.
+                </p>
+              </div>
+              <div className={`px-6 py-4 border-t text-right ${theme === "light" ? 'border-blue-100' : 'border-slate-700'}`}>
+                <button onClick={() => setShowAccessibility(false)} className="px-4 py-2 rounded-md bg-gradient-to-r from-green-600 to-blue-500 text-white font-semibold hover:from-green-700 hover:to-blue-600 transition">Entendido</button>
+              </div>
             </div>
           </div>
         )}

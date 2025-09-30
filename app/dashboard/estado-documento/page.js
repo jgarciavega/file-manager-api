@@ -9,10 +9,7 @@ import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
   faDownload,
   faTrash,
-  faMoon,
-  faSun,
   faSearch,
-  faArrowLeft,
   faFileAlt,
   faEye,
   faCheck,
@@ -22,6 +19,9 @@ import {
   faChartLine,
   faEdit
 } from "@fortawesome/free-solid-svg-icons";
+import DashboardHeader from '@/components/DashboardHeader';
+import BackToHomeButton from '@/components/BackToHomeButton';
+import DashboardMenu from '@/components/DashboardMenu';
 import Link from "next/link";
 
 // Componente de Tooltip reutilizable
@@ -77,6 +77,37 @@ export default function EstadoDocumentoPage() {
   const [soportes, setSoportes] = useState([]);
   const [ubicaciones, setUbicaciones] = useState([]);
   const [catalogosError, setCatalogosError] = useState(false);
+
+  // Sincronizar el estado local de tema con la clase `dark` del root y con el evento global `themechange`
+  useEffect(() => {
+    const root = document.documentElement;
+    const readStored = () => {
+      try { return localStorage.getItem('theme'); } catch (e) { return null; }
+    };
+
+    const stored = readStored();
+    if (stored === 'dark') setDarkMode(true);
+    else if (stored === 'light') setDarkMode(false);
+    else setDarkMode(root.classList.contains('dark') || (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches));
+
+    const onThemeChange = (e) => {
+      const t = e?.detail?.theme;
+      if (t === 'dark') setDarkMode(true);
+      else if (t === 'light') setDarkMode(false);
+      else setDarkMode(root.classList.contains('dark'));
+    };
+    window.addEventListener('themechange', onThemeChange);
+
+    const observer = new MutationObserver(() => {
+      setDarkMode(root.classList.contains('dark'));
+    });
+    observer.observe(root, { attributes: true, attributeFilter: ['class'] });
+
+    return () => {
+      window.removeEventListener('themechange', onThemeChange);
+      observer.disconnect();
+    };
+  }, []);
 
   // Filtros avanzados
   const [filterStatus, setFilterStatus] = useState('');
@@ -385,24 +416,7 @@ export default function EstadoDocumentoPage() {
   }
 
   return (
-    <div className={`min-h-screen transition-all duration-700 ${
-      darkMode 
-        ? "bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900" 
-        : "bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50"
-    }`}>
-      {/* Animación de fondo */}
-      <div className="absolute inset-0 opacity-30">
-        <div className={`absolute top-20 left-20 w-64 h-64 ${
-          darkMode ? "bg-blue-500" : "bg-purple-300"
-        } rounded-full mix-blend-multiply filter blur-xl animate-blob`}></div>
-        <div className={`absolute top-40 right-20 w-64 h-64 ${
-          darkMode ? "bg-purple-500" : "bg-blue-300"
-        } rounded-full mix-blend-multiply filter blur-xl animate-blob animation-delay-2000`}></div>
-        <div className={`absolute bottom-20 left-40 w-64 h-64 ${
-          darkMode ? "bg-pink-500" : "bg-indigo-300"
-        } rounded-full mix-blend-multiply filter blur-xl animate-blob animation-delay-4000`}></div>
-      </div>
-
+    <div className={`min-h-screen transition-colors duration-300 bg-gray-50 dark:bg-gray-900`}>
       <div className="relative z-10 p-6">
         {/* Modal de observaciones mejorado */}
         {modalObs.open && (
@@ -432,123 +446,20 @@ export default function EstadoDocumentoPage() {
           </div>
         )}
 
-        {/* Header reorganizado: Logo izquierda - Título centro - Controles derecha */}
-        <div className={`px-12 py-6 border-b mb-8 ${
-          darkMode 
-            ? "bg-gray-800 border-gray-700" 
-            : "bg-white border-gray-200"
-        }`}>
-          <div className="w-full flex items-center">
-            {/* Logo más a la izquierda */}
-            <div className="absolute left-12">
-              <Image 
-                src={darkMode ? "/api-dark23.png" : "/api.jpg"}
-                alt="Logo API BCS" 
-                width={300} 
-                height={105} 
-                className="object-contain transition-opacity duration-300" 
-              />
-            </div>
-            
-            {/* Título al centro con estilo profesional */}
-            <div className="w-full flex justify-center">
-              <div className="text-center">
-                <h1 className="text-4xl font-bold drop-shadow-2xl wave-container">
-                  <span style={{animationDelay: '0.1s'}}>E</span>
-                  <span style={{animationDelay: '0.2s'}}>s</span>
-                  <span style={{animationDelay: '0.3s'}}>t</span>
-                  <span style={{animationDelay: '0.4s'}}>a</span>
-                  <span style={{animationDelay: '0.5s'}}>d</span>
-                  <span style={{animationDelay: '0.6s'}}>o</span>
-                  <span style={{animationDelay: '0.7s'}} className="ml-3">d</span>
-                  <span style={{animationDelay: '0.8s'}}>e</span>
-                  <span style={{animationDelay: '0.9s'}} className="ml-3">D</span>
-                  <span style={{animationDelay: '1.0s'}}>o</span>
-                  <span style={{animationDelay: '1.1s'}}>c</span>
-                  <span style={{animationDelay: '1.2s'}}>u</span>
-                  <span style={{animationDelay: '1.3s'}}>m</span>
-                  <span style={{animationDelay: '1.4s'}}>e</span>
-                  <span style={{animationDelay: '1.5s'}}>n</span>
-                  <span style={{animationDelay: '1.6s'}}>t</span>
-                  <span style={{animationDelay: '1.7s'}}>o</span>
-                  <span style={{animationDelay: '1.8s'}}>s</span>
-                </h1>
-                <div className="h-1 w-32 mx-auto mt-2 bg-gradient-to-r from-blue-500 to-purple-600 rounded-full animate-pulse"></div>
-                <div className="header-subtitle">
-                  <FontAwesomeIcon icon={faChartLine} className="text-green-500 text-lg" />
-                  <span className="font-medium">Panel de Control Archivístico</span>
-                </div>
-              </div>
-            </div>
+        {/* Header global */}
+        <DashboardHeader title="Estado de Documentos" avatarUrl={user.avatar} />
 
-            {/* Controles del usuario a la derecha */}
-            <div className="absolute right-12 flex items-center gap-6">
-              {/* Toggle de modo oscuro */}
-              <TooltipWrapper text={darkMode ? "Cambiar a modo claro" : "Cambiar a modo oscuro"}>
-                <button
-                  onClick={() => setDarkMode(!darkMode)}
-                  className={`p-4 rounded-xl transition-all duration-300 hover:scale-110 theme-toggle ${
-                    darkMode 
-                      ? "bg-gray-700 hover:bg-gray-600 text-yellow-400" 
-                      : "bg-gray-100 hover:bg-gray-200 text-gray-600"
-                  }`}
-                  title="Cambiar tema"
-                >
-                  <FontAwesomeIcon 
-                    icon={darkMode ? faSun : faMoon} 
-                    className="text-xl relative z-10" 
-                  />
-                </button>
-              </TooltipWrapper>
-
-              {/* Info del usuario */}
-              <div className={`flex items-center gap-4 p-3 rounded-xl border transition-all duration-300 user-avatar-container ${
-                darkMode 
-                  ? "bg-gradient-to-r from-gray-700/50 to-gray-800/50 border-gray-600" 
-                  : "bg-gradient-to-r from-blue-50 to-purple-50 border-blue-200"
-              }`}>
-                <div className="w-16 h-16 rounded-xl overflow-hidden shadow-lg">
-                  <Image
-                    src={user.avatar}
-                    alt={`Avatar de ${user.name}`}
-                    width={64}
-                    height={64}
-                    className="w-full h-full object-cover"
-                  />
-                </div>
-                <div className="hidden lg:block pr-2 user-info-clean">
-                  <p className={`text-base font-semibold ${
-                    darkMode ? "text-white" : "text-gray-900"
-                  }`}>
-                    {user.name}
-                  </p>
-                  <div className={`flex items-center gap-2 text-sm ${
-                    darkMode ? "text-gray-400" : "text-gray-500"
-                  }`}>
-                    <div className={`w-2 h-2 rounded-full ${
-                      user.position === "admin" ? "bg-green-500" : "bg-blue-500"
-                    } animate-pulse`}></div>
-                    <span className="capitalize">
-                      {user.position === "admin" ? "Administrador" : user.position === "000" ? "Usuario" : user.position}
-                    </span>
-                  </div>
-                </div>
-              </div>
-            </div>
+        {/* Botón regresar y menú al mismo nivel */}
+        <div className="mb-8 px-6 flex items-center justify-between">
+          <div className="flex items-center">
+            <TooltipWrapper text="Regresar al panel principal">
+              <BackToHomeButton href="/home" label="Volver al Inicio" darkMode={darkMode} />
+            </TooltipWrapper>
           </div>
-        </div>
 
-        {/* Botón regresar sin barra */}
-        <div className="mb-8 px-6">
-          <TooltipWrapper text="Regresar al panel principal">
-            <Link
-              href="/home"
-              className="btn-professional btn-primary-pro"
-            >
-              <FontAwesomeIcon icon={faArrowLeft} className="btn-icon" />
-              <span>Volver al Inicio</span>
-            </Link>
-          </TooltipWrapper>
+          <div className="ml-4">
+            <DashboardMenu />
+          </div>
         </div>
 
         {/* Panel de filtros premium */}
@@ -587,7 +498,7 @@ export default function EstadoDocumentoPage() {
                   className={`w-full px-4 py-3 rounded-xl transition-all duration-300 focus:ring-2 focus:ring-blue-500 focus:scale-105 ${
                     darkMode 
                       ? "bg-slate-700/50 text-white border border-slate-600 hover:bg-slate-600/50" 
-                      : "bg-white text-gray-800 border border-gray-300 hover:bg-gray-50"
+                      : "bg-white text-gray-800 border border-gray-600 hover:bg-gray-50"
                   }`}
                 >
                   <option value="">Todos los estados</option>
@@ -614,7 +525,7 @@ export default function EstadoDocumentoPage() {
                   className={`w-full px-4 py-3 rounded-xl transition-all duration-300 focus:ring-2 focus:ring-blue-500 focus:scale-105 ${
                     darkMode 
                       ? "bg-slate-700/50 text-white border border-slate-600 hover:bg-slate-600/50" 
-                      : "bg-white text-gray-800 border border-gray-300 hover:bg-gray-50"
+                      : "bg-white text-gray-800 border border-gray-600 hover:bg-gray-50"
                   }`}
                 >
                   <option value="">Todas las vigencias</option>
@@ -636,7 +547,7 @@ export default function EstadoDocumentoPage() {
                   className={`w-full px-4 py-3 rounded-xl transition-all duration-300 focus:ring-2 focus:ring-blue-500 focus:scale-105 ${
                     darkMode 
                       ? "bg-slate-700/50 text-white border border-slate-600 hover:bg-slate-600/50" 
-                      : "bg-white text-gray-800 border border-gray-300 hover:bg-gray-50"
+                      : "bg-white text-gray-800 border border-gray-600 hover:bg-gray-50"
                   }`}
                 >
                   <option value="">Todos los responsables</option>
@@ -672,23 +583,23 @@ export default function EstadoDocumentoPage() {
           <div className="flex flex-col lg:flex-row gap-6">
             {/* Estadísticas rápidas - diseño mejorado similar a subir documento */}
             <div className="flex-1 grid grid-cols-2 lg:grid-cols-4 gap-6">
-              <div className="bg-gradient-to-br from-blue-50 to-blue-100 dark:from-blue-900/30 dark:to-blue-800/30 border border-blue-200 dark:border-blue-700 rounded-2xl p-6 text-center transition-all duration-300 hover:scale-105 hover:shadow-lg">
+              <div className="bg-gradient-to-br from-blue-50 to-blue-100 dark:from-blue-900/30 dark:to-blue-800/30 border border-blue-400 dark:border-blue-700 rounded-2xl p-6 text-center transition-all duration-300 hover:scale-105 hover:shadow-lg">
                 <div className="text-3xl font-bold text-blue-600 dark:text-blue-400 mb-1">{filteredFiles.length}</div>
                 <div className="text-sm font-medium text-blue-700 dark:text-blue-300">Total Documentos</div>
               </div>
-              <div className="bg-gradient-to-br from-green-50 to-green-100 dark:from-green-900/30 dark:to-green-800/30 border border-green-200 dark:border-green-700 rounded-2xl p-6 text-center transition-all duration-300 hover:scale-105 hover:shadow-lg">
+              <div className="bg-gradient-to-br from-green-50 to-green-100 dark:from-green-900/30 dark:to-green-800/30 border border-green-400 dark:border-green-700 rounded-2xl p-6 text-center transition-all duration-300 hover:scale-105 hover:shadow-lg">
                 <div className="text-3xl font-bold text-green-600 dark:text-green-400 mb-1">
                   {filteredFiles.filter(f => f.status === 'Concluido').length}
                 </div>
                 <div className="text-sm font-medium text-green-700 dark:text-green-300">Concluidos</div>
               </div>
-              <div className="bg-gradient-to-br from-yellow-50 to-yellow-100 dark:from-yellow-900/30 dark:to-yellow-800/30 border border-yellow-200 dark:border-yellow-700 rounded-2xl p-6 text-center transition-all duration-300 hover:scale-105 hover:shadow-lg">
+              <div className="bg-gradient-to-br from-yellow-50 to-yellow-100 dark:from-yellow-900/30 dark:to-yellow-800/30 border border-yellow-400 dark:border-yellow-700 rounded-2xl p-6 text-center transition-all duration-300 hover:scale-105 hover:shadow-lg">
                 <div className="text-3xl font-bold text-yellow-600 dark:text-yellow-400 mb-1">
                   {filteredFiles.filter(f => f.status === 'En trámite').length}
                 </div>
                 <div className="text-sm font-medium text-yellow-700 dark:text-yellow-300">En trámite</div>
               </div>
-              <div className="bg-gradient-to-br from-purple-50 to-purple-100 dark:from-purple-900/30 dark:to-purple-800/30 border border-purple-200 dark:border-purple-700 rounded-2xl p-6 text-center transition-all duration-300 hover:scale-105 hover:shadow-lg">
+              <div className="bg-gradient-to-br from-purple-50 to-purple-100 dark:from-purple-900/30 dark:to-purple-800/30 border border-purple-400 dark:border-purple-700 rounded-2xl p-6 text-center transition-all duration-300 hover:scale-105 hover:shadow-lg">
                 <div className="text-3xl font-bold text-purple-600 dark:text-purple-400 mb-1">
                   {filteredFiles.filter(f => f.status === 'Histórico').length}
                 </div>

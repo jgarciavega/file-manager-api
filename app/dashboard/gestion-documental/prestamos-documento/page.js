@@ -1,9 +1,9 @@
 "use client";
 
-import BackToHomeButton from "../../../../components/BackToHomeButton";
+import BackToHomeButton from "@/components/BackToHomeButton";
 import { useSession } from "next-auth/react";
-import DashboardHeader from "../../components/DashboardHeader";
-import avatarMap from "../../../../lib/avatarMap";
+import DashboardHeader from "@/components/DashboardHeader";
+import avatarMap from "@/lib/avatarMap";
 import { useState } from "react";
 
 export default function PrestamosDocumento() {

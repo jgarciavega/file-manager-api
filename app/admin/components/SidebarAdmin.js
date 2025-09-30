@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import DarkModeToggle from "./../components/DarkModeToggle";
+import ThemeToggle from '@/components/ThemeToggle';
 import Link from "next/link";
 import Image from "next/image";
 import avatarMap from "../../../lib/avatarMap";
@@ -50,6 +50,7 @@ export default function SidebarAdminLayout({ children }) {
   const navItems = [
     { href: "/admin", label: "Inicio", icon: <FiHome /> },
     { href: "/admin/archivos", label: "Archivos", icon: <FiFolder /> },
+    { href: "/admin/bitacora", label: "Bitácora", icon: <FiFileText /> },
     { href: "/admin/reportes", label: "Reportes", icon: <FiFileText /> },
     { href: "/admin/usuarios", label: "Usuarios", icon: <FiUsers /> },
     { href: "/admin/verificacion-lea", label: "Verificación LEA", icon: <FiCheckCircle /> },
@@ -105,7 +106,7 @@ export default function SidebarAdminLayout({ children }) {
             </button>
 
             <div className="mt-4">
-              <DarkModeToggle />
+              <ThemeToggle />
             </div>
           </div>
         </div>
