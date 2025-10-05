@@ -75,7 +75,7 @@ export default function LoginPage() {
       setAttempts(0);
 
       // ✅ Redireccionar según rol
-      if (user.role_id === 1) {
+      if (user.role_id === 2) {
         router.push("/admin");
       } else {
         router.push("/dashboard");

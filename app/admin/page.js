@@ -19,7 +19,7 @@ export default function AdminHome() {
 
     try {
       const parsedUser = JSON.parse(userData);
-      if (parsedUser.role_id !== 1) {
+      if (parsedUser.role_id !== 2) {
         router.push("/unauthorized");
       } else {
         setUser(parsedUser);

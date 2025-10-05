@@ -1,133 +1,214 @@
 "use client";
 import { useState, useEffect } from "react";
-import NEXT_PUBLIC_API_URL from "@/config";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { faSearch } from "@fortawesome/free-solid-svg-icons";
+import Paginacion from "@/app/admin/components/Paginacion";
 
-export default function AdminBitacora() {
-  const [darkMode, setDarkMode] = useState(false);
+export default function BitacoraAdmin() {
   const [bitacora, setBitacora] = useState([]);
-  const [search, setSearch] = useState("");
-  const [dateFilter, setDateFilter] = useState("");
-  const [userFilter, setUserFilter] = useState("");
-  const [typeFilter, setTypeFilter] = useState("");
+  const [filteredBitacora, setFilteredBitacora] = useState([]);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [filterAccion, setFilterAccion] = useState("");
+  const [loading, setLoading] = useState(true);
 
-  // 🌙 Detectar modo oscuro
+  const [paginaActual, setPaginaActual] = useState(1);
+  const registrosPorPagina = 10;
+
+  const [token, setToken] = useState(null);
   useEffect(() => {
-    const root = document.documentElement;
-    const readTheme = () => {
-      try {
-        const stored = localStorage.getItem('theme');
-        if (stored === 'dark') return true;
-        if (stored === 'light') return false;
-      } catch { }
-      return root.classList.contains('dark') || (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches);
-    };
-    setDarkMode(readTheme());
+    if (typeof window !== "undefined") {
+      setToken(localStorage.getItem("token"));
+    }
   }, []);
 
-  // 📡 Obtener bitácora desde el backend
   useEffect(() => {
+    if (!token) return;
+
     const fetchBitacora = async () => {
+      setLoading(true);
       try {
-        const token = localStorage.getItem("token");
-        const res = await fetch(`${NEXT_PUBLIC_API_URL}/bitacora`, {
-          headers: { Authorization: `Bearer ${token}` },
+        const res = await fetch("http://localhost:4000/api/bitacora", {
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
         });
         const data = await res.json();
-        if (data.success) setBitacora(data.data || []);
+        if (!data.success || !Array.isArray(data.data.registros)) {
+          setBitacora([]);
+          setFilteredBitacora([]);
+          return;
+        }
+
+        const registros = data.data.registros;
+
+        // Obtener correos de usuarios
+        const uniqueUserIds = [...new Set(registros.map((r) => r.usuario_id))];
+        const userEmails = {};
+
+        await Promise.all(
+          uniqueUserIds.map(async (id) => {
+            try {
+              const resUser = await fetch(`http://localhost:4000/api/usuarios/${id}`, {
+                headers: {
+                  "Content-Type": "application/json",
+                  Authorization: `Bearer ${token}`,
+                },
+              });
+              const userData = await resUser.json();
+              if (userData?.data?.email) {
+                userEmails[id] = userData.data.email;
+              }
+            } catch (err) {
+              console.error(`Error usuario ${id}:`, err);
+            }
+          })
+        );
+
+        const enriched = registros.map((r) => ({
+          ...r,
+          usuario_email: userEmails[r.usuario_id] || `Usuario ${r.usuario_id}`,
+        }));
+
+        setBitacora(enriched);
+        setFilteredBitacora(enriched);
       } catch (err) {
-        console.error("Error cargando bitácora:", err);
+        console.error("Error bitácora:", err);
+      } finally {
+        setLoading(false);
       }
     };
+
     fetchBitacora();
-  }, []);
+  }, [token]);
 
-  const filtered = bitacora.filter(ev =>
-    (!search || ev.accion?.toLowerCase().includes(search.toLowerCase())) &&
-    (!dateFilter || ev.fecha === dateFilter) &&
-    (!userFilter || ev.usuario?.toLowerCase().includes(userFilter.toLowerCase())) &&
-    (!typeFilter || ev.tipo === typeFilter)
-  );
+  // Filtrar y buscar
+  useEffect(() => {
+    let filtered = bitacora;
 
-  const exportCSV = () => {
-    const headers = ['Fecha', 'Usuario', 'Acción', 'Tipo', 'Confidencial', 'IP', 'Estado', 'Documento', 'Observaciones'];
-    const rows = filtered.map(ev => [ev.fecha, ev.usuario, ev.accion, ev.tipo, ev.confidencial ? 'Sí' : 'No', ev.ip, ev.estado, ev.documento, ev.observaciones]);
-    const csv = headers.join(',') + '\n' + rows.map(r => r.map(x => `"${x}"`).join(',')).join('\n');
-    const blob = new Blob([csv], { type: 'text/csv' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `bitacora_admin_${new Date().toISOString().slice(0, 10)}.csv`;
-    a.click();
-    setTimeout(() => URL.revokeObjectURL(url), 1000);
-  };
+    if (searchTerm) {
+      filtered = filtered.filter(
+        (item) =>
+          item.usuario_email.toLowerCase().includes(searchTerm.toLowerCase()) ||
+          item.accion.toLowerCase().includes(searchTerm.toLowerCase()) ||
+          item.descripcion?.toLowerCase().includes(searchTerm.toLowerCase())
+      );
+    }
+
+    if (filterAccion) {
+      filtered = filtered.filter((item) => item.accion === filterAccion);
+    }
+
+    setFilteredBitacora(filtered);
+    setPaginaActual(1);
+  }, [searchTerm, filterAccion, bitacora]);
+
+  const indiceUltimo = paginaActual * registrosPorPagina;
+  const indicePrimero = indiceUltimo - registrosPorPagina;
+  const registrosActuales = filteredBitacora.slice(indicePrimero, indiceUltimo);
+  const totalPaginas = Math.ceil(filteredBitacora.length / registrosPorPagina);
+
+  if (loading)
+    return (
+      <div className="p-6 text-center text-gray-700 dark:text-gray-300">
+        Cargando bitácora…
+      </div>
+    );
 
   return (
-    <div className={`min-h-screen transition-all duration-300 ${darkMode ? 'bg-slate-900 text-white' : 'bg-gray-50 text-gray-900'}`}>
-      <div className="w-full px-6 mt-6">
-        <h1 className="text-2xl md:text-3xl font-bold text-gray-900 dark:text-gray-100">Bitácora Administrativa</h1>
+    <div className="space-y-8">
+      <div className="flex justify-between items-center">
+        <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100 text-center flex-1">
+          Bitácora Administrativa
+        </h1>
+        <div className="w-32" />
       </div>
 
-      <main className={`w-full max-w-full mx-auto mt-10 p-10 rounded-2xl shadow-2xl ${darkMode ? 'bg-slate-900' : 'bg-white/80'} min-h-[700px]`}>
-        {/* Filtros y export */}
-        <div className="flex flex-wrap gap-4 mb-6 items-center justify-between">
-          <input type="date" value={dateFilter} onChange={e => setDateFilter(e.target.value)} className="px-3 py-2 rounded-lg border text-sm font-semibold focus:ring-2 focus:ring-blue-500 transition-all duration-300 shadow-sm bg-white dark:bg-slate-800 border-blue-400 dark:border-blue-700 text-blue-900 dark:text-white" />
-          <input type="text" placeholder="Buscar usuario..." value={userFilter} onChange={e => setUserFilter(e.target.value)} className="px-3 py-2 rounded-lg border text-sm font-semibold focus:ring-2 focus:ring-blue-500 transition-all duration-300 shadow-sm bg-white dark:bg-slate-800 border-blue-400 dark:border-blue-700 text-blue-900 dark:text-white" />
-          <input type="text" placeholder="Buscar acción..." value={search} onChange={e => setSearch(e.target.value)} className="px-3 py-2 rounded-lg border text-sm font-semibold focus:ring-2 focus:ring-blue-500 transition-all duration-300 shadow-sm bg-white dark:bg-slate-800 border-blue-400 dark:border-blue-700 text-blue-900 dark:text-white" />
-          <select value={typeFilter} onChange={e => setTypeFilter(e.target.value)} className="px-3 py-2 rounded-lg border text-sm font-semibold focus:ring-2 focus:ring-blue-500 transition-all duration-300 shadow-sm bg-white dark:bg-slate-800 border-blue-400 dark:border-blue-700 text-blue-900 dark:text-white">
-            <option value="">Tipo de acción</option>
-            <option value="Descarga">Descarga</option>
-            <option value="Eliminación">Eliminación</option>
-            <option value="Validación">Validación</option>
-            <option value="Carga">Carga</option>
-            <option value="Edición">Edición</option>
-          </select>
-          <button onClick={exportCSV} className="px-4 py-2 rounded-lg bg-gradient-to-r from-blue-600 to-green-500 text-white font-bold shadow hover:from-blue-700 hover:to-green-600 transition-all">
-            Exportar CSV
-          </button>
+      <div className="flex flex-col md:flex-row justify-between gap-4">
+        <div className="relative w-full max-w-md">
+          <span className="absolute inset-y-0 left-0 flex items-center pl-3 text-gray-500 dark:text-gray-400">
+            <FontAwesomeIcon icon={faSearch} />
+          </span>
+          <input
+            type="text"
+            placeholder="Buscar por usuario, acción o detalle..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            className="w-full pl-10 pr-4 py-2 rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
+          />
         </div>
 
-        {/* Tabla */}
-        <div className="overflow-x-auto rounded-2xl">
-          <table className="w-full min-w-[1500px] text-lg border-separate border-spacing-0">
-            <thead className={darkMode ? 'bg-gradient-to-r from-blue-950 via-slate-900 to-blue-900 text-blue-100' : 'bg-gradient-to-r from-blue-100 via-white to-blue-100 text-blue-900'}>
+        <select
+          className="p-2 rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
+          value={filterAccion}
+          onChange={(e) => setFilterAccion(e.target.value)}
+        >
+          <option value="">Todas las acciones</option>
+          {[...new Set(bitacora.map((item) => item.accion))].map((accion) => (
+            <option key={accion} value={accion}>
+              {accion}
+            </option>
+          ))}
+        </select>
+      </div>
+
+      <div className="overflow-x-auto">
+        <table className="min-w-full border border-gray-400 dark:border-gray-700 border-collapse text-center">
+          <thead className="bg-gray-200 dark:bg-gray-800">
+            <tr>
+              {["#", "Usuario", "Acción", "Detalles", "Fecha"].map((h) => (
+                <th
+                  key={h}
+                  className="px-4 py-2 border border-gray-400 dark:border-gray-700 text-sm font-black text-gray-700 dark:text-gray-300 uppercase"
+                >
+                  {h}
+                </th>
+              ))}
+            </tr>
+          </thead>
+          <tbody>
+            {registrosActuales.length === 0 ? (
               <tr>
-                <th className="px-6 py-4 border-b font-semibold text-base uppercase">ID</th>
-                <th className="px-6 py-4 border-b font-semibold text-base uppercase">Fecha</th>
-                <th className="px-6 py-4 border-b font-semibold text-base uppercase">Hora</th>
-                <th className="px-6 py-4 border-b font-semibold text-base uppercase">Usuario</th>
-                <th className="px-6 py-4 border-b font-semibold text-base uppercase">Acción</th>
-                <th className="px-6 py-4 border-b font-semibold text-base uppercase">Tipo</th>
-                <th className="px-6 py-4 border-b font-semibold text-base uppercase">Confidencial</th>
-                <th className="px-6 py-4 border-b font-semibold text-base uppercase">IP</th>
-                <th className="px-6 py-4 border-b font-semibold text-base uppercase">Estado</th>
-                <th className="px-6 py-4 border-b font-semibold text-base uppercase">Documento</th>
-                <th className="px-6 py-4 border-b font-semibold text-base uppercase">Observaciones</th>
+                <td colSpan={5} className="p-4 text-gray-700 dark:text-gray-300">
+                  No se encontraron registros.
+                </td>
               </tr>
-            </thead>
-            <tbody>
-              {filtered.length > 0 ? filtered.map((ev, idx) => (
-                <tr key={ev.id} className={`${darkMode ? (idx % 2 === 0 ? 'bg-slate-900' : 'bg-blue-900/40') : (idx % 2 === 0 ? 'bg-white' : 'bg-blue-50/60')} ${ev.confidencial ? ' font-bold text-red-600 dark:text-red-300' : ''}`}>
-                  <td className="px-6 py-4 border-b">{ev.id}</td>
-                  <td className="px-6 py-4 border-b">{ev.fecha}</td>
-                  <td className="px-6 py-4 border-b">{ev.hora}</td>
-                  <td className="px-6 py-4 border-b">{ev.usuario}</td>
-                  <td className="px-6 py-4 border-b">{ev.accion}</td>
-                  <td className="px-6 py-4 border-b">{ev.tipo}</td>
-                  <td className="px-6 py-4 border-b">{ev.confidencial ? 'Sí' : 'No'}</td>
-                  <td className="px-6 py-4 border-b">{ev.ip}</td>
-                  <td className="px-6 py-4 border-b">{ev.estado}</td>
-                  <td className="px-6 py-4 border-b truncate max-w-[320px]" title={ev.documento}>{ev.documento}</td>
-                  <td className="px-6 py-4 border-b truncate max-w-[400px]" title={ev.observaciones}>{ev.observaciones}</td>
+            ) : (
+              registrosActuales.map((item, i) => (
+                <tr
+                  key={item.id}
+                  className={`transition-colors duration-150 hover:bg-gray-200 dark:hover:bg-gray-600 ${i % 2 === 0 ? "bg-white dark:bg-gray-900" : "bg-gray-50 dark:bg-gray-800"
+                    }`}
+                >
+                  <td className="px-4 py-2 border border-gray-400 dark:border-gray-700 text-gray-800 dark:text-gray-200">
+                    {indicePrimero + i + 1}
+                  </td>
+                  <td className="px-4 py-2 border border-gray-400 dark:border-gray-700 text-gray-800 dark:text-gray-200">
+                    {item.usuario_email}
+                  </td>
+                  <td className="px-4 py-2 border border-gray-400 dark:border-gray-700 text-gray-800 dark:text-gray-200">
+                    {item.accion}
+                  </td>
+                  <td className="px-4 py-2 border border-gray-400 dark:border-gray-700 text-gray-800 dark:text-gray-200">
+                    {item.descripcion}
+                  </td>
+                  <td className="px-4 py-2 border border-gray-400 dark:border-gray-700 text-gray-800 dark:text-gray-200">
+                    {new Date(item.fecha_inicio).toLocaleString("es-MX")}
+                  </td>
                 </tr>
-              )) : (
-                <tr>
-                  <td colSpan="11" className="text-center py-6 text-gray-400 dark:text-gray-500 font-semibold">No se encontraron resultados.</td>
-                </tr>
-              )}
-            </tbody>
-          </table>
-        </div>
-      </main>
+              ))
+            )}
+          </tbody>
+        </table>
+      </div>
+
+      {filteredBitacora.length > registrosPorPagina && (
+        <Paginacion
+          pagina={paginaActual}
+          totalPaginas={totalPaginas}
+          onChangePagina={setPaginaActual}
+        />
+      )}
     </div>
   );
 }
