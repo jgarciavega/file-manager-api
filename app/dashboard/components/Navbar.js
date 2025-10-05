@@ -21,6 +21,7 @@ export default function Navbar({ toggleSidebar }) {
 
   useEffect(() => {
     const storedUser = localStorage.getItem("user");
+    console.log("Stored user from localStorage:", storedUser);
     if (storedUser) {
       try {
         const parsedUser = JSON.parse(storedUser);
@@ -36,7 +37,6 @@ export default function Navbar({ toggleSidebar }) {
   }
 
   const email = user.email || "";
-  const avatar = avatarMap[email] || "/default-avatar.png";
   const title = profesionMap[email] || user.nombre || "Usuario";
   const saludo = ["annel", "blanca", "hdelreal"].includes(email.split("@")[0])
     ? "Bienvenida"
@@ -45,7 +45,7 @@ export default function Navbar({ toggleSidebar }) {
   return (
     <>
       <div className="relative shadow-md w-full bg-url('/inicio.webp') bg-cover bg-center overflow-hidden">
-        <Image
+        <img
           src="/inicio.webp"
           alt="Imagen de Bienvenida"
           width={1600}
@@ -56,16 +56,14 @@ export default function Navbar({ toggleSidebar }) {
 
         <div className="absolute top-0 right-0 w-full md:w-1/2 h-full flex flex-col items-center justify-center p-6 bg-black bg-opacity-50 rounded-l-lg text-white">
           <div className="flex items-center gap-4 mb-4">
-            <Image
-              src={avatar}
-              alt={`Avatar de ${user.nombre}`}
-              width={80}
-              height={80}
-              className="rounded-full border-2 border-white"
+            <img
+              src="https://ui-avatars.com/api/?name=Usuario&background=random"
+              alt="Avatar de usuario"
+              className="w-20 h-20 rounded-full border-2 border-white"
             />
             <div>
               <h2 className="text-xl font-semibold">
-                {saludo}: {title}
+                {saludo}, {title}
               </h2>
               <p className="text-sm">Tienes nuevos archivos para revisar</p>
             </div>

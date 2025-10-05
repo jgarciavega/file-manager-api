@@ -66,6 +66,8 @@ export default function LoginPage() {
       localStorage.removeItem("user");
       localStorage.setItem("token", token);
       localStorage.setItem("user", JSON.stringify(user));
+      localStorage.setItem("role_id", user.role_id.toString());
+      localStorage.setItem("user_id", user.id.toString());
 
       console.log("✅ Token y usuario guardados:", { token, user });
 
@@ -76,7 +78,7 @@ export default function LoginPage() {
       if (user.role_id === 1) {
         router.push("/admin");
       } else {
-        router.push("/home");
+        router.push("/dashboard");
       }
 
     } catch (error) {

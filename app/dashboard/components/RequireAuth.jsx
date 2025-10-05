@@ -1,28 +1,49 @@
 "use client";
-import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 
 export default function RequireAuth({ children }) {
-  const { data: session, status } = useSession();
   const router = useRouter();
+  const [loading, setLoading] = useState(true);
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
 
   useEffect(() => {
-    if (status === "unauthenticated") {
+    const token = localStorage.getItem("token"); // o cookies, según lo manejes
+
+    if (!token) {
       router.replace("/login");
+      return;
     }
-  }, [status, router]);
 
-  // Mientras la sesión se está cargando, no renderices nada (ni layout ni sidebar)
-  if (status === "loading") {
-    return <div style={{padding: 40, textAlign: 'center', color: '#2563eb', fontWeight: 600}}>Cargando sesión...</div>;
+    // Aquí puedes validar el token con tu backend
+    fetch(`${process.env.NEXT_PUBLIC_API_URL}/auth/me`, {
+      headers: { Authorization: `Bearer ${token}` },
+    })
+      .then((res) => {
+        if (!res.ok) throw new Error("Token inválido");
+        return res.json();
+      })
+      .then(() => {
+        setIsAuthenticated(true);
+        setLoading(false);
+      })
+      .catch(() => {
+        localStorage.removeItem("token"); // opcional
+        router.replace("/login");
+      });
+  }, [router]);
+
+  if (loading) {
+    return (
+      <div style={{ padding: 40, textAlign: "center", color: "#2563eb", fontWeight: 600 }}>
+        Verificando sesión...
+      </div>
+    );
   }
 
-  // Si no hay sesión, tampoco renderices nada (el useEffect hará la redirección)
-  if (!session) {
-    return null;
+  if (!isAuthenticated) {
+    return null; // El redirect ya se hizo en el useEffect
   }
 
-  // Si hay sesión, renderiza normalmente
   return <>{children}</>;
 }

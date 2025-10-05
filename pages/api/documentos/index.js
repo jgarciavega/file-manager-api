@@ -50,11 +50,22 @@ export default async function handler(req, res) {
   // ————————————————————— POST —————————————————————//
   if (req.method === 'POST') {
     /**
-     * 2️⃣ Configuramos formidable para guardar
-     *    el archivo en public/uploads manteniendo extensión.
+     * 2️⃣ Ensure upload directory exists and configure formidable
+     *    to save files in public/uploads keeping extensions.
      */
+    const uploadDir = path.join(process.cwd(), '/public/uploads');
+    try {
+      if (!fs.existsSync(uploadDir)) {
+        fs.mkdirSync(uploadDir, { recursive: true, mode: 0o755 });
+        console.log('Created upload dir:', uploadDir);
+      }
+    } catch (mkdirErr) {
+      console.error('Error creating upload dir:', mkdirErr);
+      return res.status(500).json({ error: 'Error preparando directorio de subida', details: mkdirErr.message });
+    }
+
     const form = formidable({
-      uploadDir: path.join(process.cwd(), '/public/uploads'),
+      uploadDir,
       keepExtensions: true,
       maxFileSize: 10 * 1024 * 1024, // límite: 10MB
     })
@@ -63,14 +74,34 @@ export default async function handler(req, res) {
     form.parse(req, async (err, fields, files) => {
       if (err) {
         console.error('Error formidable:', err)
-        return res.status(500).json({ error: 'Error procesando archivo' })
+        return res.status(500).json({ error: 'Error procesando archivo', details: err.message })
       }
 
-      // 4️⃣ Extraemos campos y archivo
+      // Debug: log parsed fields and file keys
+      try {
+        console.log('POST /api/documentos parsed fields:', fields);
+        console.log('POST /api/documentos parsed files keys:', Object.keys(files || {}));
+      } catch (logErr) {
+        console.warn('Error logging parse results:', logErr);
+      }
+
+      // 4️⃣ Extraemos campos y archivo. Accept multiple possible file field names.
       const { nombre, descripcion, tipos_documentos_id, usuarios_id } = fields
-      const file = files.archivo
+  // Priorizar 'file' como campo principal (compatibilidad Postman y frontend)
+  const file = files.file || files.archivo || files.ruta || Object.values(files || {})[0];
       if (!file) {
-        return res.status(400).json({ error: 'Falta el archivo' })
+        return res.status(400).json({ error: 'Falta el archivo', availableFileKeys: Object.keys(files || {}) })
+      }
+
+      // If debug mode is set, return the parsed fields and file metadata without saving to DB
+      if (req.query?.debug === 'true') {
+        const fileMeta = {
+          originalFilename: file.originalFilename || file.name || file.newFilename || null,
+          filepath: file.filepath || file.path || null,
+          size: file.size || null,
+          mimetype: file.mimetype || file.type || null,
+        };
+        return res.status(200).json({ debug: true, fields, fileMeta, availableFileKeys: Object.keys(files || {}) });
       }
 
       // 5️⃣ Generamos la URL pública (next sirve static files desde /public)
@@ -79,21 +110,22 @@ export default async function handler(req, res) {
 
       try {
         // 6️⃣ Guardamos en la BD
+        const mime = file.mimetype || file.type || '';
         const nuevo = await prisma.documentos.create({
           data: {
             nombre,
             descripcion,
-            mime: file.mimetype,
+            mime,
             ruta,
-            tipos_documentos_id: parseInt(tipos_documentos_id, 10),
-            usuarios_id:       parseInt(usuarios_id, 10),
-            fecha_subida:      new Date(),
+            tipos_documentos_id: tipos_documentos_id ? parseInt(tipos_documentos_id, 10) : null,
+            usuarios_id: usuarios_id ? parseInt(usuarios_id, 10) : null,
+            fecha_subida: new Date(),
           },
         })
         return res.status(201).json(nuevo)
       } catch (e) {
         console.error('Error al guardar en BD:', e)
-        return res.status(500).json({ error: 'Error guardando en BD' })
+        return res.status(500).json({ error: 'Error guardando en BD', details: e.message })
       } finally {
         await prisma.$disconnect()
       }

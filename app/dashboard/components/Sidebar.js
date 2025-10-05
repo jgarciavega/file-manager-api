@@ -121,7 +121,7 @@ export default function Sidebar() {
       label: "GESTION DE ARCHIVOS",
       icon: faBoxes,
       sub: [
-        { label: "Subir Documento", href: "/dashboard/upload", icon: faUpload },
+        { label: "Subir Documento", href: "/dashboard/subir-documento", icon: faUpload },
         { label: "Estado del Documento", href: "/dashboard/estado-documento", icon: faCheck },
         { label: "Favoritos", href: "/dashboard/favorites", icon: faStar },
         { label: "Mis Documentos", href: "/dashboard/mis-documentos", icon: faFolderOpen },

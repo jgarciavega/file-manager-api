@@ -163,7 +163,7 @@ export default function UsuariosPage() {
       });
 
       setModalVisible(false);
-      setPaginaActual(1);
+      setPagina(1);
 
       // Recargar usuarios
       fetch(`${NEXT_PUBLIC_API_URL}/usuarios/view?page=1`, {

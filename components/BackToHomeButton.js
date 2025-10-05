@@ -14,7 +14,7 @@ import { faArrowLeft } from "@fortawesome/free-solid-svg-icons";
  * - className: estilos extra
  */
 export default function BackToHomeButton({
-  href = "/home",
+  href = "/dashboard",
   label = "Volver al Inicio",
   darkMode = false,
   color = "white",
