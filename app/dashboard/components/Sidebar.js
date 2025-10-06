@@ -95,8 +95,9 @@ export default function Sidebar() {
       if (result.isConfirmed) {
         localStorage.removeItem("token");
         localStorage.removeItem("user");
+        localStorage.removeItem("theme");
+        document.documentElement.classList.remove("dark");
         router.push("/");
-
       }
     });
   };
