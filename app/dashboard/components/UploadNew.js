@@ -464,15 +464,6 @@ export default function UploadNew() {
     }
   };
 
-
-
-
-
-
-
-
-
-
   const closeModal = () => {
     setShowModal(false);
     setUploadProgress(0);
@@ -483,9 +474,9 @@ export default function UploadNew() {
       {/* Usar componente global DashboardHeader */}
       <DashboardHeader title="Subir Documentos" avatarUrl={session?.user ? avatarMap[session.user.email] || '/default-avatar.png' : '/default-avatar.png'} />
 
-      {/* Botón volver al inicio (sin barra de fondo) */}
+      {/* Botón volver al dashboard (sin barra de fondo) */}
       <div className="px-12 py-4">
-        <BackToHomeButton href="/home" label={"🏠 Volver al inicio"} size="lg" className="px-6 py-3" />
+        <BackToHomeButton href="/dashboard" label={" Volver al dashboard"} size="lg" className="px-6 py-3" />
       </div>
 
       {/* Formulario principal sin caja */}
@@ -1066,7 +1057,7 @@ export default function UploadNew() {
                 <div className="absolute inset-0 bg-gradient-to-r from-white/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
                 <FontAwesomeIcon icon={faFileAlt} className="text-xl relative z-10" />
                 <span className="text-xl relative z-10">
-                  {form.file ? '🔄 Cambiar Archivo' : '📁 Seleccionar Archivo'}
+                  {form.file ? 'Cambiar Archivo' : 'Seleccionar Archivo'}
                 </span>
                 <div className="absolute inset-0 rounded-xl bg-gradient-to-r from-green-400/20 to-emerald-500/20 opacity-0 group-hover:opacity-100 transition-opacity duration-300 blur-sm"></div>
               </button>
@@ -1091,7 +1082,7 @@ export default function UploadNew() {
                 )}
                 <FontAwesomeIcon icon={faUpload} className="text-xl relative z-10" />
                 <span className="text-xl relative z-10">
-                  {uploading ? '⬆️ Subiendo documento...' : '🚀 Subir Documento'}
+                  {uploading ? '⬆️ Subiendo documento...' : ' Subir Documento'}
                 </span>
               </button>
             </div>
