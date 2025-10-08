@@ -34,7 +34,7 @@ export default function LoginPage() {
       const result = await res.json();
       console.log("🔐 Respuesta del login completa:", result);
 
-      // ⚠️ Validación segura del formato de respuesta
+      // Validación de la respuesta
       if (
         !result.success ||
         !result.data ||
@@ -56,20 +56,32 @@ export default function LoginPage() {
 
       const { token, user } = result.data;
 
-      if (typeof user.role_id !== "number") {
+      if (typeof user.id !== "number") {
         setLoginError("Error inesperado. Datos de usuario incompletos.");
         return;
       }
 
-      // ✅ Guardar en localStorage
-      localStorage.removeItem("token");
-      localStorage.removeItem("user");
+      // ✅ Registrar login en la bitácora
+      try {
+        await fetch(`${NEXT_PUBLIC_API_URL}/bitacora`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+          body: JSON.stringify({
+            accion: "login",
+            descripcion: `El usuario ${user.nombre} inició sesión`,
+            usuario_id: user.id,
+          }),
+        });
+        console.log("✅ Login registrado en bitácora");
+      } catch (error) {
+        console.error("Error al registrar en bitácora:", error);
+      }
+
+      // ✅ Guardar token y usuario en localStorage
       localStorage.setItem("token", token);
       localStorage.setItem("user", JSON.stringify(user));
       localStorage.setItem("role_id", user.role_id.toString());
       localStorage.setItem("user_id", user.id.toString());
-
-      console.log("✅ Token y usuario guardados:", { token, user });
 
       setLoginError("");
       setAttempts(0);
