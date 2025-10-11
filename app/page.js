@@ -4,7 +4,7 @@ import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
-import NEXT_PUBLIC_API_URL from "@/config"; // Asegúrate de que esté bien definido
+import NEXT_PUBLIC_API_URL from "../config"
 
 export default function LoginPage() {
   const {

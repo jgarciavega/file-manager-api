@@ -43,6 +43,7 @@
   "devDependencies": {
     "@eslint/eslintrc": "^3.0.0",
     "@next/eslint-plugin-next": "^15.2.1",
+    "@types/node": "24.7.1",
     "eslint": "^9.21.0",
     "eslint-plugin-react": "^7.37.4",
     "eslint-plugin-react-hooks": "5.2.0",
