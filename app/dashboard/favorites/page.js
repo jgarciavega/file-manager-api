@@ -241,7 +241,7 @@ export default function FavoritesPage() {
       <DashboardHeader title="Mis Favoritos" avatarUrl={session?.user ? (session.user.avatar || avatarMap[session?.user?.email] || '/default-avatar.png') : '/default-avatar.png'} />
       {/* Botón Volver al Inicio y Exportar */}
       <div className="px-6 pt-4 flex flex-wrap gap-4 items-center justify-between">
-        <BackToHomeButton href="/home" label="Volver al Inicio" darkMode={darkMode} />
+        <BackToHomeButton href="/dashboard" label="Volver al Inicio" darkMode={darkMode} />
         {/* Botón exportar */}
         <button
           className={`inline-flex items-center gap-2 px-5 py-2.5 rounded-xl font-semibold transition-all duration-300 shadow-lg hover:shadow-xl transform hover:-translate-y-1 hover:scale-105 ${darkMode ? "bg-gradient-to-r from-blue-700 to-purple-700 text-white hover:from-blue-600 hover:to-purple-600" : "bg-gradient-to-r from-blue-200 to-purple-200 text-blue-900 hover:from-blue-300 hover:to-purple-300"}`}

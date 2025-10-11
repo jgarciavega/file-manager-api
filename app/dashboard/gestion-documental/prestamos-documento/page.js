@@ -55,7 +55,7 @@ export default function PrestamosDocumento() {
           </span>
         </div>
         <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100 mb-4" title="Gestión de préstamos de documentos conforme a la Ley Estatal de Archivos de BCS">
-          Préstamos de Documento
+          
         </h1>
         {/* Botón para nuevo préstamo */}
         <div className="mb-4 flex justify-end">

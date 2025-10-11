@@ -34,6 +34,8 @@ import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import DashboardHeader from '@/components/DashboardHeader';
 import BackToHomeButton from '@/components/BackToHomeButton';
 import DashboardMenu from '@/components/DashboardMenu';
+import DarkModeToggle from "@/components/DarkModeToggle";
+
 
 export default function PendingDocumentsPage() {
   // Funciones de acción (simples para evitar errores de referencia)
@@ -174,13 +176,14 @@ export default function PendingDocumentsPage() {
       {/* Botón regreso y menú al mismo nivel */}
       <div className="mb-8 px-6 flex items-center justify-between">
         <div className="flex items-center">
-          <BackToHomeButton href="/home" label="Volver al Inicio" darkMode={darkMode} />
+          <BackToHomeButton href="/dashboard" label="Volver al Inicio" darkMode={darkMode} />
         </div>
 
         <div className="ml-4">
-          <DashboardMenu />
+          {/* <DashboardMenu /> */}
         </div>
       </div>
+
 
       {/* Título removido por petición del usuario */}
 

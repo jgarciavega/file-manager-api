@@ -80,7 +80,7 @@ export default function AyudaPage() {
       {/* Barra con botón volver y menú de secciones pegado al header */}
       <div className="w-full flex items-center gap-4 px-6 py-2">
         <div>
-          <BackToHomeButton href="/home" label="Volver al Inicio" size="lg" color="primary" shadow />
+          <BackToHomeButton href="/dashboard" label="Volver al Inicio" size="lg" color="primary" shadow />
         </div>
         <div className="flex-1 flex justify-center">
           <div className="flex gap-3 items-center flex-nowrap">

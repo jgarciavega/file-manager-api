@@ -61,7 +61,7 @@ export default function DashboardHeader({ title = "Dashboard", avatarUrl }) {
   };
 
   return (
-    <header className="w-full flex items-center justify-between py-4 px-6 bg-white dark:bg-[#151a2c] border-b border-gray-300 dark:border-[#25304d]">
+  <header className="w-full flex items-center justify-between py-4 px-6 bg-white dark:bg-slate-900">
       {/* Logo a la izquierda */}
       <div className="flex items-center gap-2 min-w-[48px]">
         <Image
@@ -83,12 +83,14 @@ export default function DashboardHeader({ title = "Dashboard", avatarUrl }) {
       <div className="flex items-center gap-4 min-w-[90px] justify-end">
         <ThemeToggle />
 
-        <Image
+        {/* Use a plain <img> for avatar so we can handle onError fallback reliably */}
+        <img
           src={avatarUrl || "/login.jpg"}
           alt="Avatar"
           width={56}
           height={56}
-          className="rounded-full border border-gray-400 dark:border-gray-600 shadow-md"
+          onError={(e) => { e.currentTarget.src = '/login.jpg'; }}
+          className="rounded-full object-cover w-14 h-14"
         />
       </div>
     </header>

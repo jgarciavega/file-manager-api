@@ -453,7 +453,7 @@ export default function EstadoDocumentoPage() {
         <div className="mb-8 px-6 flex items-center justify-between">
           <div className="flex items-center">
             <TooltipWrapper text="Regresar al panel principal">
-              <BackToHomeButton href="/home" label="Volver al Inicio" darkMode={darkMode} />
+              <BackToHomeButton href="/dashboard" label="Volver al Inicio" darkMode={darkMode} />
             </TooltipWrapper>
           </div>
 

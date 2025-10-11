@@ -79,15 +79,6 @@ export default function VerificacionLEA() {
   const [page, setPage] = useState(1);
   const pageSize = 10;
 
-  if (status === "loading") {
-    return null;
-  }
-
-  const userEmail = session?.user?.email || "";
-  const userName = session?.user?.name || "Usuario";
-  const userAvatar = avatarMap[userEmail] || "/default-avatar.png";
-  const userPosition = admMap[userEmail] || "000";
-
   // Documentos de ejemplo (simulan los que requieren verificación LEA)
   const [documents] = useState([
     {
@@ -128,6 +119,16 @@ export default function VerificacionLEA() {
     },
   ]);
 
+  if (status === "loading") {
+    return null;
+  }
+
+  const userEmail = session?.user?.email || "";
+  const userName = session?.user?.name || "Usuario";
+  const userAvatar = avatarMap[userEmail] || "/default-avatar.png";
+  const userPosition = admMap[userEmail] || "000";
+
+
   // Filtros y búsqueda
   const filteredDocs = documents.filter((doc) => {
     if (filterState !== "Todos" && doc.status !== filterState) return false;
@@ -151,8 +152,8 @@ export default function VerificacionLEA() {
       <DashboardHeader title="Verificación de LEA-BCS" avatarUrl={userAvatar} />
 
       {/* Botón regreso premium (reemplazado por componente reutilizable) */}
-      <div className="mb-6 flex justify-start animate-fade-in-up delay-200">
-        <BackToHomeButton href="/home" label="Volver al Inicio" darkMode={darkMode} />
+      <div className="mt-6 mb-6 flex justify-start animate-fade-in-up delay-200">
+        <BackToHomeButton href="/dashboard" label="Volver al Inicio" darkMode={darkMode} />
       </div>
 
       {/* Filtros y búsqueda */}

@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import DashboardHeader from "@/components/DashboardHeader";
+import ThemeToggle from '@/components/ThemeToggle';
 import BackToHomeButton from "@/components/BackToHomeButton";
 import avatarMap from "@/lib/avatarMap";
 import { useSession } from "next-auth/react";
@@ -56,8 +57,18 @@ export default function AjustesPage() {
         document.body.style.background = "#0f1724"; // fondo oscuro más neutro
         document.body.style.color = "#e6eef8";
       }
-      localStorage.setItem("theme", theme);
-      localStorage.setItem("fontSize", fontSize);
+      // Guardar theme
+      try { localStorage.setItem("theme", theme); } catch (e) {}
+
+      // Aplicar y guardar tamaño de fuente
+      const applyFontSize = (size) => {
+        // Mapear a pixel sobre el root. md=16, lg=18, xl=20
+        const map = { md: '16px', lg: '18px', xl: '20px' };
+        const px = map[size] || map['md'];
+        try { document.documentElement.style.fontSize = px; } catch (e) {}
+      };
+      applyFontSize(fontSize);
+      try { localStorage.setItem("fontSize", fontSize); } catch (e) {}
     }
   }, [theme, fontSize]);
 
@@ -97,7 +108,7 @@ export default function AjustesPage() {
       {/* Botón volver al inicio y ayuda contextual */}
       <div className="w-full flex px-6 pt-3 pb-1 items-center">
         <BackToHomeButton
-          href="/home"
+          href="/dashboard"
           label="Volver al Inicio"
           size="lg"
           color="primary"
@@ -195,22 +206,48 @@ export default function AjustesPage() {
             {/* Selector de tema visual */}
             <div className="flex flex-col gap-2 flex-1">
               <label className="font-semibold">Modo visual</label>
-                <select
-                  value={theme}
-                  onChange={e => setTheme(e.target.value)}
-                  className={selectClass}
-                  aria-label="Seleccionar modo visual"
-                >
-                  <option value="light">Claro</option>
-                  <option value="dark">Oscuro</option>
-                </select>
+                <div className="flex items-center gap-3">
+                  <select
+                    value={theme}
+                    onChange={e => {
+                      const newTheme = e.target.value;
+                      setTheme(newTheme);
+                      if (typeof window !== 'undefined') {
+                        try {
+                          // Aplicar clase en <html>
+                          document.documentElement.classList.toggle('dark', newTheme === 'dark');
+                        } catch (err) {}
+                        try { localStorage.setItem('theme', newTheme); } catch (err) {}
+                        try { window.dispatchEvent(new CustomEvent('themechange', { detail: { theme: newTheme } })); } catch (err) {}
+                      }
+                    }}
+                    className={selectClass}
+                    aria-label="Seleccionar modo visual"
+                  >
+                    <option value="light">Claro</option>
+                    <option value="dark">Oscuro</option>
+                  </select>
+                  {/* Toggle visual para cambiar tema de forma rápida */}
+                  <ThemeToggle />
+                </div>
             </div>
             {/* Selector de tamaño de fuente */}
             <div className="flex flex-col gap-2 flex-1">
               <label className="font-semibold">Tamaño de fuente</label>
               <select
                 value={fontSize}
-                onChange={e => setFontSize(e.target.value)}
+                onChange={e => {
+                  const newSize = e.target.value;
+                  setFontSize(newSize);
+                  if (typeof window !== 'undefined') {
+                    try { // aplicar inmediatamente
+                      const map = { md: '16px', lg: '18px', xl: '20px' };
+                      document.documentElement.style.fontSize = map[newSize] || map['md'];
+                    } catch (err) {}
+                    try { localStorage.setItem('fontSize', newSize); } catch (err) {}
+                    try { window.dispatchEvent(new CustomEvent('fontsizechange', { detail: { fontSize: newSize } })); } catch (err) {}
+                  }
+                }}
                 className={selectClass}
                 aria-label="Seleccionar tamaño de fuente"
               >

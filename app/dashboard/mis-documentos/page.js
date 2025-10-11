@@ -22,22 +22,68 @@ export default function MisDocumentosPage() {
     restringido: 0,
   });
 
-  // 🌙 Detectar modo oscuro
+  // 🌙 Sincronizar el estado local de tema con la clase `dark` del root y con el evento global `themechange`
   useEffect(() => {
     const root = document.documentElement;
-    const readTheme = () => {
-      try {
-        const stored = localStorage.getItem("theme");
-        if (stored === "dark") return true;
-        if (stored === "light") return false;
-      } catch (e) {}
-      return (
-        root.classList.contains("dark") ||
-        (window.matchMedia &&
-          window.matchMedia("(prefers-color-scheme: dark)").matches)
-      );
+    const readStored = () => {
+      try { return localStorage.getItem('theme'); } catch (e) { return null; }
     };
-    setDarkMode(readTheme());
+
+    const stored = readStored();
+    if (stored === 'dark') {
+      try { root.classList.add('dark'); } catch (e) {}
+      setDarkMode(true);
+    } else if (stored === 'light') {
+      try { root.classList.remove('dark'); } catch (e) {}
+      setDarkMode(false);
+    }
+    else setDarkMode(root.classList.contains('dark') || (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches));
+
+    const readStoredTheme = () => {
+      try { return localStorage.getItem('theme'); } catch (e) { return null; }
+    };
+
+    const onThemeChange = (e) => {
+      // Prefer the explicit detail, fallback to localStorage (some emitters may not provide detail)
+      let t = e?.detail?.theme;
+      if (!t) t = readStoredTheme();
+      if (t === 'dark') {
+        try { root.classList.add('dark'); } catch (err) {}
+        setDarkMode(true);
+      } else if (t === 'light') {
+        try { root.classList.remove('dark'); } catch (err) {}
+        setDarkMode(false);
+      } else {
+        setDarkMode(root.classList.contains('dark'));
+      }
+    };
+    window.addEventListener('themechange', onThemeChange);
+
+    // Cross-tab sync: listen for storage events
+    const onStorage = (ev) => {
+      if (ev.key === 'theme') {
+        const t = ev.newValue;
+        if (t === 'dark') {
+          try { root.classList.add('dark'); } catch (err) {}
+          setDarkMode(true);
+        } else if (t === 'light') {
+          try { root.classList.remove('dark'); } catch (err) {}
+          setDarkMode(false);
+        }
+      }
+    };
+    window.addEventListener('storage', onStorage);
+
+    const observer = new MutationObserver(() => {
+      setDarkMode(root.classList.contains('dark'));
+    });
+    observer.observe(root, { attributes: true, attributeFilter: ['class'] });
+
+    return () => {
+      window.removeEventListener('themechange', onThemeChange);
+      window.removeEventListener('storage', onStorage);
+      observer.disconnect();
+    };
   }, []);
 
   // 🧠 Cargar usuario desde localStorage

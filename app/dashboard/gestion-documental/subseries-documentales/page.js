@@ -68,7 +68,7 @@ export default function SubseriesDocumentales() {
         </div>
         <div className="flex items-center gap-2 mb-4">
           <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100" title="Gestión de subseries documentales conforme a la Ley Estatal de Archivos de BCS">
-            Subseries Documentales
+  
           </h1>
           <button
             className="ml-2 p-1 rounded-full bg-gray-200 dark:bg-[#232b4a] hover:bg-blue-100 dark:hover:bg-[#25304d] border border-gray-300 dark:border-[#25304d] text-blue-700 dark:text-blue-200"

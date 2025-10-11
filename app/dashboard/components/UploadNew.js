@@ -1,147 +1,89 @@
-"use client";
+'use client';
 
-import { useState, useRef, useEffect } from "react";
-import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { useState, useRef, useEffect } from 'react';
+import Image from 'next/image';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import {
   faUpload,
+  faMoon,
+  faSun,
+  faArrowLeft,
   faDownload,
   faFileAlt,
+  faFilePdf,
   faExclamationTriangle,
   faCheckCircle,
   faInfoCircle,
   faChevronDown,
-  faChevronUp,
-  faLightbulb,
-  faRobot,
-} from "@fortawesome/free-solid-svg-icons";
-import { CircularProgressbar, buildStyles } from "react-circular-progressbar";
-import "react-circular-progressbar/dist/styles.css";
-import avatarMap from "../../../lib/avatarMap";
-import useAutoComplete from "@/app/hooks/useAutoComplete";
-import BackToHomeButton from "@/components/BackToHomeButton";
-import NEXT_PUBLIC_API_URL from "@/config";
-import DashboardHeader from "@/components/DashboardHeader";
+  faChevronUp
+} from '@fortawesome/free-solid-svg-icons';
+import { CircularProgressbar, buildStyles } from 'react-circular-progressbar';
+import 'react-circular-progressbar/dist/styles.css';
+import avatarMap from '../../../lib/avatarMap';
+import Link from 'next/link';
+import BackToHomeButton from '@/components/BackToHomeButton'
+import NEXT_PUBLIC_API_URL from '@/config';
+import DashboardHeader from '@/components/DashboardHeader'
 
-export default function UploadNew({ session }) {
-  // ===== ESTADO UI / SESIÓN =====
-  const [darkMode, setDarkMode] = useState(false);
-  const [showTooltip, setShowTooltip] = useState(false);
-  const [showModal, setShowModal] = useState(false);
-  const [uploadedFileUrl, setUploadedFileUrl] = useState("");
-  const [uploading, setUploading] = useState(false);
-  const [uploadProgress, setUploadProgress] = useState(0);
-  const [errorMessage, setErrorMessage] = useState("");
-  const [errors, setErrors] = useState({});
-  const fileInputRef = useRef(null);
 
-  // 📚 CATÁLOGOS ARCHIVÍSTICOS DESDE LA API
-  const [catalogs, setCatalogs] = useState({
-    cuadros: [],
-    valores: [],
-    plazos: [],
-    destinos: [],
-    soportes: [],
-    departamentos: [],
-    tiposDocumentos: [],
-  });
+export default function UploadNew() {
+
+  const storedUser = localStorage.getItem("user");
+
+  const [session, setSession] = useState(null);
+
+  const [status, setStatus] = useState("loading"); // loading, authenticated, unauthenticated
 
 
 
   useEffect(() => {
-    const fetchCatalogs = async () => {
+    if (storedUser) {
       try {
-        const token = localStorage.getItem("token");
-
-        const endpoints = [
-          "catalogs/cuadro_clasificacion",
-          "catalogs/valores_documentales",
-          "catalogs/plazos_conservacion",
-          "catalogs/destinos_finales",
-          "catalogs/soportes_documentales",
-          "departamentos",
-          "tipos-documentos"
-        ];
-
-        const responses = await Promise.all(
-          endpoints.map(async (ep) => {
-            const url = `${NEXT_PUBLIC_API_URL}/${ep}`;
-            const res = await fetch(url, {
-              headers: { Authorization: `Bearer ${token}` },
-            });
-
-            const text = await res.text();
-            try {
-              return JSON.parse(text);
-            } catch (err) {
-              console.error(`❌ Error parseando JSON (${ep}):`, text);
-              return { data: [] };
-            }
-          })
-        );
-
-        // 👇 Solo actualiza una vez, sin depender del render
-        setCatalogs({
-          cuadros: responses[0]?.data || [],
-          valores: responses[1]?.data || [],
-          plazos: responses[2]?.data || [],
-          destinos: responses[3]?.data || [],
-          soportes: responses[4]?.data || [],
-          departamentos: responses[5]?.data?.departamentos || [],
-          tiposDocumentos: responses[6]?.data?.tiposDocumentos || [],
-        });
-      } catch (error) {
-        console.error("❌ Error general al cargar catálogos:", error);
+        const parsedUser = JSON.parse(storedUser);
+        setSession(parsedUser);
+        setStatus("authenticated");
+      } catch (err) {
+        console.error("Error parseando user:", err);
+        setStatus("unauthenticated");
       }
-    };
+    } else {
+      setStatus("unauthenticated");
+    }
+  }, [storedUser]);
 
-    fetchCatalogs();
-  }, []); // 👈 IMPORTANTE: el array vacío evita el bucle infinito
-
-  // ===== FORMULARIO (campos originales + *_id para API) =====
+  // Estados del formulario
   const [form, setForm] = useState({
-    // Diseño original
-    nombre: "",
-    jefatura: "",
-    review: "",
+    nombre: '',
+    jefatura: '',
+    review: '',
     file: null,
-    serie: "",
-    subserie: "",
-    expediente: "", // compat
-    fecha_creacion: "",
-    vigencia: "",
-    acceso: "",
-    observaciones: "",
-    classification: "", // texto visible si no se usa tiposDocumentos
-
-    // Campos archivísticos (UI texto)
-    codigo_clasificacion: "", // solo para generar numero_expediente readable
-    valor_documental: "",
-    plazo_conservacion: "",
-    destino_final: "",
-    soporte_documental: "",
-    numero_expediente: "",
-    folio_documento: "",
-    procedencia: "",
-
-    // IDs reales para el backend
-    codigo_clasificacion_id: "",
-    valor_documental_id: "",
-    plazo_conservacion_id: "",
-    destino_final_id: "",
-    soporte_id: "",
-    tipos_documentos_id: "",
-    departamentos_id: "",
-    periodos_id: "1", // si tu backend asigna por defecto, puedes dejar "1" editable abajo si quieres
+    serie: '',
+    subserie: '',
+    expediente: '', // Mantenido para compatibilidad
+    fecha_creacion: '',
+    vigencia: '',
+    acceso: '',
+    observaciones: '',
+    classification: '', // Tipo de documento
+    // 🏛️ CAMPOS ARCHIVÍSTICOS OBLIGATORIOS - LEY DE ARCHIVOS BCS
+    codigo_clasificacion: '', // Código del Cuadro de Clasificación Archivística
+    valor_documental: '', // Administrativo, Legal, Fiscal, Histórico
+    plazo_conservacion: '', // Años específicos de conservación
+    destino_final: '', // Conservación permanente o baja documental
+    soporte_documental: '', // Original, Copia, Digitalización
+    numero_expediente: '', // Generado automáticamente
+    folio_documento: '', // Folio dentro del expediente
+    procedencia_admin: '' // Unidad administrativa productora
   });
 
-  // ===== AUTO-COMPLETE (tu hook) =====
-  const {
-    validacionEnTiempo,
-    alertasCalidad,
-    validarCampo,
-  } = useAutoComplete(form, setForm);
-
-  // ===== TOOLTIPS =====
+  const [errors, setErrors] = useState({});
+  const [uploading, setUploading] = useState(false);
+  const [uploadProgress, setUploadProgress] = useState(0);
+  const [darkMode, setDarkMode] = useState(false);
+  const [showModal, setShowModal] = useState(false);
+  const [uploadedFileUrl, setUploadedFileUrl] = useState('');
+  const [errorMessage, setErrorMessage] = useState('');
+  const [showTooltip, setShowTooltip] = useState(false);
   const [tooltips, setTooltips] = useState({
     titulo: false,
     descripcion: false,
@@ -152,39 +94,115 @@ export default function UploadNew({ session }) {
     expediente: false,
     soporteDocumental: false,
     destinoFinal: false,
-    folio: false,
+    folio: false
   });
-  const toggleTooltip = (key, show) =>
-    setTooltips((p) => ({ ...p, [key]: show }));
 
-  const TooltipWrapper = ({ tooltipKey, content, children, position = "top" }) => (
+  const fileInputRef = useRef(null);
+
+  // Tipos de archivo permitidos
+  const ALLOWED_FILE_TYPES = {
+    'application/pdf': 'PDF',
+    'application/msword': 'DOC',
+    'application/vnd.openxmlformats-officedocument.wordprocessingml.document': 'DOCX',
+    'application/vnd.ms-excel': 'XLS',
+    'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet': 'XLSX',
+    'application/vnd.openxmlformats-officedocument.presentationml.presentation': 'PPTX',
+    'image/jpeg': 'JPG',
+    'image/jpg': 'JPG',
+    'image/png': 'PNG',
+    'text/plain': 'TXT'
+  };
+
+  const MAX_FILE_SIZE = 150 * 1024 * 1024; // 150MB
+
+  // 🏛️ CATÁLOGOS ARCHIVÍSTICOS - LEY DE ARCHIVOS BCS
+  const CUADRO_CLASIFICACION = {
+    '001': 'Normatividad y Legislación',
+    '002': 'Planeación y Programación',
+    '003': 'Organización y Funcionamiento',
+    '004': 'Recursos Humanos',
+    '005': 'Recursos Financieros',
+    '006': 'Recursos Materiales y Servicios',
+    '007': 'Servicios Portuarios',
+    '008': 'Operaciones Marítimas',
+    '009': 'Seguridad Portuaria',
+    '010': 'Medio Ambiente',
+    '011': 'Tecnologías de la Información',
+    '012': 'Comunicación Social',
+    '013': 'Transparencia y Acceso a la Información',
+    '014': 'Contraloría Interna',
+    '015': 'Asuntos Jurídicos'
+  };
+
+  const VALORES_DOCUMENTALES = {
+    'administrativo': 'Administrativo',
+    'legal': 'Legal',
+    'fiscal': 'Fiscal',
+    'historico': 'Histórico',
+    'mixto': 'Mixto (Varios valores)'
+  };
+
+  const PLAZOS_CONSERVACION = {
+    '1': '1 año',
+    '2': '2 años',
+    '3': '3 años',
+    '5': '5 años',
+    '10': '10 años',
+    '15': '15 años',
+    '20': '20 años',
+    '30': '30 años',
+    'permanente': 'Conservación Permanente'
+  };
+
+  const DESTINOS_FINALES = {
+    'conservacion_permanente': 'Conservación Permanente',
+    'baja_documental': 'Baja Documental',
+    'transferencia_historico': 'Transferencia a Archivo Histórico'
+  };
+
+  const SOPORTES_DOCUMENTALES = {
+    'original_fisico': 'Original Físico',
+    'original_digital': 'Original Digital',
+    'copia_fisica': 'Copia Física',
+    'copia_digital': 'Copia Digital',
+    'digitalizacion': 'Digitalización de Original Físico'
+  };
+
+  // Función helper para manejar tooltips
+  const toggleTooltip = (key, show) => {
+    setTooltips(prev => ({
+      ...prev,
+      [key]: show
+    }));
+  };
+
+  // Componente tooltip reutilizable mejorado
+  const TooltipWrapper = ({ tooltipKey, content, children, position = 'top' }) => (
     <div className="relative inline-block">
       <div
         onMouseEnter={() => toggleTooltip(tooltipKey, true)}
         onMouseLeave={() => toggleTooltip(tooltipKey, false)}
-        onClick={(e) => e.stopPropagation()}
+        onClick={(e) => e.stopPropagation()} // Prevenir que el clic cierre el tooltip
       >
         {children}
       </div>
       {tooltips[tooltipKey] && (
         <div
-          className={`absolute z-50 ${position === "top" ? "bottom-full mb-2" : "top-full mt-2"
-            } left-1/2 -translate-x-1/2 p-3 bg-gray-900 dark:bg-gray-700 text-white text-sm rounded-lg shadow-lg border border-gray-600 min-w-max max-w-xs`}
+          className={`absolute z-50 ${position === 'top' ? 'bottom-full mb-2' : 'top-full mt-2'} left-1/2 transform -translate-x-1/2 p-3 bg-gray-900 dark:bg-gray-700 text-white text-sm rounded-lg shadow-lg border border-gray-600 min-w-max max-w-xs pointer-events-auto`}
+          onClick={(e) => e.stopPropagation()} // Prevenir que el clic en el tooltip lo cierre
+          onMouseEnter={() => toggleTooltip(tooltipKey, true)} // Mantener abierto si el mouse está sobre el tooltip
+          onMouseLeave={() => toggleTooltip(tooltipKey, false)} // Cerrar al salir del tooltip
         >
           <div dangerouslySetInnerHTML={{ __html: content }} />
-          <div
-            className={`absolute ${position === "top" ? "top-full" : "bottom-full"
-              } left-1/2 -translate-x-1/2 w-2 h-2 bg-gray-900 dark:bg-gray-700 border-r border-b border-gray-600 ${position === "top" ? "rotate-45" : "-rotate-45"
-              }`}
-          />
+          <div className={`absolute ${position === 'top' ? 'top-full' : 'bottom-full'} left-1/2 transform -translate-x-1/2 w-2 h-2 bg-gray-900 dark:bg-gray-700 border-r border-b border-gray-600 ${position === 'top' ? 'rotate-45' : '-rotate-45'}`}></div>
         </div>
       )}
     </div>
   );
 
-  // ===== CERRAR TOOLTIPS AL CLIC FUERA =====
+  // useEffect para cerrar tooltips al hacer clic fuera o después de un tiempo
   useEffect(() => {
-    const closeAll = () =>
+    const handleClickOutside = () => {
       setTooltips({
         titulo: false,
         descripcion: false,
@@ -195,342 +213,334 @@ export default function UploadNew({ session }) {
         expediente: false,
         soporteDocumental: false,
         destinoFinal: false,
-        folio: false,
+        folio: false
       });
-    document.addEventListener("click", closeAll);
-    return () => document.removeEventListener("click", closeAll);
+    };
+
+    // Agregar listener para clics en el documento
+    document.addEventListener('click', handleClickOutside);
+
+    // Cleanup al desmontar el componente
+    return () => {
+      document.removeEventListener('click', handleClickOutside);
+    };
   }, []);
 
+  // Sincronizar darkMode local con el tema global (ThemeToggle)
+  useEffect(() => {
+    const root = document.documentElement;
 
-  // ===== GENERAR # EXPEDIENTE con código seleccionado =====
-  const generarNumeroExpediente = (ccId) => {
-    const now = new Date();
-    const anio = now.getFullYear();
-    const cc = catalogs.cuadros.find((c) => String(c.id) === String(ccId));
-    const codigo = cc?.codigo || "000";
-    const correlativo = String(Math.floor(Math.random() * 9999) + 1).padStart(4, "0");
-    return `API-${anio}-${codigo}-${correlativo}`;
+    const readTheme = () => {
+      try {
+        const stored = localStorage.getItem('theme');
+        if (stored === 'dark') return true;
+        if (stored === 'light') return false;
+      } catch (e) {}
+      return root.classList.contains('dark');
+    };
+
+    // Inicializar
+    setDarkMode(readTheme());
+
+    // Handler para evento custom 'themechange'
+    const onThemeChange = (e) => {
+      const theme = e?.detail?.theme;
+      if (theme) setDarkMode(theme === 'dark');
+      else setDarkMode(root.classList.contains('dark'));
+    };
+
+    window.addEventListener('themechange', onThemeChange);
+
+    // Observer para cambios directos en la clase del root
+    const observer = new MutationObserver(() => setDarkMode(root.classList.contains('dark')));
+    observer.observe(root, { attributes: true, attributeFilter: ['class'] });
+
+    return () => {
+      window.removeEventListener('themechange', onThemeChange);
+      observer.disconnect();
+    };
+  }, []);
+
+  // Auto-cerrar tooltips después de 5 segundos
+  useEffect(() => {
+    const activeTooltips = Object.keys(tooltips).filter(key => tooltips[key]);
+
+    if (activeTooltips.length > 0) {
+      const timer = setTimeout(() => {
+        setTooltips(prev => ({
+          ...prev,
+          ...Object.fromEntries(activeTooltips.map(key => [key, false]))
+        }));
+      }, 5000); // 5 segundos
+
+      return () => clearTimeout(timer);
+    }
+  }, [tooltips]);
+
+  if (status === "loading") {
+    return <p className="text-center p-10">Cargando sesión...</p>;
+  }
+
+  if (status === "unauthenticated") {
+    return <p className="text-center p-10">No estás autenticado. Por favor, inicia sesión.</p>;
+  }
+
+  const userEmail = session?.user?.email || 'default';
+  const userName = session?.user?.name || 'Usuario';
+  const userAvatar = avatarMap[userEmail] || '/default-avatar.png';
+
+  // 🏛️ FUNCIÓN PARA GENERAR NÚMERO DE EXPEDIENTE
+  const generarNumeroExpediente = () => {
+    const año = new Date().getFullYear();
+    const mes = String(new Date().getMonth() + 1).padStart(2, '0');
+    const codigo = form.codigo_clasificacion || '000';
+    const correlativo = String(Math.floor(Math.random() * 9999) + 1).padStart(4, '0');
+
+    return `API-${año}-${codigo}-${correlativo}`;
   };
 
-
-  // ===== HANDLERS =====
+  // Manejo de cambios en el formulario
   const handleChange = (e) => {
     const { name, value, files } = e.target;
-
-    if (name === "file" && files?.[0]) {
+    if (name === 'file' && files && files[0]) {
       const file = files[0];
-      const ALLOWED_FILE_TYPES = {
-        "application/pdf": "PDF",
-        "application/msword": "DOC",
-        "application/vnd.openxmlformats-officedocument.wordprocessingml.document": "DOCX",
-        "application/vnd.ms-excel": "XLS",
-        "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet": "XLSX",
-        "application/vnd.openxmlformats-officedocument.presentationml.presentation": "PPTX",
-        "image/jpeg": "JPG",
-        "image/jpg": "JPG",
-        "image/png": "PNG",
-        "text/plain": "TXT",
-      };
-      const MAX_FILE_SIZE = 150 * 1024 * 1024;
 
+      // Validar tipo de archivo
       if (!ALLOWED_FILE_TYPES[file.type]) {
-        alert(`❌ Formato no permitido.\nPermitidos: ${Object.values(ALLOWED_FILE_TYPES).join(", ")}`);
-        if (fileInputRef.current) fileInputRef.current.value = "";
+        const allowedFormats = Object.values(ALLOWED_FILE_TYPES).join(', ');
+        alert(`❌ Formato de archivo no permitido.\n\nFormatos aceptados: ${allowedFormats}\n\nArchivo seleccionado: ${file.type || 'Desconocido'}`);
+        if (fileInputRef.current) {
+          fileInputRef.current.value = '';
+        }
         return;
       }
+
+      // Validar tamaño de archivo
       if (file.size > MAX_FILE_SIZE) {
-        alert(`❌ Archivo demasiado grande. Máx 150MB.\nActual: ${(file.size / 1024 / 1024).toFixed(2)}MB`);
-        if (fileInputRef.current) fileInputRef.current.value = "";
+        alert(`❌ El archivo es demasiado grande.\n\nTamaño máximo: 150MB\nTamaño del archivo: ${(file.size / 1024 / 1024).toFixed(2)}MB`);
+        if (fileInputRef.current) {
+          fileInputRef.current.value = '';
+        }
         return;
       }
-      setForm((p) => ({ ...p, file }));
-      setErrors((p) => ({ ...p, file: undefined }));
-      return;
-    }
 
-    // selects *_id
-    if (name.endsWith("_id")) {
-      // si cambia cuadro clasificación, recalcular número de expediente legible
-      if (name === "codigo_clasificacion_id") {
-        const numero_expediente = value ? generarNumeroExpediente(value) : "";
-        setForm((p) => ({
-          ...p,
-          codigo_clasificacion_id: value,
-          numero_expediente,
-        }));
-      } else {
-        setForm((p) => ({ ...p, [name]: value }));
-      }
-      return;
-    }
-
-    // resto
-    setForm((p) => ({ ...p, [name]: value }));
-
-    if (typeof value === "string" && value.trim()) {
-      validarCampo(name, value);
+      setForm(prev => ({ ...prev, file }));
+      setErrors(prev => ({ ...prev, file: undefined }));
+    } else {
+      setForm(prev => ({
+        ...prev,
+        [name]: value,
+        // Auto-generar expediente si se selecciona código de clasificación
+        ...(name === 'codigo_clasificacion' && value ? { numero_expediente: generarNumeroExpediente() } : {})
+      }));
     }
   };
 
+  // Validación del formulario
   const validateForm = () => {
-    const out = {};
-    if (!form.nombre.trim()) out.nombre = "El nombre del documento es obligatorio.";
-    if (!form.review.trim()) out.review = "La descripción del contenido es obligatoria.";
-    if (!form.jefatura.trim()) out.jefatura = "La jefatura responsable es obligatoria.";
-    if (!form.file) out.file = "Debes seleccionar un archivo.";
+    const newErrors = {};
 
-    // IDs obligatorios para backend
-    if (!form.codigo_clasificacion_id) out.codigo_clasificacion_id = "Selecciona un código de clasificación.";
-    if (!form.valor_documental_id) out.valor_documental_id = "Selecciona un valor documental.";
-    if (!form.plazo_conservacion_id) out.plazo_conservacion_id = "Selecciona un plazo de conservación.";
-    if (!form.destino_final_id) out.destino_final_id = "Selecciona un destino final.";
-    if (!form.soporte_id) out.soporte_id = "Selecciona un tipo de soporte.";
-    if (!form.tipos_documentos_id) out.tipos_documentos_id = "Selecciona un tipo de documento.";
-    if (!form.departamentos_id) out.departamentos_id = "Selecciona un departamento.";
+    // ✅ VALIDACIONES BÁSICAS ESENCIALES
+    if (!form.nombre.trim()) newErrors.nombre = 'El nombre del documento es obligatorio.';
+    if (!form.review.trim()) newErrors.review = 'La descripción del contenido es obligatoria.';
+    if (!form.jefatura.trim()) newErrors.jefatura = 'La jefatura responsable es obligatoria.';
+    if (!form.file) newErrors.file = 'Debes seleccionar un archivo.';
 
-    // adicionales UI
-    if (!form.serie.trim()) out.serie = "La serie documental es obligatoria.";
-    if (!form.procedencia.trim()) out.procedencia = "La procedencia administrativa es obligatoria.";
-
-    setErrors(out);
-    return Object.keys(out).length === 0;
-  };
-
-  const handleUpload = async () => {
-    console.log("⚙️ Entrando a handleUpload()");
-
-    if (!validateForm()) {
-      console.warn("❌ Formulario no válido");
-      console.log("Errores detectados:", errors);
-      return;
+    // 🏛️ VALIDACIONES ARCHIVÍSTICAS OBLIGATORIAS - LEY DE ARCHIVOS BCS
+    if (!form.codigo_clasificacion.trim()) {
+      newErrors.codigo_clasificacion = 'El código de clasificación archivística es obligatorio.';
+    }
+    if (!form.serie.trim()) newErrors.serie = 'La serie documental es obligatoria.';
+    if (!form.valor_documental.trim()) {
+      newErrors.valor_documental = 'El valor documental es obligatorio.';
+    }
+    if (!form.plazo_conservacion.trim()) {
+      newErrors.plazo_conservacion = 'El plazo de conservación es obligatorio.';
+    }
+    if (!form.destino_final.trim()) {
+      newErrors.destino_final = 'El destino final es obligatorio.';
+    }
+    if (!form.soporte_documental.trim()) {
+      newErrors.soporte_documental = 'El tipo de soporte documental es obligatorio.';
+    }
+    if (!form.procedencia_admin.trim()) {
+      newErrors.procedencia_admin = 'La procedencia administrativa es obligatoria.';
+    }
+    if (!form.classification.trim()) {
+      newErrors.classification = 'El tipo de documento es obligatorio.';
     }
 
-    console.log("✅ Validación pasada correctamente");
-    setUploading(true);
-    setErrorMessage("");
-    setUploadProgress(0);
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
 
-    const token = localStorage.getItem("token");
-    const usuarios_id = localStorage.getItem("user_id") || session?.user?.id;
-    console.log("📦 Token:", token, "| Usuario:", usuarios_id);
+  // Función de subida
+  const handleUpload = async () => {
+    if (!validateForm()) return;
+
+    setUploading(true);
+    setUploadProgress(0);
+    setErrorMessage('');
 
     try {
-      const fd = new FormData();
-      fd.append("file", form.file);
-      fd.append("nombre", form.nombre);
-      fd.append("descripcion", form.review);
+      const token = localStorage.getItem("token");
+      const usuarios_id = parseInt(localStorage.getItem("user_id"), 10);
 
-      // IDs de catálogos
-      fd.append("usuarios_id", String(usuarios_id || ""));
-      fd.append("tipos_documentos_id", String(form.tipos_documentos_id || ""));
-      fd.append("departamentos_id", String(form.departamentos_id || ""));
-      fd.append("periodos_id", String(form.periodos_id || "1"));
+      if (!usuarios_id) {
+        setErrorMessage("No se encontró ID de usuario en sesión");
+        setUploading(false);
+        return;
+      }
 
-      fd.append("codigo_clasificacion_id", String(form.codigo_clasificacion_id));
-      fd.append("valor_documental_id", String(form.valor_documental_id));
-      fd.append("plazo_conservacion_id", String(form.plazo_conservacion_id));
-      fd.append("destino_final_id", String(form.destino_final_id));
-      fd.append("soporte_id", String(form.soporte_id));
-      fd.append("procedencia", form.procedencia || "upload");
+      if (!form.file) {
+        setErrorMessage("Debes seleccionar un archivo");
+        setUploading(false);
+        return;
+      }
 
-      // Metadatos adicionales
-      fd.append("numero_expediente", form.numero_expediente || "");
-      fd.append("serie", form.serie || "");
-      fd.append("subserie", form.subserie || "");
-      fd.append("folio", form.folio_documento || "");
-      fd.append("nivel_acceso", form.acceso || "PUBLICO");
-      fd.append("procedencia", form.procedencia || "upload");
-      fd.append("estado_vigencia", form.vigencia || "VIGENTE");
-      if (form.fecha_creacion) fd.append("fecha_creacion", form.fecha_creacion);
-      fd.append("fecha_subida", new Date().toISOString());
+      // 🔹 Crear FormData
+      const formData = new FormData();
+      formData.append('file', form.file); // clave EXACTA 'file' que espera multer
+      formData.append('usuarios_id', usuarios_id);
+      formData.append('descripcion', form.observaciones || "");
 
-      console.log("🧾 Campos añadidos al FormData:", [...fd.keys()]);
-
+      // 🔹 Subida con XMLHttpRequest para controlar progreso
       const xhr = new XMLHttpRequest();
 
-      xhr.upload.addEventListener("progress", (e) => {
+      xhr.upload.addEventListener('progress', (e) => {
         if (e.lengthComputable) {
-          const percent = Math.round((e.loaded / e.total) * 100);
-          setUploadProgress(percent);
-          console.log("📊 Progreso:", percent + "%");
+          const progress = Math.round((e.loaded / e.total) * 100);
+          setUploadProgress(progress);
         }
       });
 
-      xhr.onreadystatechange = async () => {
-        if (xhr.readyState === XMLHttpRequest.DONE) {
-          console.log("📬 Respuesta recibida:", xhr.status, xhr.responseText);
-          setUploading(false);
+      xhr.addEventListener('load', () => {
+        setUploading(false);
+        if (xhr.status === 200 || xhr.status === 201) {
+          const response = JSON.parse(xhr.responseText);
+          if (response.success) {
+            setShowModal(true);
+            setUploadedFileUrl(response.data?.download_url || "");
 
-          if (xhr.status >= 200 && xhr.status < 300) {
-            try {
-              const res = JSON.parse(xhr.responseText);
-              if (res?.success) {
-                const download = res?.data?.download_url || "";
-                console.log("✅ Subida exitosa. URL:", download);
-                setUploadedFileUrl(download);
-                setShowModal(true);
-
-                // Registrar bitácora
-                try {
-                  await fetch(`${NEXT_PUBLIC_API_URL}/bitacora`, {
-                    method: "POST",
-                    headers: {
-                      "Content-Type": "application/json",
-                      Authorization: `Bearer ${token}`,
-                    },
-                    body: JSON.stringify({
-                      accion: "subida",
-                      descripcion: "Se subió un archivo",
-                      usuarios_id: Number(usuarios_id),
-                    }),
-                  });
-                } catch (bitErr) {
-                  console.warn("⚠️ Bitácora no registrada:", bitErr);
-                }
-
-                // Reset del formulario
-                setForm((prev) => ({
-                  ...prev,
-                  nombre: "",
-                  jefatura: "",
-                  review: "",
-                  file: null,
-                  serie: "",
-                  subserie: "",
-                  expediente: "",
-                  fecha_creacion: "",
-                  vigencia: "",
-                  acceso: "",
-                  observaciones: "",
-                  classification: "",
-                  codigo_clasificacion: "",
-                  valor_documental: "",
-                  plazo_conservacion: "",
-                  destino_final: "",
-                  soporte_documental: "",
-                  numero_expediente: "",
-                  folio_documento: "",
-                  procedencia: "",
-                  codigo_clasificacion_id: "",
-                  valor_documental_id: "",
-                  plazo_conservacion_id: "",
-                  destino_final_id: "",
-                  soporte_id: "",
-                  tipos_documentos_id: "",
-                  departamentos_id: "",
-                  periodos_id: "1",
-                }));
-
-                if (fileInputRef.current) fileInputRef.current.value = "";
-              } else {
-                console.error("❌ Error de servidor:", res?.message);
-                setErrorMessage(res?.message || "Error al subir archivo.");
-              }
-            } catch (parseErr) {
-              console.error("💥 Error parseando respuesta:", parseErr);
-              setErrorMessage("Respuesta inválida del servidor.");
-            }
+            // 🔹 Resetear formulario
+            setForm({
+              nombre: "",
+              jefatura: "",
+              review: "",
+              file: null,
+              serie: "",
+              subserie: "",
+              expediente: "",
+              fecha_creacion: "",
+              vigencia: "",
+              acceso: "",
+              observaciones: "",
+              classification: "",
+            });
+            if (fileInputRef.current) fileInputRef.current.value = "";
           } else {
-            console.error("🚫 Error HTTP:", xhr.status, xhr.statusText);
-            setErrorMessage(`Error al subir archivo (${xhr.status})`);
+            setErrorMessage(response.message || "Error al subir el archivo");
           }
+        } else {
+          setErrorMessage(`Error al subir: ${xhr.status} - ${xhr.statusText}`);
         }
-      };
+      });
 
-      const url = `${NEXT_PUBLIC_API_URL}/documentos/upload`;
-      console.log("🌐 Enviando a:", url);
-      xhr.open("POST", url);
-      xhr.setRequestHeader("Authorization", `Bearer ${token}`);
-      xhr.send(fd);
-    } catch (err) {
-      console.error("💥 Error inesperado:", err);
-      setErrorMessage("Error inesperado: " + err.message);
+      xhr.addEventListener('error', () => {
+        setErrorMessage("Error de red al subir el archivo");
+        setUploading(false);
+      });
+
+      console.log("Enviando el payload:", { formData, token });
+
+      xhr.open('POST', `${NEXT_PUBLIC_API_URL}/documentos/upload`);
+      xhr.setRequestHeader('Authorization', `Bearer ${token}`);
+      xhr.send(formData);
+
+    } catch (error) {
+      console.error("Error:", error);
+      setErrorMessage("Error inesperado: " + error.message);
       setUploading(false);
     }
   };
-
-
 
   const closeModal = () => {
     setShowModal(false);
     setUploadProgress(0);
   };
 
-  // ===== Datos de usuario para avatar (tus mapas) =====
-  const userEmail = session?.user?.email || "default";
-  const userAvatar = avatarMap[userEmail] || "/default-avatar.png";
-
-  // ======== UI (idéntico a tu diseño, con selects dinámicos) ========
   return (
-    <div className={`min-h-screen transition-colors duration-300 ${darkMode ? "dark bg-gray-900" : "bg-gray-50"}`}>
-      {/* Header */}
-      <DashboardHeader title="Subir Documento" />
+    <div className={`min-h-screen transition-colors duration-300 bg-gray-50 dark:bg-gray-900`}>
+      {/* Usar componente global DashboardHeader (soporta session.user.email o session.email) */}
+      <DashboardHeader
+        title="Subir Documentos"
+        avatarUrl={avatarMap[session?.user?.email || session?.email] || '/login.jpg'}
+      />
 
-      {/* Back button */}
-      <div className="bg-gradient-to-r from-gray-50 via-blue-50 to-gray-50 dark:from-gray-900 dark:via-blue-900/20 dark:to-gray-900 px-12 py-6 border-b border-gray-200 dark:border-gray-700">
-        <div className="flex justify-start">
-          <BackToHomeButton />
-        </div>
+      {/* Botón volver al dashboard (sin barra de fondo) */}
+      <div className="px-12 py-4">
+        <BackToHomeButton href="/dashboard" label={" Volver al dashboard"} size="lg" className="px-6 py-3" />
       </div>
 
-      {/* Contenido */}
+      {/* Formulario principal sin caja */}
       <div className="max-w-7xl mx-auto px-8 py-8">
-        {/* Alertas Calidad */}
-        {alertasCalidad.length > 0 && (
-          <div className="mb-6 p-4 bg-gradient-to-r from-amber-50 to-orange-50 dark:from-amber-900/20 dark:to-orange-900/20 border-l-4 border-amber-400 rounded-lg">
+
+        {/* Resumen de errores */}
+        {Object.keys(errors).length > 0 && (
+          <div className="mb-6 p-4 bg-red-50 border-l-4 border-red-400 rounded">
             <div className="flex items-center gap-3 mb-3">
-              <FontAwesomeIcon icon={faRobot} className="text-amber-600 text-lg" />
-              <h3 className="font-semibold text-amber-800 dark:text-amber-200">Asistente de Calidad</h3>
+              <FontAwesomeIcon icon={faExclamationTriangle} className="text-red-500" />
+              <h3 className="font-semibold text-red-700">Corrige los siguientes errores</h3>
             </div>
-            <div className="space-y-2">
-              {alertasCalidad.map((alerta, idx) => (
-                <div
-                  key={idx}
-                  className={`flex items-start gap-2 text-sm ${alerta.tipo === "error"
-                    ? "text-red-600 dark:text-red-400"
-                    : alerta.tipo === "warning"
-                      ? "text-amber-600 dark:text-amber-400"
-                      : "text-blue-600 dark:text-blue-400"
-                    }`}
-                >
-                  <span className="mt-0.5">
-                    {alerta.tipo === "error" ? "❌" : alerta.tipo === "warning" ? "⚠️" : "ℹ️"}
-                  </span>
-                  <span>{alerta.mensaje}</span>
-                </div>
+            <ul className="list-disc list-inside space-y-1 text-red-600 text-sm">
+              {Object.values(errors).map((err, idx) => (
+                <li key={idx}>{err}</li>
               ))}
-            </div>
+            </ul>
           </div>
         )}
 
-        {/* Barra de progreso */}
+        {/* Progress bar */}
         {uploadProgress > 0 && uploadProgress < 100 && (
           <div className="mb-8">
             <div className="flex justify-between items-center mb-2">
-              <span className="text-base font-medium text-gray-700">Subiendo archivo...</span>
+              <span className="text-base font-medium text-gray-700">
+                Subiendo archivo...
+              </span>
               <span className="text-base text-gray-500">{uploadProgress}%</span>
             </div>
             <div className="w-full bg-gray-200 rounded-full h-3">
-              <div className="bg-blue-600 h-3 rounded-full transition-all duration-300" style={{ width: `${uploadProgress}%` }} />
+              <div
+                className="bg-blue-600 h-3 rounded-full transition-all duration-300"
+                style={{ width: `${uploadProgress}%` }}
+              />
             </div>
           </div>
         )}
 
-        {/* SECCIÓN 1 */}
+        {/* 📄 FORMULARIO ÚNICO INTEGRADO - GESTIÓN DOCUMENTAL PROFESIONAL */}
         <div className="space-y-10">
+
+          {/* 📄 SECCIÓN 1: IDENTIFICACIÓN DEL DOCUMENTO */}
           <div className="bg-gradient-to-r from-blue-50 via-indigo-50 to-purple-50 dark:from-blue-900/20 dark:via-indigo-900/20 dark:to-purple-900/20 border-2 border-blue-200 dark:border-blue-700 rounded-2xl p-8">
+            {/* Encabezado Sección 1 */}
             <div className="flex items-center gap-4 mb-6">
               <div className="w-12 h-12 bg-gradient-to-r from-blue-600 to-indigo-600 rounded-xl flex items-center justify-center shadow-lg">
                 <span className="text-white text-xl font-bold">📄</span>
               </div>
               <div>
-                <h2 className="text-2xl font-bold text-blue-800 dark:text-blue-200">1. Información General del Documento</h2>
-                <p className="text-blue-700 dark:text-blue-300 font-medium">Información básica y descriptiva del documento</p>
+                <h2 className="text-2xl font-bold text-blue-800 dark:text-blue-200">
+                  1. Información General del Documento
+                </h2>
+                <p className="text-blue-700 dark:text-blue-300 font-medium">
+                  Información básica y descriptiva del documento
+                </p>
               </div>
             </div>
 
+            {/* Campos de identificación */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {/* Nombre */}
+              {/* Nombre del Documento */}
               <div>
                 <label className="flex items-center gap-2 mb-2 text-lg font-semibold text-blue-800 dark:text-blue-200">
                   Nombre del Documento *
@@ -538,7 +548,10 @@ export default function UploadNew({ session }) {
                     tooltipKey="titulo"
                     content="<strong>Nombre descriptivo del documento</strong><br/>Ejemplo: 'Oficio de solicitud', 'Acta de reunión', 'Contrato de servicios'"
                   >
-                    <FontAwesomeIcon icon={faInfoCircle} className="text-sm text-blue-500 dark:text-blue-400 cursor-help" />
+                    <FontAwesomeIcon
+                      icon={faInfoCircle}
+                      className="text-sm text-blue-500 dark:text-blue-400 cursor-help hover:text-blue-700 dark:hover:text-blue-200 transition-colors"
+                    />
                   </TooltipWrapper>
                 </label>
                 <input
@@ -547,23 +560,12 @@ export default function UploadNew({ session }) {
                   value={form.nombre}
                   onChange={handleChange}
                   placeholder="Ej: Acta de reunión mensual"
-                  className={`w-full px-4 py-3 border-2 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-blue-500 text-base font-medium transition-colors ${validacionEnTiempo.nombre
-                    ? validacionEnTiempo.nombre.valido
-                      ? "border-green-400 focus:border-green-500"
-                      : "border-red-400 focus:border-red-500"
-                    : "border-blue-300 dark:border-blue-600 focus:border-blue-500"
-                    }`}
+                  className="w-full px-4 py-3 border-2 border-blue-300 dark:border-blue-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-base font-medium"
                 />
-                {validacionEnTiempo.nombre && (
-                  <div className={`flex items-center gap-2 mt-1 text-sm ${validacionEnTiempo.nombre.valido ? "text-green-600" : "text-red-600"}`}>
-                    <span>{validacionEnTiempo.nombre.valido ? "✅" : "❌"}</span>
-                    <span>{validacionEnTiempo.nombre.mensaje}</span>
-                  </div>
-                )}
                 {errors.nombre && <p className="text-red-500 text-sm mt-2 font-semibold">{errors.nombre}</p>}
               </div>
 
-              {/* Descripción */}
+              {/* Descripción del Contenido */}
               <div>
                 <label className="flex items-center gap-2 mb-2 text-lg font-semibold text-blue-800 dark:text-blue-200">
                   Descripción del Contenido *
@@ -571,7 +573,10 @@ export default function UploadNew({ session }) {
                     tooltipKey="descripcion"
                     content="<strong>Resumen del contenido y propósito</strong><br/>Describa brevemente qué contiene el documento y para qué se utiliza"
                   >
-                    <FontAwesomeIcon icon={faInfoCircle} className="text-sm text-blue-500 dark:text-blue-400 cursor-help" />
+                    <FontAwesomeIcon
+                      icon={faInfoCircle}
+                      className="text-sm text-blue-500 dark:text-blue-400 cursor-help hover:text-blue-700 dark:hover:text-blue-200 transition-colors"
+                    />
                   </TooltipWrapper>
                 </label>
                 <input
@@ -580,32 +585,29 @@ export default function UploadNew({ session }) {
                   value={form.review}
                   onChange={handleChange}
                   placeholder="Ej: Descripción del contenido del documento"
-                  className="w-full px-4 py-3 border-2 border-blue-300 dark:border-blue-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-blue-500 text-base font-medium"
+                  className="w-full px-4 py-3 border-2 border-blue-300 dark:border-blue-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-base font-medium"
                 />
                 {errors.review && <p className="text-red-500 text-sm mt-2 font-semibold">{errors.review}</p>}
               </div>
 
-              {/* Jefatura */}
+              {/* Jefatura Responsable */}
               <div>
-                <label className="flex items-center gap-2 mb-2 text-lg font-semibold text-blue-800 dark:text-blue-200">
-                  Jefatura Responsable *
-                  <span className="text-sm text-green-600 dark:text-green-400 font-normal">🤖 Auto-completado inteligente</span>
-                </label>
+                <label className="block mb-2 text-lg font-semibold text-blue-800 dark:text-blue-200">Jefatura Responsable *</label>
                 <select
                   name="jefatura"
                   value={form.jefatura}
                   onChange={handleChange}
-                  className="w-full px-4 py-3 border-2 border-blue-300 dark:border-blue-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-blue-500 text-base font-medium"
+                  className="w-full px-4 py-3 border-2 border-blue-300 dark:border-blue-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-base font-medium"
                 >
                   <option value="">Selecciona una jefatura</option>
-                  <option value="Dirección General">Dirección General</option>
-                  <option value="Subdirección de Administración y Finanzas">Subdirección de Administración y Finanzas</option>
-                  <option value="Subdirección de Recursos Humanos">Subdirección de Recursos Humanos</option>
-                  <option value="Subdirección de Operaciones Portuarias">Subdirección de Operaciones Portuarias</option>
-                  <option value="Subdirección de Ingeniería y Desarrollo">Subdirección de Ingeniería y Desarrollo</option>
-                  <option value="Coordinación de Seguridad">Coordinación de Seguridad</option>
-                  <option value="Coordinación de Medio Ambiente">Coordinación de Medio Ambiente</option>
-                  <option value="Coordinación Jurídica">Coordinación Jurídica</option>
+                  <option value="Administración y Finanzas">Administración y Finanzas</option>
+                  <option value="Contraloría e Investigación">Contraloría e Investigación</option>
+                  <option value="Coordinación General">Coordinación General</option>
+                  <option value="Informática">Informática</option>
+                  <option value="Jurídico">Jurídico</option>
+                  <option value="Operaciones Portuarias">Operaciones Portuarias</option>
+                  <option value="Planeación">Planeación</option>
+                  <option value="Recursos Humanos">Recursos Humanos</option>
                 </select>
                 {errors.jefatura && <p className="text-red-500 text-sm mt-2 font-semibold">{errors.jefatura}</p>}
               </div>
@@ -618,7 +620,7 @@ export default function UploadNew({ session }) {
                   name="fecha_creacion"
                   value={form.fecha_creacion}
                   onChange={handleChange}
-                  className="w-full px-4 py-3 border-2 border-blue-300 dark:border-blue-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-blue-500 text-base font-medium"
+                  className="w-full px-4 py-3 border-2 border-blue-300 dark:border-blue-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-base font-medium"
                 />
               </div>
 
@@ -629,12 +631,12 @@ export default function UploadNew({ session }) {
                   name="acceso"
                   value={form.acceso}
                   onChange={handleChange}
-                  className="w-full px-4 py-3 border-2 border-blue-300 dark:border-blue-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-blue-500 text-base font-medium"
+                  className="w-full px-4 py-3 border-2 border-blue-300 dark:border-blue-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-base font-medium"
                 >
                   <option value="">Selecciona nivel de acceso</option>
-                  <option value="PUBLICO">Público</option>
-                  <option value="RESERVADO">Reservado</option>
-                  <option value="CONFIDENCIAL">Confidencial</option>
+                  <option value="Público">Público</option>
+                  <option value="Reservado">Reservado</option>
+                  <option value="Confidencial">Confidencial</option>
                 </select>
               </div>
 
@@ -647,88 +649,108 @@ export default function UploadNew({ session }) {
                   onChange={handleChange}
                   placeholder="Observaciones adicionales..."
                   rows={3}
-                  className="w-full px-4 py-3 border-2 border-blue-300 dark:border-blue-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-blue-500 text-base font-medium"
+                  className="w-full px-4 py-3 border-2 border-blue-300 dark:border-blue-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 resize-vertical text-base font-medium"
                 />
               </div>
             </div>
           </div>
 
-          {/* SECCIÓN 2: Clasificación Archivística */}
+          {/* 🏛️ SECCIÓN 2: METADATOS ARCHIVÍSTICOS OBLIGATORIOS */}
           <div className="bg-gradient-to-r from-amber-50 via-orange-50 to-red-50 dark:from-amber-900/20 dark:via-orange-900/20 dark:to-red-900/20 border-2 border-amber-200 dark:border-amber-700 rounded-2xl p-8">
+            {/* Encabezado Sección 2 */}
             <div className="flex items-center gap-4 mb-6">
               <div className="w-12 h-12 bg-gradient-to-r from-amber-600 to-orange-600 rounded-xl flex items-center justify-center shadow-lg">
                 <span className="text-white text-xl font-bold">🏛️</span>
               </div>
               <div>
-                <h2 className="text-2xl font-bold text-amber-800 dark:text-amber-200">2. Clasificación Archivística</h2>
-                <p className="text-amber-700 dark:text-amber-300 font-medium">Conforme a la Ley de Archivos Estatal de Baja California Sur</p>
+                <h2 className="text-2xl font-bold text-amber-800 dark:text-amber-200">
+                  2. Clasificación Archivística
+                </h2>
+                <p className="text-amber-700 dark:text-amber-300 font-medium">
+                  Conforme a la Ley de Archivos Estatal de Baja California Sur
+                </p>
               </div>
             </div>
 
+            {/* Aviso legal */}
+            <div className="bg-white dark:bg-amber-900/30 rounded-xl p-4 border border-amber-300 dark:border-amber-600 mb-6">
+              <div className="flex items-center gap-3 mb-2">
+                <span className="text-amber-600 dark:text-amber-400 text-lg">⚖️</span>
+                <span className="font-semibold text-amber-800 dark:text-amber-200">Cumplimiento Legal Obligatorio</span>
+              </div>
+              <p className="text-sm text-amber-700 dark:text-amber-300 leading-relaxed">
+                Los siguientes campos son requeridos por la normatividad archivística estatal para garantizar
+                la correcta gestión, conservación y acceso a los documentos públicos.
+              </p>
+            </div>
+
+            {/* Campos archivísticos organizados */}
             <div className="space-y-6">
-              {/* fila 1 */}
+              {/* Primera fila: Clasificación y Control */}
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {/* Cuadro de clasificación (DINÁMICO) */}
+                {/* Código de Clasificación Archivística */}
                 <div>
                   <label className="flex items-center gap-2 mb-2 text-lg font-semibold text-amber-800 dark:text-amber-200">
                     Código de Clasificación Archivística *
                     <TooltipWrapper
                       tooltipKey="clasificacion"
-                      content="<strong>Código que determina el área y tipo de documento</strong><br/>Cada código identifica una función específica."
+                      content="<strong>Código que determina el área y tipo de documento</strong><br/>Según normativa de la Ley de Archivos de BCS. Cada código identifica una función específica del gobierno."
                     >
-                      <FontAwesomeIcon icon={faInfoCircle} className="text-sm text-amber-500 dark:text-amber-400 cursor-help" />
+                      <FontAwesomeIcon
+                        icon={faInfoCircle}
+                        className="text-sm text-amber-500 dark:text-amber-400 cursor-help hover:text-amber-700 dark:hover:text-amber-200 transition-colors"
+                      />
                     </TooltipWrapper>
                   </label>
                   <select
-                    name="codigo_clasificacion_id"
-                    value={form.codigo_clasificacion_id}
+                    name="codigo_clasificacion"
+                    value={form.codigo_clasificacion}
                     onChange={handleChange}
-                    className="w-full px-4 py-3 border-2 border-amber-300 dark:border-amber-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-amber-500 text-base font-medium"
+                    className="w-full px-4 py-3 border-2 border-amber-300 dark:border-amber-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-amber-500 focus:border-amber-500 text-base font-medium"
                   >
-                    <option value="">Selecciona un código</option>
-                    {catalogs.cuadros.map((item) => (
-                      <option key={item.id} value={item.id}>
-                        {item.codigo} - {item.titulo}
+                    <option value="">Selecciona código de clasificación</option>
+                    {Object.entries(CUADRO_CLASIFICACION).map(([codigo, descripcion]) => (
+                      <option key={codigo} value={codigo}>
+                        {codigo} - {descripcion}
                       </option>
                     ))}
                   </select>
+                  {errors.codigo_clasificacion && <p className="text-red-500 text-sm mt-2 font-semibold">{errors.codigo_clasificacion}</p>}
+                </div>
 
-                  {/* Número de expediente auto (legible) */}
-                  <div className="mt-3">
-                    <label className="block mb-2 text-sm font-semibold text-amber-800 dark:text-amber-200">
-                      Número de Expediente (auto)
-                    </label>
+                {/* Número de Expediente (Auto-generado) */}
+                <div>
+                  <label className="flex items-center gap-2 mb-2 text-lg font-semibold text-amber-800 dark:text-amber-200">
+                    Número de Expediente
+                    <TooltipWrapper
+                      tooltipKey="expediente"
+                      content="<strong>Generado automáticamente</strong><br/>Se crea basado en el código de clasificación seleccionado. Formato: [CÓDIGO]-[AÑO]-[CONSECUTIVO]"
+                    >
+                      <FontAwesomeIcon
+                        icon={faInfoCircle}
+                        className="text-sm text-amber-500 dark:text-amber-400 cursor-help hover:text-amber-700 dark:hover:text-amber-200 transition-colors"
+                      />
+                    </TooltipWrapper>
+                  </label>
+                  <div className="relative">
                     <input
                       type="text"
                       name="numero_expediente"
                       value={form.numero_expediente}
                       readOnly
-                      placeholder="Se genera al elegir el código"
+                      placeholder="Se genera automáticamente"
                       className="w-full px-4 py-3 border-2 border-gray-300 dark:border-gray-600 rounded-lg bg-gray-50 dark:bg-gray-800 text-gray-700 dark:text-gray-300 text-base font-mono cursor-not-allowed"
                     />
+                    <div className="absolute right-3 top-3 text-gray-400">
+                      <span className="text-sm font-semibold">AUTO</span>
+                    </div>
                   </div>
-                  {errors.codigo_clasificacion_id && (
-                    <p className="text-red-500 text-sm mt-2 font-semibold">{errors.codigo_clasificacion_id}</p>
-                  )}
-                  <input
-                    type="text"
-                    name="procedencia"
-                    value={form.procedencia}
-                    onChange={handleChange}
-                    placeholder="Ej: Dirección General / Coordinación de..."
-                    className="w-full px-4 py-3 border-2 border-amber-300 dark:border-amber-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-amber-500 focus:border-amber-500 text-base font-medium"
-                  />
-                  {errors.procedencia && (
-                    <p className="text-red-500 text-sm mt-2 font-semibold">
-                      {errors.procedencia}
-                    </p>
-                  )}
-
-
+                  <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                    Se genera al seleccionar código de clasificación
+                  </p>
                 </div>
 
-
-                {/* Serie / Subserie */}
+                {/* Serie y Subserie Integradas */}
                 <div>
                   <label className="block mb-2 text-lg font-semibold text-amber-800 dark:text-amber-200">Serie Documental *</label>
                   <div className="grid grid-cols-2 gap-2">
@@ -738,7 +760,7 @@ export default function UploadNew({ session }) {
                       value={form.serie}
                       onChange={handleChange}
                       placeholder="Serie"
-                      className="px-3 py-3 border-2 border-amber-300 dark:border-amber-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-amber-500 text-base font-medium"
+                      className="px-3 py-3 border-2 border-amber-300 dark:border-amber-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-amber-500 focus:border-amber-500 text-base font-medium"
                     />
                     <input
                       type="text"
@@ -746,138 +768,169 @@ export default function UploadNew({ session }) {
                       value={form.subserie}
                       onChange={handleChange}
                       placeholder="Subserie"
-                      className="px-3 py-3 border-2 border-amber-300 dark:border-amber-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-amber-500 text-base font-medium"
+                      className="px-3 py-3 border-2 border-amber-300 dark:border-amber-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-amber-500 focus:border-amber-500 text-base font-medium"
                     />
                   </div>
                   {errors.serie && <p className="text-red-500 text-sm mt-2 font-semibold">{errors.serie}</p>}
                 </div>
+              </div>
 
-                {/* Valor Documental (DINÁMICO) */}
+              {/* Segunda fila: Valores y Conservación */}
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {/* Valor Documental */}
                 <div>
                   <label className="flex items-center gap-2 mb-2 text-lg font-semibold text-amber-800 dark:text-amber-200">
                     Valor Documental *
                     <TooltipWrapper
                       tooltipKey="valorDocumental"
-                      content="<strong>Importancia del documento</strong><br/>Administrativo, Legal, Fiscal, Histórico, etc."
+                      content="<strong>Importancia del documento</strong><br/><span class='text-blue-300'>Administrativo:</span> Tramites y procedimientos<br/><span class='text-green-300'>Legal:</span> Sustento jurídico<br/><span class='text-yellow-300'>Fiscal:</span> Recursos económicos<br/><span class='text-purple-300'>Histórico:</span> Valor cultural permanente"
                     >
-                      <FontAwesomeIcon icon={faInfoCircle} className="text-sm text-amber-500 dark:text-amber-400 cursor-help" />
+                      <FontAwesomeIcon
+                        icon={faInfoCircle}
+                        className="text-sm text-amber-500 dark:text-amber-400 cursor-help hover:text-amber-700 dark:hover:text-amber-200 transition-colors"
+                      />
                     </TooltipWrapper>
                   </label>
                   <select
-                    name="valor_documental_id"
-                    value={form.valor_documental_id}
+                    name="valor_documental"
+                    value={form.valor_documental}
                     onChange={handleChange}
-                    className="w-full px-4 py-3 border-2 border-amber-300 dark:border-amber-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-amber-500 text-base font-medium"
+                    className="w-full px-4 py-3 border-2 border-amber-300 dark:border-amber-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-amber-500 focus:border-amber-500 text-base font-medium"
                   >
-                    <option value="">Selecciona un valor documental</option>
-                    {catalogs.valores.map((v) => (
-                      <option key={v.id} value={v.id}>
-                        {v.nombre}
+                    <option value="">Selecciona valor documental</option>
+                    {Object.entries(VALORES_DOCUMENTALES).map(([key, label]) => (
+                      <option key={key} value={key}>
+                        {label}
                       </option>
                     ))}
                   </select>
-
-                  {errors.valor_documental_id && <p className="text-red-500 text-sm mt-2 font-semibold">{errors.valor_documental_id}</p>}
+                  {errors.valor_documental && <p className="text-red-500 text-sm mt-2 font-semibold">{errors.valor_documental}</p>}
                 </div>
-              </div>
-              {/* fila 2 */}
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {/* Plazo de conservación (DINÁMICO) */}
+
+                {/* Plazo de Conservación */}
                 <div>
                   <label className="flex items-center gap-2 mb-2 text-lg font-semibold text-amber-800 dark:text-amber-200">
                     Plazo de Conservación *
                     <TooltipWrapper
                       tooltipKey="plazoConservacion"
-                      content="<strong>Tiempo mínimo de conservación</strong>"
+                      content="<strong>Tiempo mínimo de conservación</strong><br/>Determina cuánto tiempo debe preservarse el documento según la Ley de Archivos. Después del plazo, se evalúa su destino final."
                     >
-                      <FontAwesomeIcon icon={faInfoCircle} className="text-sm text-amber-500 dark:text-amber-400 cursor-help" />
+                      <FontAwesomeIcon
+                        icon={faInfoCircle}
+                        className="text-sm text-amber-500 dark:text-amber-400 cursor-help hover:text-amber-700 dark:hover:text-amber-200 transition-colors"
+                      />
                     </TooltipWrapper>
                   </label>
                   <select
-                    name="plazo_conservacion_id"
-                    value={form.plazo_conservacion_id}
+                    name="plazo_conservacion"
+                    value={form.plazo_conservacion}
                     onChange={handleChange}
-                    className="w-full px-4 py-3 border-2 border-amber-300 dark:border-amber-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-amber-500 text-base font-medium"
+                    className="w-full px-4 py-3 border-2 border-amber-300 dark:border-amber-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-amber-500 focus:border-amber-500 text-base font-medium"
                   >
-                    <option value="">Selecciona un plazo de conservación</option>
-                    {catalogs.plazos.map((p) => (
-                      <option key={p.id} value={p.id}>
-                        {p.descripcion}
+                    <option value="">Selecciona plazo de conservación</option>
+                    {Object.entries(PLAZOS_CONSERVACION).map(([key, label]) => (
+                      <option key={key} value={key}>
+                        {label}
                       </option>
                     ))}
                   </select>
-
-                  {errors.plazo_conservacion_id && <p className="text-red-500 text-sm mt-2 font-semibold">{errors.plazo_conservacion_id}</p>}
+                  {errors.plazo_conservacion && <p className="text-red-500 text-sm mt-2 font-semibold">{errors.plazo_conservacion}</p>}
                 </div>
 
-                {/* Destino final (DINÁMICO) */}
+                {/* Destino Final */}
                 <div>
                   <label className="flex items-center gap-2 mb-2 text-lg font-semibold text-amber-800 dark:text-amber-200">
                     Destino Final *
                     <TooltipWrapper
                       tooltipKey="destinoFinal"
-                      content="<strong>Acción al finalizar la conservación</strong>"
+                      content="<strong>Qué sucede después del plazo de conservación</strong><br/><span class='text-green-300'>Conservación Permanente:</span> Se preserva para siempre<br/><span class='text-red-300'>Baja Documental:</span> Se elimina<br/><span class='text-blue-300'>Transferencia:</span> Se envía al archivo histórico"
                     >
-                      <FontAwesomeIcon icon={faInfoCircle} className="text-sm text-amber-500 dark:text-amber-400 cursor-help" />
+                      <FontAwesomeIcon
+                        icon={faInfoCircle}
+                        className="text-sm text-amber-500 dark:text-amber-400 cursor-help hover:text-amber-700 dark:hover:text-amber-200 transition-colors"
+                      />
                     </TooltipWrapper>
                   </label>
                   <select
-                    name="destino_final_id"
-                    value={form.destino_final_id}
+                    name="destino_final"
+                    value={form.destino_final}
                     onChange={handleChange}
-                    className="w-full px-4 py-3 border-2 border-amber-300 dark:border-amber-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-amber-500 text-base font-medium"
+                    className="w-full px-4 py-3 border-2 border-amber-300 dark:border-amber-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-amber-500 focus:border-amber-500 text-base font-medium"
                   >
-                    <option value="">Selecciona un destino final</option>
-                    {catalogs.destinos.map((d) => (
-                      <option key={d.id} value={d.id}>
-                        {d.nombre}
+                    <option value="">Selecciona destino final</option>
+                    {Object.entries(DESTINOS_FINALES).map(([key, label]) => (
+                      <option key={key} value={key}>
+                        {label}
                       </option>
                     ))}
                   </select>
-
-                  {errors.destino_final_id && <p className="text-red-500 text-sm mt-2 font-semibold">{errors.destino_final_id}</p>}
+                  {errors.destino_final && <p className="text-red-500 text-sm mt-2 font-semibold">{errors.destino_final}</p>}
                 </div>
+              </div>
 
-                {/* Soporte (DINÁMICO) */}
+              {/* Tercera fila: Soporte y Procedencia */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                {/* Soporte Documental */}
                 <div>
                   <label className="flex items-center gap-2 mb-2 text-lg font-semibold text-amber-800 dark:text-amber-200">
                     Soporte Documental *
                     <TooltipWrapper
                       tooltipKey="soporteDocumental"
-                      content="<strong>Origen/Formato del documento</strong>"
+                      content="<strong>Origen del documento</strong><br/><span class='text-blue-300'>Original:</span> Documento fuente<br/><span class='text-green-300'>Copia:</span> Reproducción<br/><span class='text-yellow-300'>Digitalización:</span> Conversión de físico a digital"
                     >
-                      <FontAwesomeIcon icon={faInfoCircle} className="text-sm text-amber-500 dark:text-amber-400 cursor-help" />
+                      <FontAwesomeIcon
+                        icon={faInfoCircle}
+                        className="text-sm text-amber-500 dark:text-amber-400 cursor-help hover:text-amber-700 dark:hover:text-amber-200 transition-colors"
+                      />
                     </TooltipWrapper>
                   </label>
                   <select
-                    name="soporte_id"
-                    value={form.soporte_id}
+                    name="soporte_documental"
+                    value={form.soporte_documental}
                     onChange={handleChange}
-                    className="w-full px-4 py-3 border-2 border-amber-300 dark:border-amber-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-amber-500 text-base font-medium"
+                    className="w-full px-4 py-3 border-2 border-amber-300 dark:border-amber-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-amber-500 focus:border-amber-500 text-base font-medium"
                   >
-                    <option value="">Selecciona un tipo de soporte</option>
-                    {catalogs.soportes.map((s) => (
-                      <option key={s.id} value={s.id}>
-                        {s.nombre}
+                    <option value="">Selecciona tipo de soporte</option>
+                    {Object.entries(SOPORTES_DOCUMENTALES).map(([key, label]) => (
+                      <option key={key} value={key}>
+                        {label}
                       </option>
                     ))}
                   </select>
+                  {errors.soporte_documental && <p className="text-red-500 text-sm mt-2 font-semibold">{errors.soporte_documental}</p>}
+                </div>
 
-                  {errors.soporte_id && <p className="text-red-500 text-sm mt-2 font-semibold">{errors.soporte_id}</p>}
+                {/* Procedencia Administrativa (antes "Origen") */}
+                <div>
+                  <label className="block mb-2 text-lg font-semibold text-amber-800 dark:text-amber-200">
+                    Procedencia Administrativa *
+                  </label>
+                  <input
+                    type="text"
+                    name="procedencia_admin"
+                    value={form.procedencia_admin}
+                    onChange={handleChange}
+                    placeholder="Ej: Dirección General / Coordinación de..."
+                    className="w-full px-4 py-3 border-2 border-amber-300 dark:border-amber-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-amber-500 focus:border-amber-500 text-base font-medium"
+                  />
+                  {errors.procedencia_admin && <p className="text-red-500 text-sm mt-2 font-semibold">{errors.procedencia_admin}</p>}
                 </div>
               </div>
 
-              {/* fila 3 */}
+              {/* Cuarta fila: Campos adicionales */}
               <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                {/* Folio */}
+                {/* Folio del Documento */}
                 <div>
                   <label className="flex items-center gap-2 mb-2 text-lg font-semibold text-amber-800 dark:text-amber-200">
                     Folio del Documento
                     <TooltipWrapper
                       tooltipKey="folio"
-                      content="<strong>Identificador de ubicación dentro del expediente</strong>"
+                      content="<strong>Número de página o posición</strong><br/>Identifica la ubicación del documento dentro del expediente. Ejemplo: 001/2025, A-001, F-123"
                     >
-                      <FontAwesomeIcon icon={faInfoCircle} className="text-sm text-amber-500 dark:text-amber-400 cursor-help" />
+                      <FontAwesomeIcon
+                        icon={faInfoCircle}
+                        className="text-sm text-amber-500 dark:text-amber-400 cursor-help hover:text-amber-700 dark:hover:text-amber-200 transition-colors"
+                      />
                     </TooltipWrapper>
                   </label>
                   <input
@@ -886,76 +939,53 @@ export default function UploadNew({ session }) {
                     value={form.folio_documento}
                     onChange={handleChange}
                     placeholder="Ej: 001/2025, A-001"
-                    className="w-full px-4 py-3 border-2 border-amber-300 dark:border-amber-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-amber-500 text-base font-medium"
+                    className="w-full px-4 py-3 border-2 border-amber-300 dark:border-amber-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-amber-500 focus:border-amber-500 text-base font-medium"
                   />
                 </div>
 
-                {/* Tipo de Documento (DINÁMICO desde /tiposDocumentos) */}
+                {/* Tipo de Documento (consolidado de classification) */}
                 <div>
-                  <label className="block mb-2 text-lg font-semibold text-amber-800 dark:text-amber-200">
-                    Tipo de Documento *
-                  </label>
+                  <label className="block mb-2 text-lg font-semibold text-amber-800 dark:text-amber-200">Tipo de Documento *</label>
                   <select
-                    name="tipos_documentos_id"
-                    value={form.tipos_documentos_id || ""}
+                    name="classification"
+                    value={form.classification}
                     onChange={handleChange}
                     className="w-full px-4 py-3 border-2 border-amber-300 dark:border-amber-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-amber-500 focus:border-amber-500 text-base font-medium"
                   >
                     <option value="">Selecciona tipo de documento</option>
-                    {catalogs.tiposDocumentos?.map((tipo) => (
-                      <option key={tipo.id} value={tipo.id}>
-                        {tipo.tipo}
-                      </option>
-                    ))}
+                    <option value="Acuerdo">Acuerdo</option>
+                    <option value="Acta">Acta</option>
+                    <option value="Circular">Circular</option>
+                    <option value="Informe">Informe</option>
+                    <option value="Memorándum">Memorándum</option>
+                    <option value="Oficio">Oficio</option>
+                    <option value="Otro">Otro</option>
                   </select>
-                  {errors.tipos_documentos_id && (
-                    <p className="text-red-500 text-sm mt-2 font-semibold">
-                      {errors.tipos_documentos_id}
-                    </p>
-                  )}
+                  {errors.classification && <p className="text-red-500 text-sm mt-2 font-semibold">{errors.classification}</p>}
                 </div>
 
-
-                {/* Departamento (DINÁMICO) */}
+                {/* Vigencia */}
                 <div>
-                  <label className="block mb-2 text-lg font-semibold text-amber-800 dark:text-amber-200">
-                    Departamento *
-                  </label>
+                  <label className="block mb-2 text-lg font-semibold text-amber-800 dark:text-amber-200">Estado de Vigencia</label>
                   <select
-                    name="departamentos_id"
-                    value={form.departamentos_id}
+                    name="vigencia"
+                    value={form.vigencia}
                     onChange={handleChange}
-                    className="w-full px-4 py-3 border-2 border-amber-300 dark:border-amber-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-amber-500 text-base font-medium"
+                    className="w-full px-4 py-3 border-2 border-amber-300 dark:border-amber-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-amber-500 focus:border-amber-500 text-base font-medium"
                   >
-                    <option value="">Selecciona un departamento</option>
-                    {catalogs.departamentos.map((d) => (
-                      <option key={d.id} value={d.id}>
-                        {d.nombre}
-                      </option>
-                    ))}
+                    <option value="">Selecciona estado de vigencia</option>
+                    <option value="Vigente">Vigente</option>
+                    <option value="Temporal">Temporal</option>
+                    <option value="Vencido">Vencido</option>
                   </select>
                 </div>
-
               </div>
-
-              {/* (Opcional) Periodo ID si quieres exponerlo */}
-              {/* <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                <div>
-                  <label className="block mb-2 text-lg font-semibold text-amber-800 dark:text-amber-200">Periodo ID (opcional)</label>
-                  <input
-                    type="number"
-                    name="periodos_id"
-                    value={form.periodos_id}
-                    onChange={handleChange}
-                    className="w-full px-4 py-3 border-2 border-amber-300 dark:border-amber-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-amber-500 text-base font-medium"
-                  />
-                </div>
-              </div> */}
             </div>
           </div>
 
-          {/* SECCIÓN 3: Archivo */}
+          {/* 📁 SECCIÓN 3: SUBIDA Y VALIDACIÓN DE ARCHIVO */}
           <div className="bg-gradient-to-r from-green-50 via-emerald-50 to-teal-50 dark:from-green-900/20 dark:via-emerald-900/20 dark:to-teal-900/20 border-2 border-green-200 dark:border-green-700 rounded-2xl p-8">
+            {/* Encabezado Sección 3 */}
             <div className="flex items-center gap-4 mb-6">
               <div className="w-12 h-12 bg-gradient-to-r from-green-600 to-emerald-600 rounded-xl flex items-center justify-center shadow-lg">
                 <span className="text-white text-xl font-bold">📁</span>
@@ -971,27 +1001,31 @@ export default function UploadNew({ session }) {
                       onMouseLeave={() => setShowTooltip(false)}
                     />
                     {showTooltip && (
-                      <div className="absolute z-50 bottom-full left-1/2 -translate-x-1/2 mb-2 p-3 bg-gray-900 dark:bg-gray-700 text-white text-sm rounded-lg shadow-lg border border-gray-600 min-w-max">
+                      <div className="absolute z-50 bottom-full left-1/2 transform -translate-x-1/2 mb-2 p-3 bg-gray-900 dark:bg-gray-700 text-white text-sm rounded-lg shadow-lg border border-gray-600 min-w-max">
                         <div className="space-y-2">
                           <div>
                             <span className="font-semibold text-green-400">Formatos admitidos:</span>
-                            <div className="text-xs mt-1">PDF, DOC, DOCX, XLS, XLSX, PPT, PPTX, JPG, JPEG, PNG, TXT</div>
+                            <div className="text-xs mt-1">
+                              PDF, DOC, DOCX, XLS, XLSX, PPT, PPTX, JPG, JPEG, PNG, TXT
+                            </div>
                           </div>
                           <div>
                             <span className="font-semibold text-blue-400">Tamaño máximo:</span>
                             <div className="text-xs mt-1">150 MB por archivo</div>
                           </div>
                         </div>
-                        <div className="absolute top-full left-1/2 -translate-x-1/2 w-2 h-2 bg-gray-900 dark:bg-gray-700 border-r border-b border-gray-600 rotate-45"></div>
+                        <div className="absolute top-full left-1/2 transform -translate-x-1/2 w-2 h-2 bg-gray-900 dark:bg-gray-700 border-r border-b border-gray-600 rotate-45"></div>
                       </div>
                     )}
                   </div>
                 </h2>
-                <p className="text-green-700 dark:text-green-300 font-medium">Carga y valida el archivo digital del documento</p>
+                <p className="text-green-700 dark:text-green-300 font-medium">
+                  Carga y valida el archivo digital del documento
+                </p>
               </div>
             </div>
 
-            {/* preview archivo */}
+            {/* Información del archivo seleccionado */}
             {form.file && (
               <div className="mb-6 p-4 bg-green-100 dark:bg-green-900/30 border border-green-300 dark:border-green-600 rounded-xl">
                 <div className="flex items-center gap-3">
@@ -1004,18 +1038,20 @@ export default function UploadNew({ session }) {
                     </p>
                     <div className="flex items-center gap-4 mt-1">
                       <span className="px-3 py-1 bg-green-600 text-white rounded-full text-sm font-semibold">
-                        {(form.file.name || "").split("/").pop()?.toUpperCase() || "FILE"} •{" "}
-                        {(form.file.size / 1024 / 1024).toFixed(2)} MB
+                        {ALLOWED_FILE_TYPES[form.file.type]} • {(form.file.size / 1024 / 1024).toFixed(2)} MB
                       </span>
-                      <span className="text-green-600 dark:text-green-400 text-sm font-medium">✅ Archivo válido</span>
+                      <span className="text-green-600 dark:text-green-400 text-sm font-medium">
+                        ✅ Archivo válido
+                      </span>
                     </div>
                   </div>
                 </div>
               </div>
             )}
 
-            {/* Botones */}
+            {/* Botones de acción */}
             <div className="flex flex-col sm:flex-row justify-center items-center gap-6">
+              {/* Botón para seleccionar archivo - Diseño premium */}
               <button
                 type="button"
                 onClick={() => fileInputRef.current?.click()}
@@ -1023,21 +1059,19 @@ export default function UploadNew({ session }) {
               >
                 <div className="absolute inset-0 bg-gradient-to-r from-white/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
                 <FontAwesomeIcon icon={faFileAlt} className="text-xl relative z-10" />
-                <span className="text-xl relative z-10">{form.file ? "🔄 Cambiar Archivo" : "📁 Seleccionar Archivo"}</span>
+                <span className="text-xl relative z-10">
+                  {form.file ? 'Cambiar Archivo' : 'Seleccionar Archivo'}
+                </span>
                 <div className="absolute inset-0 rounded-xl bg-gradient-to-r from-green-400/20 to-emerald-500/20 opacity-0 group-hover:opacity-100 transition-opacity duration-300 blur-sm"></div>
               </button>
 
+              {/* Botón para subir documento - Diseño premium */}
               <button
-                type="button"
-                onClick={(e) => {
-                  e.preventDefault(); // 🔒 evita recarga del form
-                  console.log("🟢 CLICK DETECTADO"); // ✅ verifica que funcione
-                  handleUpload();
-                }}
+                onClick={handleUpload}
                 disabled={uploading || !form.file}
                 className={`group relative w-full sm:w-auto inline-flex items-center justify-center gap-3 px-12 py-4 text-lg font-bold rounded-xl shadow-lg transition-all duration-300 transform overflow-hidden ${uploading || !form.file
-                  ? "bg-gradient-to-r from-gray-400 to-gray-500 cursor-not-allowed text-gray-200 shadow-none"
-                  : "bg-gradient-to-r from-blue-600 via-blue-700 to-purple-600 hover:from-blue-700 hover:via-purple-600 hover:to-blue-800 text-white hover:shadow-2xl hover:scale-105 active:scale-95 border border-blue-400/30"
+                  ? 'bg-gradient-to-r from-gray-400 to-gray-500 cursor-not-allowed text-gray-200 shadow-none'
+                  : 'bg-gradient-to-r from-blue-600 via-blue-700 to-purple-600 hover:from-blue-700 hover:via-purple-600 hover:to-blue-800 text-white hover:shadow-2xl hover:scale-105 active:scale-95 border border-blue-400/30'
                   }`}
               >
                 {!uploading && !form.file && (
@@ -1051,13 +1085,12 @@ export default function UploadNew({ session }) {
                 )}
                 <FontAwesomeIcon icon={faUpload} className="text-xl relative z-10" />
                 <span className="text-xl relative z-10">
-                  {uploading ? "⬆️ Subiendo documento..." : "🚀 Subir Documento"}
+                  {uploading ? '⬆️ Subiendo documento...' : ' Subir Documento'}
                 </span>
               </button>
-
             </div>
 
-            {/* Error */}
+            {/* Error message */}
             {errorMessage && (
               <div className="mt-6 p-4 bg-red-100 dark:bg-red-900/30 border border-red-400 dark:border-red-600 rounded-xl">
                 <div className="flex items-center gap-3">
@@ -1067,13 +1100,13 @@ export default function UploadNew({ session }) {
               </div>
             )}
 
-            {/* input file oculto */}
+            {/* Campo de archivo oculto */}
             <input
               ref={fileInputRef}
               type="file"
               name="file"
               onChange={handleChange}
-              accept=".pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.jpg,.jpeg,.png,.txt"
+              accept={Object.keys(ALLOWED_FILE_TYPES).join(',')}
               className="hidden"
             />
             {errors.file && (
@@ -1084,64 +1117,86 @@ export default function UploadNew({ session }) {
           </div>
         </div>
 
-        {/* input duplicado (compat) */}
-        <input ref={fileInputRef} type="file" name="file" onChange={handleChange} className="hidden" />
-
-        {/* PROGRESO modal */}
-        {uploading && (
-          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-            <div className="bg-white dark:bg-gray-800 rounded-lg p-6 max-w-sm w-full mx-4">
-              <div className="text-center">
-                <div className="w-20 h-20 mx-auto mb-4">
-                  <CircularProgressbar
-                    value={uploadProgress}
-                    text={`${uploadProgress}%`}
-                    styles={buildStyles({
-                      textColor: darkMode ? "#ffffff" : "#000000",
-                      pathColor: "#3b82f6",
-                      trailColor: darkMode ? "#374151" : "#e5e7eb",
-                    })}
-                  />
-                </div>
-                <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-2">Subiendo archivo...</h3>
-                <p className="text-gray-600 dark:text-gray-400">Por favor espera mientras procesamos tu documento.</p>
-              </div>
-            </div>
-          </div>
-        )}
-
-        {/* ÉXITO modal */}
-        {showModal && (
-          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-            <div className="bg-white dark:bg-gray-800 rounded-lg p-6 max-w-md w-full mx-4">
-              <div className="text-center">
-                <FontAwesomeIcon icon={faCheckCircle} className="text-green-500 text-4xl mb-4" />
-                <h3 className="text-xl font-bold text-gray-900 dark:text-gray-100 mb-2">¡Archivo subido exitosamente!</h3>
-                <p className="text-gray-600 dark:text-gray-400 mb-4">Tu documento ha sido procesado y guardado correctamente.</p>
-                {uploadedFileUrl && (
-                  <div className="mb-4">
-                    <a
-                      href={uploadedFileUrl}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors"
-                    >
-                      <FontAwesomeIcon icon={faDownload} />
-                      Descargar
-                    </a>
-                  </div>
-                )}
-                <button
-                  onClick={closeModal}
-                  className="px-6 py-2 bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 text-gray-800 dark:text-gray-200 rounded-lg transition-colors"
-                >
-                  Cerrar
-                </button>
-              </div>
-            </div>
+        {/* Campo de archivo oculto */}
+        <input
+          ref={fileInputRef}
+          type="file"
+          name="file"
+          onChange={handleChange}
+          accept={Object.keys(ALLOWED_FILE_TYPES).join(',')}
+          className="hidden"
+        />
+        {errors.file && (
+          <div className="mb-4 text-center">
+            <p className="text-red-500 text-sm font-semibold">{errors.file}</p>
           </div>
         )}
       </div>
+
+      {/* Modal de éxito */}
+      {showModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white dark:bg-gray-800 rounded-lg p-6 max-w-md w-full mx-4">
+            <div className="text-center">
+              <FontAwesomeIcon icon={faCheckCircle} className="text-green-500 text-4xl mb-4" />
+              <h3 className="text-xl font-bold text-gray-900 dark:text-gray-100 mb-2">
+                ¡Archivo subido exitosamente!
+              </h3>
+              <p className="text-gray-600 dark:text-gray-400 mb-4">
+                Tu documento ha sido procesado y guardado correctamente.
+              </p>
+
+              {uploadedFileUrl && (
+                <div className="mb-4">
+                  <a
+                    href={uploadedFileUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors"
+                  >
+                    <FontAwesomeIcon icon={faDownload} />
+                    Descargar
+                  </a>
+                </div>
+              )}
+
+              <button
+                onClick={closeModal}
+                className="px-6 py-2 bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 text-gray-800 dark:text-gray-200 rounded-lg transition-colors"
+              >
+                Cerrar
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Modal de progreso */}
+      {uploading && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white dark:bg-gray-800 rounded-lg p-6 max-w-sm w-full mx-4">
+            <div className="text-center">
+              <div className="w-20 h-20 mx-auto mb-4">
+                <CircularProgressbar
+                  value={uploadProgress}
+                  text={`${uploadProgress}%`}
+                  styles={buildStyles({
+                    textColor: darkMode ? '#ffffff' : '#000000',
+                    pathColor: '#3b82f6',
+                    trailColor: darkMode ? '#374151' : '#e5e7eb'
+                  })}
+                />
+              </div>
+              <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-2">
+                Subiendo archivo...
+              </h3>
+              <p className="text-gray-600 dark:text-gray-400">
+                Por favor espera mientras procesamos tu documento.
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
