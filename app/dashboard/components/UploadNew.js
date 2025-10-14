@@ -21,6 +21,7 @@ import useAutoComplete from "@/app/hooks/useAutoComplete";
 import BackToHomeButton from "@/components/BackToHomeButton";
 import NEXT_PUBLIC_API_URL from "@/config";
 import DashboardHeader from "@/components/DashboardHeader";
+import DarkModeToggle from "@/components/DarkModeToggle";
 
 export default function UploadNew({ session }) {
   // ===== ESTADO UI / SESIÓN =====
@@ -199,6 +200,39 @@ export default function UploadNew({ session }) {
       });
     document.addEventListener("click", closeAll);
     return () => document.removeEventListener("click", closeAll);
+  }, []);
+
+  // Sincronizar el estado local darkMode con la clase 'dark' en document.documentElement
+  useEffect(() => {
+    const root = document.documentElement;
+
+    const readTheme = () => {
+      try {
+        const stored = localStorage.getItem("theme");
+        if (stored === "dark") return true;
+        if (stored === "light") return false;
+      } catch (e) {
+        // ignore
+      }
+      return root.classList.contains("dark");
+    };
+
+    setDarkMode(readTheme());
+
+    const onThemeChange = (e) => {
+      if (e?.detail?.theme) setDarkMode(e.detail.theme === "dark");
+      else setDarkMode(root.classList.contains("dark"));
+    };
+
+    window.addEventListener("themechange", onThemeChange);
+
+    const observer = new MutationObserver(() => setDarkMode(root.classList.contains("dark")));
+    observer.observe(root, { attributes: true, attributeFilter: ["class"] });
+
+    return () => {
+      window.removeEventListener("themechange", onThemeChange);
+      observer.disconnect();
+    };
   }, []);
 
 
@@ -463,11 +497,11 @@ export default function UploadNew({ session }) {
   // ======== UI (idéntico a tu diseño, con selects dinámicos) ========
   return (
     <div className={`min-h-screen transition-colors duration-300 ${darkMode ? "dark bg-gray-900" : "bg-gray-50"}`}>
-      {/* Header */}
-      <DashboardHeader title="Subir Documento" />
+  {/* Header */}
+  <DashboardHeader title="Subir Documento" avatarUrl={userAvatar} />
 
       {/* Back button */}
-      <div className="bg-gradient-to-r from-gray-50 via-blue-50 to-gray-50 dark:from-gray-900 dark:via-blue-900/20 dark:to-gray-900 px-12 py-6 border-b border-gray-200 dark:border-gray-700">
+      <div className="bg-gradient-to-r from-gray-50 via-blue-50 to-gray-50 px-12 py-6 border-b border-gray-200 dark:bg-transparent dark:from-transparent dark:via-transparent dark:to-transparent dark:border-transparent">
         <div className="flex justify-start">
           <BackToHomeButton />
         </div>

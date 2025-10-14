@@ -1,7 +1,7 @@
 "use client";
 import { useEffect, useState } from "react";
 import Image from "next/image";
-import ThemeToggle from '@/components/ThemeToggle'
+import DarkModeToggle from '@/components/DarkModeToggle'
 
 export default function DashboardHeader({ title = "Dashboard", avatarUrl }) {
   const [isDark, setIsDark] = useState(false);
@@ -81,15 +81,22 @@ export default function DashboardHeader({ title = "Dashboard", avatarUrl }) {
 
       {/* Botón de tema y avatar a la derecha */}
       <div className="flex items-center gap-4 min-w-[90px] justify-end">
-        <ThemeToggle />
+        <DarkModeToggle />
 
-        {/* Use a plain <img> for avatar so we can handle onError fallback reliably */}
+        {/* Avatar con fallback robusto */}
         <img
           src={avatarUrl || "/login.jpg"}
           alt="Avatar"
           width={56}
           height={56}
-          onError={(e) => { e.currentTarget.src = '/login.jpg'; }}
+          onError={(e) => {
+            try {
+              e.currentTarget.onerror = null;
+              e.currentTarget.src = '/blanca.jpeg';
+            } catch (err) {
+              // ignore
+            }
+          }}
           className="rounded-full object-cover w-14 h-14"
         />
       </div>
